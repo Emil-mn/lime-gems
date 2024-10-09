@@ -6,7 +6,7 @@ var musx, musy
 var clickX, clickY
 var ctx = can.getContext("2d")
 //states stuff
-var states = {stopped:0,menu:1,level:2,paused:3, brik:4}
+var states = {stopped:0,menu:1,level:2,paused:3,brik:4,pew:5}
 var gameState = states.stopped
 var prevState
 //weapon stuff
@@ -46,7 +46,7 @@ const SPEED = 2
 var levelInterval
 var fireInterval
 //sprites
-var player, pGun, arcadeTest
+var player, pGun, arcadeTest, arcade2
 //brik-brek
 var ball, paddle, bricks, brikBalls = [], brikLives = 0 
 var brickArray = [], brickCount = 0, brikLvl = 1
@@ -243,6 +243,7 @@ function checkButt(mButt){
             player = new character(40,200,10,25,'gray');
             pGun = new gun(40,300,12,5)
             arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
+            arcade2 = new Obstacle(536,totH-99,10,20,'black')
             //pickup test
             pickups.push(new character(totW/2,totH-15,5,5,'green','points',15))
             pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
@@ -251,6 +252,7 @@ function checkButt(mButt){
             //obstacle test
             floors.push(new Obstacle(300,totH-32,60,5,'gray'))
             floors.push(new Obstacle(430,totH-55,50,5,'gray'))
+            floors.push(new Obstacle(515,totH-79,59,5,'gray'))
             walls.push(new Obstacle(320,totH-105,5,75,'gray'))
             gameState = states.level; can.style.cursor = 'crosshair';
             health = maxHealth
@@ -682,16 +684,26 @@ function levelLoop() {
     var xInput, yInput; if(keys && (keys['a'] || keys['ArrowLeft'])) {xInput = -1}; 
     if (keys && (keys['d'] || keys['ArrowRight'])) {xInput = 1}; if (keys && (keys['w'] || keys['ArrowUp'])) {yInput = 1}
     
+    //brikbrek
     arcadeTest.update();
     ctx.fillStyle = 'green'; ctx.fillRect(arcadeTest.x+2,arcadeTest.y+2,6,6)    
-    if (player.x + player.width > arcadeTest.x - 25 && player.x < arcadeTest.x + 35 && player.y + player.height > arcadeTest.y - 25 && player.y < arcadeTest.y + arcadeTest.height + 25) {
+    if (player.x + player.width > arcadeTest.x - 20 && player.x < arcadeTest.x + arcadeTest.width + 20 && player.y + player.height > arcadeTest.y - 20 && player.y < arcadeTest.y + arcadeTest.height + 20) {
         ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
         ctx.fillText('[E]Play Brik-Brek',arcadeTest.x-50,arcadeTest.y-8);
 
         if (keys && keys['e']) {console.log('starting brik-brek'); clearInterval(levelInterval); gameState = states.brik; startBrikBrek()}
     }
     
-    
+    //pewpew
+    arcade2.update();
+    ctx.fillStyle = 'green'; ctx.fillRect(arcade2.x+2,arcade2.y+2,6,6)
+    if (player.x + player.width > arcade2.x -20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 20 && player.y < arcade2.y + arcade2.height + 20) {
+        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
+        ctx.fillText('[E]Play Pew-Pew',arcade2.x-50,arcade2.y-8);
+
+        if (keys && keys['e']) {console.log('starting pew-pew'); clearInterval(levelInterval); gameState = states.pew;}
+    }
+
     //render player
     player.update(xInput, yInput); pGun.update(); pGun.x = player.x + 20; pGun.y = player.y + 22; 
     //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
