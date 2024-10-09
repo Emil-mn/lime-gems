@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <title>Third gem</title>
+        <style>
+            canvas { 
+                background-color: black; position:absolute; 
+                left:25vw; border:17px solid lightslategray; border-radius: 50px;
+            }
+            h1 {
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+                text-align: center; color:green; text-decoration: solid underline;
+            }
+            #butt1 {
+                position:absolute; width:16px; height:16px; background-color: red; top:81.3vh; left:70vw;
+                border-radius: 8px;
+            }
+            #butt2 {
+                position:absolute; width:16px; height: 16px; background-color: black; top:81.3vh; left:68vw;
+                border-radius: 8px;
+            }
+            body { background-color: cornflowerblue;}
+            div { background-color: aquamarine; border:4px solid cadetblue; position:absolute; 
+                top:85vh; left:59vw; padding-left:3px; padding-right: 3px; font-family:monospace;}
+            .nav { border: 2px solid darkslateblue; padding:1.5px; background-color: darkcyan; text-decoration: none; color: darkslategrey; border-radius: 4px}
+            .nav:hover { color: darkslateblue; background-color: darkseagreen;}
+            .clocker { position: fixed; border-width: 3px; border-style: ridge; border-color: darkslategray; 
+                border-bottom-right-radius: 10px; top: 0; left:0; padding: 6px; background-color: lightslategray; }
+            button:hover {cursor:pointer}
+        </style>
+        
+    </head>
+    <body>
+        <div class="clocker"> 
+            <a href="../weuweb01/lime gems/lime gems/main.html" class="nav">Main menu</a>
+            <a href="../weuweb01/lime gems/lime gems/minitonk/lorem.html" class="nav">Minitonk</a>
+            <a href="../weuweb01/lime gems/lime gems/bes defense/bes.html" class="nav">Bes defense</a>  
+        </div>
+        
+        
+        <h1>Welcome to gem three!</h1>
+        <canvas id="canvas" width="600px" height="400px"></canvas>
+        <button id="butt1" onclick="start()"></button>
+        <button id="butt2" onclick="pause()"></button>
+        <div id="instructions">
+            <p>Press <strong>here</strong> to <strong>start</strong>↑</p>
+            <p>Press <strong>here</strong> to <strong>↑pause</strong></p>
+        </div>
+        <script src="gem.js"></script>
+    </body>
+</html>

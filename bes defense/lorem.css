@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
+body { background-color: cornflowerblue; user-select: none;}
+
+.clocker { position: fixed; border-width: 3px; border-style: ridge; border-color: darkslategray; 
+border-bottom-right-radius: 10px; top: 0; left:0; padding: 6px; background-color: lightslategray; }
+
+#toptext { position: absolute;  padding: 10px; border:3px solid hotpink; display: contents; justify-self:stretch; text-align: center; color:firebrick; font-family: 'Lobster', cursive;}
+
+#canvos { border: 5px black solid; position: absolute; left: 400px; top: 150; background-color: black;}
+
+/*#startbutt { position:absolute; left: 47vw; top: 45vh; z-index: 999; border:solid blue 2px; border-radius: 5px; background-color:black; color:cornflowerblue;}
+#startbutt:hover { background-color: cadetblue; color:cyan; transition-duration: 0.25s; cursor:pointer;}*/
+
+
+.nav { border: 2px solid darkslateblue; padding:1.5px; background-color: darkcyan; text-decoration: none; color: darkslategrey; border-radius: 4px}
+.nav:hover { color: darkslateblue; background-color: darkseagreen;}
