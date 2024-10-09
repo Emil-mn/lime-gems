@@ -216,6 +216,11 @@ function startBrikBrek() {
     levelInterval = setInterval(brikBrek,20)
 }
 
+function startPewPew() {
+    //startup stuff
+    console.log('startup stuff')
+    levelInterval = setInterval(pewPew,20)
+}
 
 function pause() {
     if (gameState == states.level) {prevState = 1}
@@ -699,9 +704,9 @@ function levelLoop() {
     ctx.fillStyle = 'green'; ctx.fillRect(arcade2.x+2,arcade2.y+2,6,6)
     if (player.x + player.width > arcade2.x -20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 20 && player.y < arcade2.y + arcade2.height + 20) {
         ctx.fillStyle = 'black'; ctx.font = '12px consolas';
-        ctx.fillText('[E]Play Pew-Pew',arcade2.x-50,arcade2.y-8);
+        ctx.fillText('[E]Play Pew-Pew',arcade2.x-47,arcade2.y-8);
 
-        if (keys && keys['e']) {console.log('starting pew-pew'); clearInterval(levelInterval); gameState = states.pew;}
+        if (keys && keys['e']) {console.log('starting pew-pew'); clearInterval(levelInterval); gameState = states.pew; startPewPew()}
     }
 
     //render player
@@ -968,7 +973,7 @@ function brikBrek() {
                            brickCount-- 
                            console.log(brickCount)
                            if (b.pUp == true) {
-                                var pup = 4 //Math.floor(Math.random() * 5)
+                                var pup = Math.floor(Math.random() * 5)
                                 msgTime = 2
                                 switch (pup) {
                                     case 0:
@@ -1032,4 +1037,42 @@ function brikBrek() {
         levelInterval = setInterval(levelLoop,20)
     }
 
+}
+
+
+function pewPew() {
+    ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'black'; ctx.fillRect(135,50,335,350);
+    ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Pew-Pew',185,100);
+    ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
+
+    if (keys && (keys['a'] || keys['ArrowLeft'])) {
+        
+        ctx.fillStyle = 'crimson'; ctx.beginPath();
+        ctx.moveTo(235,360); ctx.lineTo(265,330); 
+        ctx.lineTo(265,390); ctx.closePath(); ctx.fill()
+        
+    }
+    else {
+        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.moveTo(235,360); ctx.lineTo(265,330); 
+        ctx.lineTo(265,390); ctx.closePath(); ctx.fill()
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.moveTo(235,350); ctx.lineTo(265,320); 
+        ctx.lineTo(265,380); ctx.closePath(); ctx.fill()
+    }
+    
+    
+    if (keys && (keys['d'] || keys['ArrowRight'])) {
+        
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(300,360,30,0,360); ctx.fill()
+        ctx.fillStyle = 'white'; ctx.fillText('B',283,377)
+    }
+    else {
+        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.arc(300,360,30,0,360); ctx.fill()
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(300,350,30,0,360); ctx.fill()
+        ctx.fillStyle = 'white'; ctx.fillText('B',283,367)
+    }
 }
