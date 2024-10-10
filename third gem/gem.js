@@ -51,6 +51,8 @@ var player, pGun, arcadeTest, arcade2
 var ball, paddle, bricks, brikBalls = [], brikLives = 0 
 var brickArray = [], brickCount = 0, brikLvl = 1
 var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
+//pew-pew
+var arrow, arrowPArray = [], fireCool = 0
 
 can.addEventListener('mousedown', function (e) {
     var rect = can.getBoundingClientRect();
@@ -135,7 +137,6 @@ function start() {
         setTimeout(function() {ctx.fillText('Loading.........',100,totH/2)},1400)
 
         setTimeout(loadMenu,2000)
-        //setTimeout(startBrikBrek,2000)
     }
     else if (gameState == states.menu || gameState == states.level || gameState == states.paused || gameState == states.brik)
     {
@@ -217,8 +218,22 @@ function startBrikBrek() {
 }
 
 function startPewPew() {
-    //startup stuff
-    console.log('startup stuff')
+    arrow = {
+        health:5,
+        angle:0,
+        speed:0,
+        dx:0,
+        dy:0,
+        sx:0,
+        sy:0,
+        frontPoint:{x:300,y:210},
+        backLeftPoint:{x:295,y:225},
+        backRightPoint:{x:305,y:225},
+        centerX:300,
+        centerY:217.5
+    }
+    
+
     levelInterval = setInterval(pewPew,20)
 }
 
@@ -1044,35 +1059,149 @@ function pewPew() {
     ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'black'; ctx.fillRect(135,50,335,350);
     ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Pew-Pew',185,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
+    if (fireCool > 0) {fireCool -= 0.02}
+    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
 
+    arrow.angle = arrow.angle % 360; 
+    if (arrow.angle > 180) {
+        arrow.angle -= 360; // Adjust to be within -180 to 180 degrees
+    } 
+    else if (arrow.angle < -180) {
+        arrow.angle += 360;
+    }
+
+    //left button
     if (keys && (keys['a'] || keys['ArrowLeft'])) {
-        
+        arrow.angle -= 2.5;
         ctx.fillStyle = 'crimson'; ctx.beginPath();
-        ctx.moveTo(235,360); ctx.lineTo(265,330); 
-        ctx.lineTo(265,390); ctx.closePath(); ctx.fill()
+        ctx.moveTo(220,360); ctx.lineTo(255,330); 
+        ctx.lineTo(265,330); ctx.lineTo(265,390);
+        ctx.lineTo(255,390); ctx.closePath(); ctx.fill()
         
     }
     else {
         ctx.fillStyle = 'maroon'; ctx.beginPath()
-        ctx.moveTo(235,360); ctx.lineTo(265,330); 
-        ctx.lineTo(265,390); ctx.closePath(); ctx.fill()
+        ctx.moveTo(220,360); ctx.lineTo(220,350);
+        ctx.lineTo(265,350); ctx.lineTo(265,390);
+        ctx.lineTo(255,390); ctx.closePath(); ctx.fill()
         ctx.fillStyle = 'crimson'; ctx.beginPath()
-        ctx.moveTo(235,350); ctx.lineTo(265,320); 
-        ctx.lineTo(265,380); ctx.closePath(); ctx.fill()
+        ctx.moveTo(220,350); ctx.lineTo(255,320);
+        ctx.lineTo(265,320); ctx.lineTo(265,380);
+        ctx.lineTo(255,380); ctx.closePath(); ctx.fill()
     }
     
+    //middle button
+    if (keys && (keys['s'] || keys['ArrowDown'])) {
+        if (fireCool <= 0) {
+            fireCool = 0.5; 
+            arrow.sx = arrow.speed * Math.cos((arrow.angle - 90) * Math.PI / 180)
+            arrow.sy = arrow.speed * Math.sin((arrow.angle - 90) * Math.PI / 180)
+            arrowPArray.push({x:arrow.centerX,y:arrow.centerY,xSpeed:arrow.sx * 3,ySpeed:arrow.sy * 3})
+        }
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(300,370,20,0,360); ctx.fill()
+    }
+    else {
+        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.arc(300,370,20,0,360); ctx.fill()
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(300,360,20,0,360); ctx.fill()
+    }
     
+    //top button
+    if (keys && (keys['w'] || keys['ArrowUp'])) {
+        arrow.speed = 1;
+        arrow.dx = arrow.speed * Math.cos((arrow.angle - 90) * Math.PI / 180)
+        arrow.dy = arrow.speed * Math.sin((arrow.angle - 90) * Math.PI / 180)
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.moveTo(300,320); ctx.lineTo(270,335)
+        ctx.lineTo(270,340); ctx.lineTo(330,340)
+        ctx.lineTo(330,335); ctx.closePath(); ctx.fill()
+    }
+    else {
+        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.moveTo(270,330); ctx.lineTo(270,340);
+        ctx.lineTo(330,340); ctx.lineTo(330,330);
+        ctx.closePath(); ctx.fill()
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.moveTo(300,310); ctx.lineTo(270,325)
+        ctx.lineTo(270,330); ctx.lineTo(330,330)
+        ctx.lineTo(330,325); ctx.closePath(); ctx.fill()
+    }
+
+    //right button
     if (keys && (keys['d'] || keys['ArrowRight'])) {
-        
+        arrow.angle += 2.5
         ctx.fillStyle = 'crimson'; ctx.beginPath()
-        ctx.arc(300,360,30,0,360); ctx.fill()
-        ctx.fillStyle = 'white'; ctx.fillText('B',283,377)
+        ctx.moveTo(380,360); ctx.lineTo(345,330)
+        ctx.lineTo(335,330); ctx.lineTo(335,390);
+        ctx.lineTo(345,390); ctx.closePath(); ctx.fill()
     }
     else {
         ctx.fillStyle = 'maroon'; ctx.beginPath()
-        ctx.arc(300,360,30,0,360); ctx.fill()
+        ctx.moveTo(380,360); ctx.lineTo(380,350);
+        ctx.lineTo(335,350); ctx.lineTo(335,390);
+        ctx.lineTo(345,390); ctx.closePath(); ctx.fill()
         ctx.fillStyle = 'crimson'; ctx.beginPath()
-        ctx.arc(300,350,30,0,360); ctx.fill()
-        ctx.fillStyle = 'white'; ctx.fillText('B',283,367)
+        ctx.moveTo(380,350); ctx.lineTo(345,320)
+        ctx.lineTo(335,320); ctx.lineTo(335,380);
+        ctx.lineTo(345,380); ctx.closePath(); ctx.fill()
+    }
+
+    arrow.frontPoint.x += arrow.dx;
+    arrow.frontPoint.y += arrow.dy;
+    arrow.backLeftPoint.x += arrow.dx;
+    arrow.backLeftPoint.y += arrow.dy;
+    arrow.backRightPoint.x += arrow.dx;
+    arrow.backRightPoint.y += arrow.dy;
+    arrow.centerX += arrow.dx;
+    arrow.centerY += arrow.dy;
+
+    //draw arrow
+    ctx.save(); // Save the current state
+    ctx.translate(arrow.centerX, arrow.centerY); // Move the origin to the center
+    ctx.rotate(arrow.angle * Math.PI / 180); // Rotate the canvas
+    ctx.translate(-arrow.centerX, -arrow.centerY); // Move the origin back
+    ctx.fillStyle = 'white'; ctx.beginPath();
+    ctx.moveTo(arrow.frontPoint.x,arrow.frontPoint.y);
+    ctx.lineTo(arrow.backLeftPoint.x,arrow.backLeftPoint.y);
+    ctx.lineTo(arrow.backRightPoint.x,arrow.backRightPoint.y);
+    ctx.closePath(); ctx.fill() // Draw the triangle
+    ctx.restore(); // Restore the original state
+    console.log('angle: '+arrow.angle+' dx: '+arrow.dx+' dy: '+arrow.dy)
+
+    //collide with sides
+    if ( arrow.frontPoint.y < 117 || arrow.backLeftPoint.y < 117 || arrow.backRightPoint.y < 117) {
+        arrow.dy = -arrow.dy
+    }
+    if ( arrow.frontPoint.x < 152 || arrow.backLeftPoint.x < 152 || arrow.backRightPoint.x < 152) {
+        arrow.dx = -arrow.dx
+    }
+    if ( arrow.frontPoint.x > 453 || arrow.backLeftPoint.x > 453 || arrow.backRightPoint.x > 453) {
+        arrow.dx = -arrow.dx
+    }
+    if ( arrow.frontPoint.y > 313 || arrow.backLeftPoint.y > 313 || arrow.backRightPoint.y > 313) {
+        arrow.dy = -arrow.dy
+    }
+    
+    if (arrow.health == 0) {
+        clearInterval(levelInterval); console.log('failed'); ctx.font = '45px consolas';
+        ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'white';
+        ctx.fillText('Game over',190,200); setTimeout(startPewPew,2000);
+    }
+    
+    //draw and collide projectiles
+    arrowPArray.forEach((bullet,index) => {
+        bullet.x += bullet.xSpeed;
+        bullet.y += bullet.ySpeed;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(bullet.x,bullet.y,4,4)
+    })
+
+
+
+    if (keys && keys['q']) {
+        clearInterval(levelInterval); gameState = states.level; console.log('exiting pew-pew');
+        levelInterval = setInterval(levelLoop,20)
     }
 }
