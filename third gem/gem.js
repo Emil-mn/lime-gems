@@ -53,6 +53,7 @@ var brickArray = [], brickCount = 0, brikLvl = 1
 var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 //pew-pew
 var arrow, arrowPArray = [], fireCool = 0
+var time = 0, score = 0
 
 can.addEventListener('mousedown', function (e) {
     var rect = can.getBoundingClientRect();
@@ -260,7 +261,7 @@ function checkButt(mButt){
     if (gameState == states.menu){
         if (buttClicked(400,250,100,50)){
             console.log('clicked play button'); 
-            player = new character(40,200,10,25,'gray');
+            player = new character(520,20,10,25,'gray');
             pGun = new gun(40,300,12,5)
             arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
             arcade2 = new Obstacle(536,totH-99,10,20,'black')
@@ -1060,6 +1061,7 @@ function pewPew() {
     ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Pew-Pew',185,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
     if (fireCool > 0) {fireCool -= 0.02}
+    time += 0.02;
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
 
     arrow.angle = arrow.angle % 360; 
@@ -1096,7 +1098,7 @@ function pewPew() {
             fireCool = 0.5; 
             arrow.sx = arrow.speed * Math.cos((arrow.angle - 90) * Math.PI / 180)
             arrow.sy = arrow.speed * Math.sin((arrow.angle - 90) * Math.PI / 180)
-            arrowPArray.push({x:arrow.centerX,y:arrow.centerY,xSpeed:arrow.sx * 3,ySpeed:arrow.sy * 3})
+            arrowPArray.push({x:arrow.centerX,y:arrow.centerY,xSpeed:arrow.sx * 3,ySpeed:arrow.sy * 3,type:'frend'})
         }
         ctx.fillStyle = 'crimson'; ctx.beginPath()
         ctx.arc(300,370,20,0,360); ctx.fill()
@@ -1113,6 +1115,7 @@ function pewPew() {
         arrow.speed = 1;
         arrow.dx = arrow.speed * Math.cos((arrow.angle - 90) * Math.PI / 180)
         arrow.dy = arrow.speed * Math.sin((arrow.angle - 90) * Math.PI / 180)
+        arrowPArray.push({x:arrow.centerX,y:arrow.centerY,xSpeed:-arrow.dx + Math.random() - 1,ySpeed:-arrow.dy + Math.random() - 1,lifeTime:0,type:'particle'})
         ctx.fillStyle = 'crimson'; ctx.beginPath()
         ctx.moveTo(300,320); ctx.lineTo(270,335)
         ctx.lineTo(270,340); ctx.lineTo(330,340)
@@ -1170,18 +1173,53 @@ function pewPew() {
     ctx.restore(); // Restore the original state
     console.log('angle: '+arrow.angle+' dx: '+arrow.dx+' dy: '+arrow.dy)
 
+    //draw time, score and health
+    ctx.fillStyle = 'white';
+    ctx.font = '18px consolas';
+    ctx.fillRect(155,120,10,15);
+    if (arrow.health >= 2) {
+        ctx.fillRect(167.5,120,10,15);
+    }
+    if (arrow.health >= 3) {
+        ctx.fillRect(180,120,10,15);
+    }
+    if (arrow.health >= 4) {
+        ctx.fillRect(192.5,120,10,15);
+    }
+    if (arrow.health == 5) {
+        ctx.fillRect(205,120,10,15);
+    }
+    ctx.fillText(Math.floor(time),155,150);
+    ctx.fillText(score,155,165);
+
     //collide with sides
     if ( arrow.frontPoint.y < 117 || arrow.backLeftPoint.y < 117 || arrow.backRightPoint.y < 117) {
-        arrow.dy = -arrow.dy
+        arrow.dy = -arrow.dy; 
+        if (arrow.frontPoint.y < 115 || arrow.backLeftPoint.y < 115 || arrow.backRightPoint.y < 115) {
+            arrow.centerY += 10; arrow.frontPoint.y += 10;
+            arrow.backLeftPoint.y += 10; arrow.backRightPoint.y += 10
+        }
     }
     if ( arrow.frontPoint.x < 152 || arrow.backLeftPoint.x < 152 || arrow.backRightPoint.x < 152) {
-        arrow.dx = -arrow.dx
+        arrow.dx = -arrow.dx; 
+        if (arrow.frontPoint.x < 150 || arrow.backLeftPoint.x < 150 || arrow.backRightPoint.x < 150) {
+            arrow.centerX += 10; arrow.frontPoint.x += 10;
+            arrow.backLeftPoint.x += 10; arrow.backRightPoint.x += 10
+        }
     }
     if ( arrow.frontPoint.x > 453 || arrow.backLeftPoint.x > 453 || arrow.backRightPoint.x > 453) {
-        arrow.dx = -arrow.dx
+        arrow.dx = -arrow.dx;
+        if (arrow.frontPoint.x > 455 || arrow.backLeftPoint.x > 455 || arrow.backRightPoint.x > 455) {
+            arrow.centerX -= 10; arrow.frontPoint.x -= 10;
+            arrow.backLeftPoint.x -= 10; arrow.backRightPoint.x -= 10
+        }
     }
     if ( arrow.frontPoint.y > 313 || arrow.backLeftPoint.y > 313 || arrow.backRightPoint.y > 313) {
-        arrow.dy = -arrow.dy
+        arrow.dy = -arrow.dy; 
+        if (arrow.frontPoint.y > 315 || arrow.backLeftPoint.y > 315 || arrow.backRightPoint.y > 315) {
+            arrow.centerY -= 10; arrow.frontPoint.y -= 10;
+            arrow.backLeftPoint.y -= 10; arrow.backRightPoint.y -= 10
+        }
     }
     
     if (arrow.health == 0) {
@@ -1195,7 +1233,22 @@ function pewPew() {
         bullet.x += bullet.xSpeed;
         bullet.y += bullet.ySpeed;
         ctx.fillStyle = 'white';
-        ctx.fillRect(bullet.x,bullet.y,4,4)
+        if (bullet.x < 152 || bullet.x > 453 || bullet.y < 117 || bullet.y > 313) {
+            arrowPArray.splice(index,1)
+        }
+
+        if (bullet.type == 'frend') {
+            ctx.fillRect(bullet.x,bullet.y,4,4)
+            
+        }
+        else if (bullet.type == 'particle') {
+            bullet.lifeTime += 0.02;
+            ctx.fillRect(bullet.x,bullet.y,2,2);
+            if (bullet.lifeTime > 1) {
+                arrowPArray.splice(index,1)
+            }
+        }
+        
     })
 
 
