@@ -53,7 +53,7 @@ var brickArray = [], brickCount = 0, brikLvl = 1
 var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 //pew-pew
 var arrow, arrowPArray = [], fireCool = 0
-var time = 0, score = 0
+var time, score, pewEnemies, spawnCool
 
 can.addEventListener('mousedown', function (e) {
     var rect = can.getBoundingClientRect();
@@ -139,9 +139,10 @@ function start() {
 
         setTimeout(loadMenu,2000)
     }
-    else if (gameState == states.menu || gameState == states.level || gameState == states.paused || gameState == states.brik)
+    else
     {
-        if (gameState == states.level || gameState == states.brik) {clearInterval(levelInterval)}
+        if (gameState == states.level || gameState == states.brik || gameState == states.pew) 
+        {clearInterval(levelInterval)}
         
         document.getElementById('butt1').style.backgroundColor = 'red'
         gameState = states.stopped; ctx.clearRect(0,0,totW,totH)
@@ -233,16 +234,17 @@ function startPewPew() {
         centerX:300,
         centerY:217.5
     }
-    
-
+    time = 0; score = 0
+    pewEnemies = []; spawnCool = 2
     levelInterval = setInterval(pewPew,20)
 }
 
 function pause() {
     if (gameState == states.level) {prevState = 1}
     else if (gameState == states.brik) {prevState = 2}
+    else if (gameState == states.pew) {prevState = 3}
 
-    if (gameState == states.level || gameState == states.brik) {
+    if (gameState == states.level || gameState == states.brik || gameState == states.pew) {
         console.log('paused'); gameState = states.paused; clearInterval(levelInterval)
         ctx.fillStyle = 'gray'; ctx.font = '45px consolas'; ctx.fillText('Paused',220,totH/2)
     }
@@ -253,6 +255,9 @@ function pause() {
         }
         else if (prevState == 2) {
             gameState = states.brik; levelInterval = setInterval(brikBrek,20)
+        }
+        else if (prevState == 3) {
+            gameState = states.brik; levelInterval = setInterval(pewPew,20)
         }
     }
 }
@@ -1061,6 +1066,7 @@ function pewPew() {
     ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Pew-Pew',185,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
     if (fireCool > 0) {fireCool -= 0.02}
+    if (spawnCool > 0) {spawnCool -= 0.02}
     time += 0.02;
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
 
@@ -1172,6 +1178,43 @@ function pewPew() {
     ctx.closePath(); ctx.fill() // Draw the triangle
     ctx.restore(); // Restore the original state
     console.log('angle: '+arrow.angle+' dx: '+arrow.dx+' dy: '+arrow.dy)
+
+    //spawn asteroids
+    if (spawnCool <= 0) {
+        spawnCool = 2; 
+        var sides = Math.floor(Math.random() * 10 + 5);
+        var asteroid = [];
+        var radius = Math.random() * 20 + 10;
+        var astX = Math.random() * 300 + 150;
+        var astY = Math.random() * 200 + 115;
+        var xSpeed = Math.random() * 6 -3;
+        var ySpeed = Math.random() * 4 - 2;
+        var rotation = Math.random() * 4 -2;
+
+        for (var s = 0; s < sides; s++) {
+            var angle = (Math.PI * 2 / sides) * s;
+            var x = astX + Math.cos(angle) * (radius + Math.random() * 10 - 5);
+            var y = astY + Math.sin(angle) * (radius + Math.random() * 10 - 5);
+            asteroid.push({ x: x, y: y });
+        }
+        
+        asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation})
+
+        pewEnemies.push(asteroid)
+        console.log(pewEnemies)
+    }
+
+    //draw asteroids
+    pewEnemies.forEach((steroid,index) => {
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.moveTo(steroid[0].x, steroid[0].y);
+        for (var i = 1; i < steroid.length; i++) {
+            ctx.lineTo(steroid[i].x, steroid[i].y)
+        }
+        ctx.closePath();
+        ctx.fill()
+    })
 
     //draw time, score and health
     ctx.fillStyle = 'white';
