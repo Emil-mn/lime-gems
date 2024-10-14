@@ -234,7 +234,8 @@ function startPewPew() {
         centerX:300,
         centerY:217.5
     }
-    time = 0; score = 0
+    time = 0; score = 0;
+    ctx.textAlign = 'left';
     pewEnemies = []; spawnCool = 2
     levelInterval = setInterval(pewPew,20)
 }
@@ -1177,19 +1178,20 @@ function pewPew() {
     ctx.lineTo(arrow.backRightPoint.x,arrow.backRightPoint.y);
     ctx.closePath(); ctx.fill() // Draw the triangle
     ctx.restore(); // Restore the original state
-    console.log('angle: '+arrow.angle+' dx: '+arrow.dx+' dy: '+arrow.dy)
+    //console.log('angle: '+arrow.angle+' dx: '+arrow.dx+' dy: '+arrow.dy)
 
     //spawn asteroids
     if (spawnCool <= 0) {
-        spawnCool = 2; 
+        spawnCool = 3; 
         var sides = Math.floor(Math.random() * 10 + 5);
         var asteroid = [];
-        var radius = Math.random() * 20 + 10;
+        var radius = Math.random() * 15 + 10;
         var astX = Math.random() * 300 + 150;
         var astY = Math.random() * 200 + 115;
-        var xSpeed = Math.random() * 6 -3;
-        var ySpeed = Math.random() * 4 - 2;
+        var xSpeed = Math.random() * 2 - 1;
+        var ySpeed = Math.random() * 2 - 1;
         var rotation = Math.random() * 4 -2;
+        var health = Math.floor((radius - 10) / 15 * (8 - 3) + 3)
 
         for (var s = 0; s < sides; s++) {
             var angle = (Math.PI * 2 / sides) * s;
@@ -1198,24 +1200,94 @@ function pewPew() {
             asteroid.push({ x: x, y: y });
         }
         
-        asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation})
+        asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, score:health})
 
         pewEnemies.push(asteroid)
         console.log(pewEnemies)
     }
+    
+    //move asteroids
+    pewEnemies.forEach(steroid => {
+        var last = steroid[steroid.length - 1]
+        
+        last.xPos += last.dx;
+        last.yPos += last.dy;
+
+        for (var i = 0; i < steroid.length-1; i++) {
+            steroid[i].x += last.dx;
+            steroid[i].y += last.dy;
+        }
+    })
 
     //draw asteroids
-    pewEnemies.forEach((steroid,index) => {
+    pewEnemies.forEach(steroid => {
+        var last = steroid[steroid.length - 1];
+        last.angle += last.rot;
+
+        ctx.save();
+        ctx.translate(last.xPos, last.yPos); 
+        ctx.rotate(last.angle * Math.PI / 180); 
+        ctx.translate(-last.xPos, -last.yPos)
+
         ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.moveTo(steroid[0].x, steroid[0].y);
         for (var i = 1; i < steroid.length; i++) {
-            ctx.lineTo(steroid[i].x, steroid[i].y)
+            ctx.lineTo(steroid[i].x, steroid[i].y);
         }
         ctx.closePath();
-        ctx.fill()
+        ctx.fill();
+        
+        ctx.restore();
+    });
+
+
+    //asteroid wall collisions
+    pewEnemies.forEach(roid => {
+        var last = roid[roid.length - 1];
+                
+        if (last.xPos - last.radius < 152 || last.xPos + last.radius > 453) {
+            last.dx = -last.dx;
+            if (last.xPos - last.radius < 150) {
+                last.xPos += 10
+                for (var i = 0; i < roid.length-1; i++) {
+                    roid[i].x += 10;
+                }
+            }
+            if (last.xPos + last.radius > 455) {
+                last.xPos -= 10
+                for (var i = 0; i < roid.length-1; i++) {
+                    roid[i].x -= 10;
+                }
+            }
+        }
+        
+        if (last.yPos - last.radius < 117 || last.yPos + last.radius > 313) {
+            last.dy = -last.dy;
+            if (last.yPos - last.radius < 115) {
+                last.yPos += 10
+                for (var i = 0; i < roid.length-1; i++) {                    
+                    roid[i].y += 10;
+                }
+            }
+            if (last.yPos + last.radius > 315) {
+                last.yPos -= 10
+                for (var i = 0; i < roid.length-1; i++) {
+                    roid[i].y -= 10;
+                }
+            }
+        }
     })
 
+
+    //asteroid player collisions
+    pewEnemies.forEach(aroid => {
+        var last = aroid[aroid.length - 1];
+        if (arrow.centerX > last.xPos - last.radius && arrow.centerX < last.xPos + last.radius
+            && arrow.centerY > last.yPos - last.radius && arrow.centerY < last.yPos + last.radius
+        ) {arrow.dx = -arrow.dx; arrow.dy = -arrow.dy; arrow.health -= 1}
+    })   
+     
     //draw time, score and health
     ctx.fillStyle = 'white';
     ctx.font = '18px consolas';
@@ -1265,36 +1337,50 @@ function pewPew() {
         }
     }
     
-    if (arrow.health == 0) {
-        clearInterval(levelInterval); console.log('failed'); ctx.font = '45px consolas';
-        ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'white';
-        ctx.fillText('Game over',190,200); setTimeout(startPewPew,2000);
-    }
     
     //draw and collide projectiles
-    arrowPArray.forEach((bullet,index) => {
+    arrowPArray.forEach((bullet,bIndex) => {
         bullet.x += bullet.xSpeed;
         bullet.y += bullet.ySpeed;
         ctx.fillStyle = 'white';
         if (bullet.x < 152 || bullet.x > 453 || bullet.y < 117 || bullet.y > 313) {
-            arrowPArray.splice(index,1)
+            arrowPArray.splice(bIndex,1)
         }
 
         if (bullet.type == 'frend') {
             ctx.fillRect(bullet.x,bullet.y,4,4)
-            
+            pewEnemies.forEach((roid,index) => {
+                var last = roid[roid.length - 1];
+                
+                if (bullet.x > last.xPos - last.radius && bullet.x < last.xPos + last.radius 
+                && bullet.y > last.yPos - last.radius && bullet.y < last.yPos + last.radius) 
+                {
+                    arrowPArray.splice(bIndex,1); last.hp -= 1;
+                    if (last.hp == 0) {
+                        pewEnemies.splice(index,1)
+                        score += last.score; 
+                    }
+                }
+            });
         }
         else if (bullet.type == 'particle') {
             bullet.lifeTime += 0.02;
             ctx.fillRect(bullet.x,bullet.y,2,2);
             if (bullet.lifeTime > 1) {
-                arrowPArray.splice(index,1)
+                arrowPArray.splice(bIndex,1)
             }
         }
         
     })
 
-
+    if (arrow.health == 0) {
+        clearInterval(levelInterval); console.log('finished'); ctx.font = '45px consolas';
+        ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,190); ctx.fillStyle = 'white';
+        ctx.textAlign = 'center'; ctx.fillText('Game over',300,200);
+        setTimeout(() => {ctx.font = '20px consolas'; ctx.fillText('time: '+Math.floor(time),300,240)},2000)
+        setTimeout(() => {ctx.fillText('score: '+score,300,260)},3000)
+        setTimeout(startPewPew,5000);
+    }
 
     if (keys && keys['q']) {
         clearInterval(levelInterval); gameState = states.level; console.log('exiting pew-pew');
