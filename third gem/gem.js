@@ -40,8 +40,7 @@ var grenadeCool = true
 var maxHealth = hlt[hltLvl]
 var maxArmor = 25
 //inputs n stuff
-var stopit = false
-var keyPress, keys
+var keys
 const SPEED = 2
 var levelInterval
 var fireInterval
@@ -52,8 +51,14 @@ var ball, paddle, bricks, brikBalls = [], brikLives = 0
 var brickArray = [], brickCount = 0, brikLvl = 1
 var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 //pew-pew
-var arrow, arrowPArray = [], fireCool = 0
+var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies, spawnCool
+//highscore stuff
+var key,keyPress,canEnterName = false, ready = false
+var keysEntered = 0, nameListener
+var n,a,m,namer,NAMER
+const NO_OF_HIGH_SCORES = 4
+const HIGH_SCORES = 'pewHighScores'
 
 can.addEventListener('mousedown', function (e) {
     var rect = can.getBoundingClientRect();
@@ -80,8 +85,6 @@ window.addEventListener('mouseup', function (e) {
 });
 
 document.addEventListener('keydown', function(e) {
-    //if (!stopit)
-    /*{stopit = true; keyPress = e.key; console.log(keyPress);}*/
     keys = (keys || []);
     keys[e.key] = true; //console.log(keys)  
 })
@@ -114,6 +117,33 @@ function buttHovered(x, y, width, height) {
     return hovered;
 }
 
+function checkHighScore(score) {
+    const highScores = JSON.parse(localStorage.getItem(HIGH_SCORES)) ?? [];
+    const lowestScore = highScores[NO_OF_HIGH_SCORES-1]?.score ?? 0;
+
+    if (score > lowestScore) {
+        canEnterName = true
+        console.log('new highscore, can enter name')
+    }
+    else {
+        console.log('no new highscore')
+    }
+}
+
+function saveHighScore(score,time) {
+    const highScores = JSON.parse(localStorage.getItem(HIGH_SCORES)) ?? [];
+    var timer = Math.floor(time)
+    const newScore = { score, NAMER, timer };
+
+    highScores.push(newScore);
+    highScores.sort((a, b) => b.score - a.score);
+    highScores.splice(NO_OF_HIGH_SCORES);
+
+    console.log(highScores)
+    console.log('new highscore saved')
+
+    localStorage.setItem(HIGH_SCORES, JSON.stringify(highScores));
+}
 
 function start() {
     if (gameState == states.stopped)
@@ -1068,6 +1098,7 @@ function pewPew() {
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
     if (fireCool > 0) {fireCool -= 0.02}
     if (spawnCool > 0) {spawnCool -= 0.02}
+    if (hurtCool > 0) {hurtCool -= 0.02}
     time += 0.02;
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
 
@@ -1081,7 +1112,7 @@ function pewPew() {
 
     //left button
     if (keys && (keys['a'] || keys['ArrowLeft'])) {
-        arrow.angle -= 2.5;
+        arrow.angle -= 3;
         ctx.fillStyle = 'crimson'; ctx.beginPath();
         ctx.moveTo(220,360); ctx.lineTo(255,330); 
         ctx.lineTo(265,330); ctx.lineTo(265,390);
@@ -1141,7 +1172,7 @@ function pewPew() {
 
     //right button
     if (keys && (keys['d'] || keys['ArrowRight'])) {
-        arrow.angle += 2.5
+        arrow.angle += 3
         ctx.fillStyle = 'crimson'; ctx.beginPath()
         ctx.moveTo(380,360); ctx.lineTo(345,330)
         ctx.lineTo(335,330); ctx.lineTo(335,390);
@@ -1285,7 +1316,19 @@ function pewPew() {
         var last = aroid[aroid.length - 1];
         if (arrow.centerX > last.xPos - last.radius && arrow.centerX < last.xPos + last.radius
             && arrow.centerY > last.yPos - last.radius && arrow.centerY < last.yPos + last.radius
-        ) {arrow.dx = -arrow.dx; arrow.dy = -arrow.dy; arrow.health -= 1}
+        ) 
+        {
+            arrow.dx = -arrow.dx; arrow.dy = -arrow.dy; 
+            arrow.frontPoint.x += arrow.dx * 10;
+            arrow.frontPoint.y += arrow.dy * 10;
+            arrow.backLeftPoint.x += arrow.dx * 10;
+            arrow.backLeftPoint.y += arrow.dy * 10;
+            arrow.backRightPoint.x += arrow.dx * 10;
+            arrow.backRightPoint.y += arrow.dy * 10;
+            arrow.centerX += arrow.dx * 10;
+            arrow.centerY += arrow.dy * 10;
+            if (hurtCool <= 0) {arrow.health -= 1; hurtCool = 2}
+        }
     })   
      
     //draw time, score and health
@@ -1375,15 +1418,124 @@ function pewPew() {
 
     if (arrow.health == 0) {
         clearInterval(levelInterval); console.log('finished'); ctx.font = '45px consolas';
-        ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,190); ctx.fillStyle = 'white';
+        ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'white';
         ctx.textAlign = 'center'; ctx.fillText('Game over',300,200);
         setTimeout(() => {ctx.font = '20px consolas'; ctx.fillText('time: '+Math.floor(time),300,240)},2000)
         setTimeout(() => {ctx.fillText('score: '+score,300,260)},3000)
-        setTimeout(startPewPew,5000);
+        checkHighScore(score); window.addEventListener('keypress', nameInput) 
+        
+        if (canEnterName == true) {
+            setTimeout(() => {ctx.fillText('new highscore',300,290)},4000)
+            setTimeout(() => {
+                ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,190);
+                ctx.textAlign = 'left';
+                ctx.fillStyle = 'white'; ctx.font = "30px Consolas"; ctx.fillText('submit score', totW/2- 100, 190);
+                ctx.font = '50px Consolas'; ctx.fillText('NAME', totW/2 - 55, 240 )
+                ctx.beginPath(); ctx.strokeStyle = 'white';
+                ready = true;
+                ctx.moveTo(totW/2 - 60, 200); ctx.lineTo(360, 200);  
+                ctx.lineTo(360, 250); ctx.lineTo(totW/2 - 60, 250);
+                ctx.lineTo(totW/2 - 60, 200); ctx.stroke();                      
+            },6000)
+        }
+        else { setTimeout(showHighScores,5000) }
     }
 
     if (keys && keys['q']) {
         clearInterval(levelInterval); gameState = states.level; console.log('exiting pew-pew');
         levelInterval = setInterval(levelLoop,20)
+    }
+}
+
+function showHighScores() {
+    const highScores = JSON.parse(localStorage.getItem(HIGH_SCORES)) ?? [];
+    
+    const pos1 = highScores[0] ?? null; console.log(pos1); 
+    if (pos1 != null) {
+        var pos1Name = pos1.NAMER; var pos1Score = pos1.score; var pos1Time = pos1.timer;
+        console.log(pos1Name+'  '+pos1Score+'  '+pos1Time);
+    }
+
+    const pos2 = highScores[1] ?? null; console.log(pos2);
+    if (pos2 != null) {
+        var pos2Name = pos2.NAMER; var pos2Score = pos2.score; var pos2Time = pos2.timer;
+        console.log(pos2Name+'  '+pos2Score+'  '+pos2Time);
+    }
+
+    const pos3 = highScores[2] ?? null; console.log(pos3);
+    if (pos3 != null) {
+        var pos3Name = pos3.NAMER; var pos3Score = pos3.score; var pos3Time = pos3.timer;
+        console.log(pos3Name+'  '+pos3Score+'  '+pos3Time);
+    }
+
+    const pos4 = highScores[3] ?? null; console.log(pos4);
+    if (pos4 != null) {
+        var pos4Name = pos4.NAMER; var pos4Score = pos4.score; var pos4Time = pos4.timer;
+        console.log(pos4Name+'  '+pos4Score+'  '+pos4Time);
+    }
+
+    ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
+    ctx.fillStyle = 'white'; ctx.font = '30px consolas'; ctx.fillText('scoreboard', 300,150);
+    ctx.font = '15px consolas'; ctx.fillText('pos name score time',300,175)
+    
+    ctx.font = '20px consolas';
+
+    if (pos1 == null) {ctx.fillText('1 NAME - NaN - NaN', 300, 205)}
+    else {ctx.fillText('1 '+pos1Name+' - '+pos1Score+' - '+pos1Time, 300,205)}
+
+    if (pos2 == null) {ctx.fillText('2 NAME - NaN - NaN', 300, 235)}
+    else {ctx.fillText('2 '+pos2Name+' - '+pos2Score+' - '+pos2Time, 300, 235)}
+
+    if (pos3 == null) {ctx.fillText('3 NAME - NaN - NaN', 300, 265)}
+    else {ctx.fillText('3 '+pos3Name+' - '+pos3Score+' - '+pos3Time, 300, 265)}
+
+    if (pos4 == null) {ctx.fillText('4 NAME - NaN - NaN', 300, 295)}
+    else {ctx.fillText('4 '+pos4Name+' - '+pos4Score+' - '+pos4Time, 300, 295);}
+
+    ctx.beginPath(); 
+    ctx.moveTo(200, 180); ctx.lineTo(400, 180);
+    ctx.moveTo(200, 210); ctx.lineTo(400, 210); 
+    ctx.moveTo(200, 240); ctx.lineTo(400, 240); 
+    ctx.moveTo(200, 270); ctx.lineTo(400, 270); 
+    ctx.moveTo(200, 300); ctx.lineTo(400, 300); 
+    ctx.stroke();
+}
+
+
+function nameInput(e) {
+    key = e.keyCode
+    console.log(key)
+    if (canEnterName == true && ready == true && ((key >= 65 && key <= 90) || (key >= 97 && key <= 122))) {
+        switch (keysEntered) {
+            case 0:
+                ctx.fillStyle = 'green'; ctx.fillRect(totW/2 -57, 203, 114, 43); ctx.font = '50px Consolas'; 
+                ctx.fillStyle = 'white'; ctx.fillText(String.fromCharCode(key).toUpperCase(), totW/2 - 55, 240); 
+                keysEntered++; n = String.fromCharCode(key); console.log(n);
+            break;
+            case 1:
+                ctx.fillText(String.fromCharCode(key).toUpperCase(), totW/2 - 28, 240); 
+                keysEntered++; a = String.fromCharCode(key); console.log(a);
+            break;
+            case 2:
+                ctx.fillText(String.fromCharCode(key).toUpperCase(),totW/2 - 1, 240);
+                keysEntered++; m = String.fromCharCode(key); console.log(m);
+            break;
+            case 3:
+                ctx.fillText(String.fromCharCode(key).toUpperCase(), totW/2 + 26, 240);
+                keysEntered++; namer = n+a+m+String.fromCharCode(key); NAMER = namer.toUpperCase();
+                console.log('your name is = '+NAMER); saveHighScore(score,time); canEnterName = false; ready = false;
+                ctx.font = '20px consolas'; ctx.textAlign = 'center'; ctx.fillText('score added, press enter',300,290)
+            break;
+        }
+    }
+
+    if (key == 13 && keysEntered == 4) {showHighScores();}
+    if (key == 114 && keysEntered == 4) {keysEntered = 0; startPewPew()}
+
+    if (key == 32) {localStorage.clear()}
+
+    if (key == 113) {
+        gameState = states.level; console.log('exiting pew-pew'); ctx.textAlign = 'left';
+        levelInterval = setInterval(levelLoop,20); keysEntered = 0; removeEventListener('keypress',nameInput)
     }
 }
