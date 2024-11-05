@@ -312,7 +312,10 @@ function checkButt(mButt){
             floors.push(new Obstacle(300,totH-32,60,5,'gray'))
             floors.push(new Obstacle(430,totH-55,50,5,'gray'))
             floors.push(new Obstacle(515,totH-79,59,5,'gray'))
-            walls.push(new Obstacle(320,totH-105,5,75,'gray'))
+            walls.push(new Obstacle(320,totH-105,5,45,'gray'))
+            walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
+            walls.push(new Obstacle(330,totH-105,5,45,'gray'))
+            walls.push(new Obstacle(330,totH-60,5,28,'lightslategray','gBreakable'))
             gameState = states.level; can.style.cursor = 'crosshair';
             health = maxHealth
             armor = maxArmor
@@ -792,13 +795,33 @@ function levelLoop() {
         }
     })
 
-    walls.forEach(wall => {
+    walls.forEach((wall,windex) => {
         wall.update()
         if (player.wallLeft(wall)) {
             player.x = wall.x - player.width
         }
         else if (player.wallRight(wall)) {
             player.x = wall.x + wall.width
+        }
+
+        if (wall.type == 'breakable') {
+            projectiles.forEach((bullet,bundex) => {
+                if (bullet.crashWith(wall))
+                {
+                    projectiles.splice(bundex,1)
+                    walls.splice(windex,1)
+                }
+            })
+        }
+
+        else if (wall.type == 'gBreakable') {
+            projectiles.forEach((bullet,bundex) => {
+                if (bullet.crashWith(wall) && bullet.type == 'grenade')
+                {
+                    projectiles.splice(bundex,1)
+                    walls.splice(windex,1)
+                }
+            })
         }
     })
 
