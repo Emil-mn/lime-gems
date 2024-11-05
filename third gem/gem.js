@@ -35,7 +35,7 @@ var walls = []
 var points = 99
 var health
 var armor
-var grenades = 1
+var grenades = 9
 var grenadeCool = true
 var maxHealth = hlt[hltLvl]
 var maxArmor = 25
@@ -126,6 +126,7 @@ function checkHighScore(score) {
         console.log('new highscore, can enter name')
     }
     else {
+        canEnterName = false
         console.log('no new highscore')
     }
 }
@@ -155,6 +156,7 @@ function start() {
         ctx.fillRect(0,0,totW,totH)
         ctx.fillStyle = 'black'
         ctx.font = '40px consolas'
+        ctx.textAlign = 'left'
         ctx.fillText('Loading',100,totH/2)
         
         setTimeout(function() {ctx.fillText('Loading.',100,totH/2)},700)
@@ -302,7 +304,7 @@ function checkButt(mButt){
             arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
             arcade2 = new Obstacle(536,totH-99,10,20,'black')
             //pickup test
-            pickups.push(new character(totW/2,totH-15,5,5,'green','points',15))
+            pickups.push(new character(totW/2,totH-15,5,5,'gold','points',15))
             pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
             pickups.push(new character(totW/2+20,totH-15,5,5,'darkblue','armor',10))
             pickups.push(new character(totW/2+30,totH-15,5,5,'darkslategrey','grenade',1))
@@ -480,65 +482,72 @@ class character {
             }
             return crash
         }
-        this.floor = function (otherobj) {
-            var myleft = this.x
-            var myright = this.x + (this.width)
-            var mybottom = this.y + (this.height)
-            var mycenter = this.y + this.height/2
-            var otherleft = otherobj.x
-            var otherright = otherobj.x + otherobj.width
-            var othertop = otherobj.y
-            var otherbottom = otherobj.y + otherobj.height
-            var onFloor = false
-            if ((mybottom > othertop) && (mycenter < othertop) && (myright > otherleft) && (myleft < otherright)) {
-                onFloor = true
-            }
-            return onFloor
+    }    
+        
+    
+            
+    floor(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mybottom = this.y + (this.height)
+        var mycenter = this.y + this.height/2
+        var otherleft = otherobj.x
+        var otherright = otherobj.x + otherobj.width
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var onFloor = false
+        if ((mybottom > othertop) && (mycenter < othertop) && (myright > otherleft) && (myleft < otherright)) {
+            onFloor = true
         }
-        this.floorBottom = function (otherobj) {
-            var myleft = this.x
-            var myright = this.x + (this.width)
-            var mytop = this.y
-            var mybottom = this.y + (this.height)
-            var otherleft = otherobj.x
-            var otherright = otherobj.x + otherobj.width
-            var othertop = otherobj.y
-            var otherbottom = otherobj.y + otherobj.height
-            var belowFloor = false
-            if ((mytop < otherbottom) && (mytop > othertop) && (myright > otherleft) && (myleft < otherright)) {
-                belowFloor = true
-            }
-            return belowFloor
-        }
-        this.wallLeft = function (otherobj) {
-            var myleft = this.x
-            var myright = this.x + (this.width)
-            var mytop = this.y
-            var mybottom = this.y + (this.height)
-            var otherleft = otherobj.x
-            var othertop = otherobj.y
-            var otherbottom = otherobj.y + otherobj.height
-            var leftOfWall = false
-            if ((mybottom > othertop) && (mytop < otherbottom) && (myright > otherleft) && (myleft < otherleft)) {
-                leftOfWall = true
-            }
-            return leftOfWall
-        }
-        this.wallRight = function (otherobj) {
-            var myleft = this.x
-            var myright = this.x + (this.width)
-            var mytop = this.y
-            var mybottom = this.y + (this.height)
-            var otherright = otherobj.x + otherobj.width
-            var othertop = otherobj.y
-            var otherbottom = otherobj.y + otherobj.height
-            var rightOfWall = false
-            if ((mybottom > othertop) && (mytop < otherbottom) && (myleft < otherright) && (myright > otherright)) {
-                rightOfWall = true
-            }
-            return rightOfWall
-        }
+        return onFloor
     }
+    
+    floorBottom(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mytop = this.y
+        var mybottom = this.y + (this.height)
+        var otherleft = otherobj.x
+        var otherright = otherobj.x + otherobj.width
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var belowFloor = false
+        if ((mytop < otherbottom) && (mytop > othertop) && (myright > otherleft) && (myleft < otherright)) {
+            belowFloor = true
+        }
+        return belowFloor
+    }
+    
+    wallLeft(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mytop = this.y
+        var mybottom = this.y + (this.height)
+        var otherleft = otherobj.x
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var leftOfWall = false
+        if ((mybottom > othertop) && (mytop < otherbottom) && (myright > otherleft) && (myleft < otherleft)) {
+            leftOfWall = true
+        }
+        return leftOfWall
+    }
+        
+    wallRight(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mytop = this.y
+        var mybottom = this.y + (this.height)
+        var otherright = otherobj.x + otherobj.width
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var rightOfWall = false
+        if ((mybottom > othertop) && (mytop < otherbottom) && (myleft < otherright) && (myright > otherright)) {
+            rightOfWall = true
+        }
+        return rightOfWall
+    }    
+    
 }
 
 
@@ -735,8 +744,13 @@ function levelLoop() {
     ctx.fillRect(45,15,140*armorPercentage,5)
     ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.strokeRect(15,15,170,15)
     ctx.font = '15px consolas'; ctx.fillStyle = 'black'; ctx.fillText(Math.round(health),17,28)
+    //points counter
+    ctx.fillText(points,17,45); ctx.fillStyle = 'gold'; if (points.toString().length == 3) {ctx.fillRect(45,35,10,10);}
+    else if (points.toString().length == 2) {ctx.fillRect(35,35,10,10)};
     //grenade counter
-    ctx.fillText(grenades,17,45); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,35,10,10)
+    ctx.fillStyle = 'black'
+    ctx.fillText(grenades,17,60); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,50,10,10)
+
     //walk and jump
     var xInput, yInput; if(keys && (keys['a'] || keys['ArrowLeft'])) {xInput = -1}; 
     if (keys && (keys['d'] || keys['ArrowRight'])) {xInput = 1}; if (keys && (keys['w'] || keys['ArrowUp'])) {yInput = 1}
@@ -1319,14 +1333,14 @@ function pewPew() {
         ) 
         {
             arrow.dx = -arrow.dx; arrow.dy = -arrow.dy; 
-            arrow.frontPoint.x += arrow.dx * 10;
-            arrow.frontPoint.y += arrow.dy * 10;
-            arrow.backLeftPoint.x += arrow.dx * 10;
-            arrow.backLeftPoint.y += arrow.dy * 10;
-            arrow.backRightPoint.x += arrow.dx * 10;
-            arrow.backRightPoint.y += arrow.dy * 10;
-            arrow.centerX += arrow.dx * 10;
-            arrow.centerY += arrow.dy * 10;
+            arrow.frontPoint.x += arrow.dx * 15;
+            arrow.frontPoint.y += arrow.dy * 15;
+            arrow.backLeftPoint.x += arrow.dx * 15;
+            arrow.backLeftPoint.y += arrow.dy * 15;
+            arrow.backRightPoint.x += arrow.dx * 15;
+            arrow.backRightPoint.y += arrow.dy * 15;
+            arrow.centerX += arrow.dx * 15;
+            arrow.centerY += arrow.dy * 15;
             if (hurtCool <= 0) {arrow.health -= 1; hurtCool = 2}
         }
     })   
@@ -1509,16 +1523,16 @@ function nameInput(e) {
         switch (keysEntered) {
             case 0:
                 ctx.fillStyle = 'green'; ctx.fillRect(totW/2 -57, 203, 114, 43); ctx.font = '50px Consolas'; 
-                ctx.fillStyle = 'white'; ctx.fillText(String.fromCharCode(key).toUpperCase(), totW/2 - 55, 240); 
-                keysEntered++; n = String.fromCharCode(key); console.log(n);
+                ctx.fillStyle = 'white'; keysEntered++; n = String.fromCharCode(key); console.log(n);           
+                ctx.fillText(n.toUpperCase(), totW/2 - 55, 240);
             break;
             case 1:
-                ctx.fillText(String.fromCharCode(key).toUpperCase(), totW/2 - 28, 240); 
                 keysEntered++; a = String.fromCharCode(key); console.log(a);
+                ctx.fillText(a.toUpperCase(), totW/2 - 28, 240); 
             break;
             case 2:
-                ctx.fillText(String.fromCharCode(key).toUpperCase(),totW/2 - 1, 240);
                 keysEntered++; m = String.fromCharCode(key); console.log(m);
+                ctx.fillText(m.toUpperCase(),totW/2 - 1, 240);
             break;
             case 3:
                 ctx.fillText(String.fromCharCode(key).toUpperCase(), totW/2 + 26, 240);
@@ -1530,7 +1544,7 @@ function nameInput(e) {
     }
 
     if (key == 13 && keysEntered == 4) {showHighScores();}
-    if (key == 114 && keysEntered == 4) {keysEntered = 0; startPewPew()}
+    if (key == 114 && (keysEntered == 4 || canEnterName == false)) {keysEntered = 0; startPewPew()}
 
     if (key == 32) {localStorage.clear()}
 
