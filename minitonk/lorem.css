@@ -6,9 +6,9 @@ border-bottom-right-radius: 10px; top: 0; left:0; padding: 6px; background-color
 
 #toptext { position: absolute;  padding: 10px; border:3px solid hotpink; display: contents; justify-self:stretch; text-align: center; color:firebrick; font-family: 'Lobster', cursive;}
 
-#canvos { border: 3px firebrick solid; position: absolute; left: 400px; top: 150; background-color: black;}
+#canvos { border: 3px firebrick solid; display:flex; align-self: center; justify-self:center; background-color: black;}
 
-#startbutt { position:absolute; left: 47vw; top: 45vh; z-index: 999; border:solid blue 2px; border-radius: 5px; background-color:black; color:cornflowerblue;}
+#startbutt { display:flex;  justify-self: center; z-index:999;  border:solid blue 2px; border-radius: 5px; background-color:black; color:cornflowerblue;}
 #startbutt:hover { background-color: cadetblue; color:cyan; transition-duration: 0.25s; cursor:pointer;}
 
 
