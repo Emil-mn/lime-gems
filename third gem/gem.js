@@ -365,7 +365,7 @@ function checkButt(mButt){
             }, frt[frtLvl])
         }
         if (mButt == 2 && grenadeCool == true && grenades > 0) {
-            projectiles.push(new Projectile(5,5,'darkslategray',player.x,player.y,musx,musy,'grenade'))
+            projectiles.push(new grenade(player.x,player.y,5,5,'darkslategray',musx,musy))
             grenades--; grenadeCool = false; setTimeout(() => {grenadeCool = true},1000)
         }
     }
@@ -425,6 +425,71 @@ class Obstacle {
     }
 }
 
+class grenade {
+    constructor(x,y,width,height,color,targetX,targetY) {
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.centerX = this.x + this.width / 2
+        this.centerY = this.y + this.height / 2
+        this.gravity = 0.15
+        this.fallSpeed = 0
+        this.bounceStrength = 
+        this.grounded = false;
+        this.type = 'grenade'
+        this.targetX = targetX
+        this.targetY = targetY
+        this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX)
+        this.dx = Math.cos(this.angle)
+        this.dy = Math.sin(this.angle)
+        this.gUpdate = function() {
+            this.x += this.dx * 5
+            if (this.dx > 0) {this.dx -= 0.01}
+            else if (this.dx < 0) {this.dx += 0.01}
+            //this.y += this.dy * 5
+            
+            if (this.grounded) {
+                this.fallSpeed = -this.fallSpeed;
+                this.bounceStrength /= 2
+                this.grounded = false;
+            }
+            
+            if (!this.grounded)
+            {   
+                this.fallSpeed += this.gravity
+                this.y += this.dy * 4 + this.fallSpeed
+            }
+            
+            if (this.y + this.height > totH - 5) {
+                this.y = totH - this.height - 5;
+                this.grounded = true;
+            } 
+            
+            ctx.fillStyle = color
+            ctx.fillRect(this.x, this.y, this.width, this.height)
+        }
+        this.newPos = function () {
+            if (this.x > totW || this.x < 0 || this.y > totH || this.y < 0) { return true} 
+            return false
+        }
+        this.crashWith = function (otherobj) {
+            var myleft = this.x
+            var myright = this.x + (this.width)
+            var mytop = this.y
+            var mybottom = this.y + (this.height)
+            var otherleft = otherobj.x
+            var otherright = otherobj.x + otherobj.width
+            var othertop = otherobj.y
+            var otherbottom = otherobj.y + otherobj.height
+            var crash = true
+            if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+                crash = false
+            }
+            return crash
+        }
+    }
+}
 
 class character {
     constructor(x, y, width, height, color, type, amount) {
@@ -627,8 +692,8 @@ class Projectile {
         this.update = function () {
             if (crit == true) { ctx.fillStyle = 'red'} 
             else { ctx.fillStyle = color} 
-            this.x += this.dx * 8
-            this.y += this.dy * 8
+            this.x += this.dx * 7
+            this.y += this.dy * 7
             ctx.fillRect(this.x, this.y, this.width, this.height)
         }
         this.newPos = function () {
@@ -754,6 +819,8 @@ function levelLoop() {
     ctx.fillStyle = 'black'
     ctx.fillText(grenades,17,60); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,50,10,10)
 
+    if (keys && keys['g']) {grenades = 9}
+
     //walk and jump
     var xInput, yInput; if(keys && (keys['a'] || keys['ArrowLeft'])) {xInput = -1}; 
     if (keys && (keys['d'] || keys['ArrowRight'])) {xInput = 1}; if (keys && (keys['w'] || keys['ArrowUp'])) {yInput = 1}
@@ -779,7 +846,7 @@ function levelLoop() {
     }
 
     //render player
-    player.update(xInput, yInput); pGun.update(); pGun.x = player.x + 20; pGun.y = player.y + 22; 
+    player.update(xInput, yInput); pGun.x = player.x + 20; pGun.y = player.y + 22; pGun.update();
     //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
     
 
@@ -826,11 +893,15 @@ function levelLoop() {
     })
 
     projectiles.forEach((bullet,index) => {
-        bullet.update(); //console.log(projectiles)
+        if (bullet.type != 'grenade') {
+            bullet.update();
+        }
+        
         if (bullet.newPos())
         {
             projectiles.splice(index,1); console.log(bullet.type+' spliced')
         }
+        
         if (bullet.type == 'enemi' && bullet.crashWith(player))
         {
             if (armor == 0)
@@ -864,6 +935,11 @@ function levelLoop() {
                     enemi.health -= bullet.damage
                 }
             })
+        }
+        else if (bullet.type == 'grenade')
+        {
+            bullet.gUpdate()
+            console.log(' x: '+bullet.x+' y: '+bullet.y+' dx: '+bullet.dx+' dy: '+bullet.dy+' fallSpeed: '+bullet.fallSpeed+' grounded: '+bullet.grounded)
         }
     })
 
