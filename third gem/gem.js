@@ -52,7 +52,7 @@ var brickArray = [], brickCount = 0, brikLvl = 1
 var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 //pew-pew
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
-var time, score, pewEnemies, spawnCool
+var time, score, pewEnemies = [], spawnCool, justReleased = false
 //highscore stuff
 var key,keyPress,canEnterName = false, ready = false
 var keysEntered = 0, nameListener
@@ -435,7 +435,7 @@ class grenade {
         this.centerY = this.y + this.height / 2
         this.gravity = 0.15
         this.fallSpeed = 0
-        this.bounceStrength = 
+        this.bounceStrength = -2
         this.grounded = false;
         this.type = 'grenade'
         this.targetX = targetX
@@ -443,22 +443,19 @@ class grenade {
         this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX)
         this.dx = Math.cos(this.angle)
         this.dy = Math.sin(this.angle)
+        this.lifeTime = 0
         this.gUpdate = function() {
             this.x += this.dx * 5
+            this.fallSpeed += this.gravity
+            this.y += this.dy * 5 + this.fallSpeed
+            
             if (this.dx > 0) {this.dx -= 0.01}
             else if (this.dx < 0) {this.dx += 0.01}
-            //this.y += this.dy * 5
             
             if (this.grounded) {
-                this.fallSpeed = -this.fallSpeed;
+                this.fallSpeed = this.bounceStrength
                 this.bounceStrength /= 2
                 this.grounded = false;
-            }
-            
-            if (!this.grounded)
-            {   
-                this.fallSpeed += this.gravity
-                this.y += this.dy * 4 + this.fallSpeed
             }
             
             if (this.y + this.height > totH - 5) {
@@ -939,7 +936,9 @@ function levelLoop() {
         else if (bullet.type == 'grenade')
         {
             bullet.gUpdate()
-            console.log(' x: '+bullet.x+' y: '+bullet.y+' dx: '+bullet.dx+' dy: '+bullet.dy+' fallSpeed: '+bullet.fallSpeed+' grounded: '+bullet.grounded)
+            console.log('angle: '+bullet.angle+'dx: '+bullet.dx+' dy: '+bullet.dy+' fallSpeed: '+bullet.fallSpeed)
+            bullet.lifeTime += 0.02;
+            if (bullet.lifeTime > 3) {projectiles.splice(index,1)}
         }
     })
 
@@ -1225,7 +1224,7 @@ function pewPew() {
 
     //left button
     if (keys && (keys['a'] || keys['ArrowLeft'])) {
-        arrow.angle -= 3;
+        arrow.angle -= 5;
         ctx.fillStyle = 'crimson'; ctx.beginPath();
         ctx.moveTo(220,360); ctx.lineTo(255,330); 
         ctx.lineTo(265,330); ctx.lineTo(265,390);
@@ -1263,7 +1262,7 @@ function pewPew() {
     
     //top button
     if (keys && (keys['w'] || keys['ArrowUp'])) {
-        arrow.speed = 1;
+        arrow.speed = 2;
         arrow.dx = arrow.speed * Math.cos((arrow.angle - 90) * Math.PI / 180)
         arrow.dy = arrow.speed * Math.sin((arrow.angle - 90) * Math.PI / 180)
         arrowPArray.push({x:arrow.centerX,y:arrow.centerY,xSpeed:-arrow.dx + Math.random() - 1,ySpeed:-arrow.dy + Math.random() - 1,lifeTime:0,type:'particle'})
@@ -1271,8 +1270,16 @@ function pewPew() {
         ctx.moveTo(300,320); ctx.lineTo(270,335)
         ctx.lineTo(270,340); ctx.lineTo(330,340)
         ctx.lineTo(330,335); ctx.closePath(); ctx.fill()
+        justReleased = true
     }
-    else {
+    else {  
+        if (justReleased == true)
+        {
+            arrow.speed = 1;
+            arrow.dx = arrow.speed * Math.cos((arrow.angle - 90) * Math.PI / 180)
+            arrow.dy = arrow.speed * Math.sin((arrow.angle - 90) * Math.PI / 180)
+            justReleased = false
+        }
         ctx.fillStyle = 'maroon'; ctx.beginPath()
         ctx.moveTo(270,330); ctx.lineTo(270,340);
         ctx.lineTo(330,340); ctx.lineTo(330,330);
@@ -1285,7 +1292,7 @@ function pewPew() {
 
     //right button
     if (keys && (keys['d'] || keys['ArrowRight'])) {
-        arrow.angle += 3
+        arrow.angle += 5
         ctx.fillStyle = 'crimson'; ctx.beginPath()
         ctx.moveTo(380,360); ctx.lineTo(345,330)
         ctx.lineTo(335,330); ctx.lineTo(335,390);
@@ -1322,7 +1329,7 @@ function pewPew() {
     ctx.lineTo(arrow.backRightPoint.x,arrow.backRightPoint.y);
     ctx.closePath(); ctx.fill() // Draw the triangle
     ctx.restore(); // Restore the original state
-    //console.log('angle: '+arrow.angle+' dx: '+arrow.dx+' dy: '+arrow.dy)
+    console.log('speed: '+arrow.speed+' dx: '+arrow.dx+' dy: '+arrow.dy)
 
     //spawn asteroids
     if (spawnCool <= 0) {
@@ -1381,10 +1388,14 @@ function pewPew() {
         }
         ctx.closePath();
         ctx.fill();
-        
         ctx.restore();
+        
+        ctx.fillStyle = 'lightslategray'
+        ctx.textAlign = 'center'
+        ctx.fillText(last.hp,last.xPos,last.yPos+3)  
     });
 
+    ctx.textAlign = 'left'
 
     //asteroid wall collisions
     pewEnemies.forEach(roid => {
