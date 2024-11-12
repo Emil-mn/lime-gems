@@ -486,6 +486,68 @@ class grenade {
             return crash
         }
     }
+
+    floor(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mybottom = this.y + (this.height)
+        var mycenter = this.y + this.height/2
+        var otherleft = otherobj.x
+        var otherright = otherobj.x + otherobj.width
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var onFloor = false
+        if ((mybottom > othertop) && (mybottom < otherbottom) && (myright > otherleft) && (myleft < otherright)) {
+            onFloor = true
+        }
+        return onFloor
+    }
+    
+    floorBottom(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mytop = this.y
+        var mybottom = this.y + (this.height)
+        var otherleft = otherobj.x
+        var otherright = otherobj.x + otherobj.width
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var belowFloor = false
+        if ((mytop < otherbottom) && (mytop > othertop) && (myright > otherleft) && (myleft < otherright)) {
+            belowFloor = true
+        }
+        return belowFloor
+    }
+    
+    wallLeft(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mytop = this.y
+        var mybottom = this.y + (this.height)
+        var otherleft = otherobj.x
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var leftOfWall = false
+        if ((mybottom > othertop) && (mytop < otherbottom) && (myright > otherleft) && (myleft < otherleft)) {
+            leftOfWall = true
+        }
+        return leftOfWall
+    }
+        
+    wallRight(otherobj) {
+        var myleft = this.x
+        var myright = this.x + (this.width)
+        var mytop = this.y
+        var mybottom = this.y + (this.height)
+        var otherright = otherobj.x + otherobj.width
+        var othertop = otherobj.y
+        var otherbottom = otherobj.y + otherobj.height
+        var rightOfWall = false
+        if ((mybottom > othertop) && (mytop < otherbottom) && (myleft < otherright) && (myright > otherright)) {
+            rightOfWall = true
+        }
+        return rightOfWall
+    }    
 }
 
 class character {
@@ -857,6 +919,25 @@ function levelLoop() {
             player.y = floor.y + floor.height;
             player.fallSpeed = 0
         }
+        projectiles.forEach((bullet,index) => {
+            if (bullet.type == 'grenade') {
+                if (bullet.floor(floor)) {
+                    bullet.y = floor.y - bullet.height;
+                    //bullet.grounded = true;
+                    bullet.dy = -bullet.dy;
+                    console.log('bounce on floor')
+                }
+                if (bullet.floorBottom(floor)) {
+                    bullet.y = floor.y + floor.height;
+                    bullet.dy = 0
+                }
+            }
+            else {
+                if (bullet.crashWith(floor)) {
+                    projectiles.splice(index,1)
+                }
+            }
+        })
     })
 
     walls.forEach((wall,windex) => {
@@ -872,18 +953,47 @@ function levelLoop() {
             projectiles.forEach((bullet,bundex) => {
                 if (bullet.crashWith(wall))
                 {
-                    projectiles.splice(bundex,1)
-                    walls.splice(windex,1)
+                    if (bullet.type == 'grenade') {
+                        bullet.dx = -bullet.dx
+                    }   
+                    else if (bullet.type == 'enemi') {
+                        projectiles.splice(bundex,1)
+                    }
+                    else if (bullet.type == 'frend' || bullet.type == 'fragment') {
+                        walls.splice(windex,1)
+                        projectiles.splice(bundex,1)
+                    }
                 }
             })
         }
 
         else if (wall.type == 'gBreakable') {
             projectiles.forEach((bullet,bundex) => {
-                if (bullet.crashWith(wall) && bullet.type == 'grenade')
+                if (bullet.crashWith(wall))
                 {
-                    projectiles.splice(bundex,1)
-                    walls.splice(windex,1)
+                    if (bullet.type == 'grenade') {
+                        bullet.dx = -bullet.dx
+                    }
+                    else if (bullet.type == 'frend' || bullet.type == 'enemi') {
+                        projectiles.splice(bundex,1)
+                    }
+                    else if (bullet.type == 'fragment') {
+                        walls.splice(windex,1)
+                        projectiles.splice(bundex,1)
+                    }
+                }
+            })
+        }
+
+        else {
+            projectiles.forEach((bullet,bundex) => {
+                if (bullet.crashWith(wall)) {
+                    if (bullet.type == 'frend' || bullet.type == 'enemi' || bullet.type == 'fragment') {
+                        projectiles.splice(bundex,1)
+                    }
+                    else if (bullet.type == 'grenade') {
+                        bullet.dx = -bullet.dx
+                    }
                 }
             })
         }
@@ -938,7 +1048,12 @@ function levelLoop() {
             bullet.gUpdate()
             console.log('angle: '+bullet.angle+'dx: '+bullet.dx+' dy: '+bullet.dy+' fallSpeed: '+bullet.fallSpeed)
             bullet.lifeTime += 0.02;
-            if (bullet.lifeTime > 3) {projectiles.splice(index,1)}
+            if (bullet.lifeTime > 3) {
+                projectiles.splice(index,1)
+                for (var g = 0; g < 10; g++) {
+                    projectiles.push(new Projectile(2,2,'darkslategrey',bullet.x,bullet.y,bullet.x + Math.random() * (2 * 10) - 10,bullet.y + Math.random() * (2 * 10) - 10,'fragment'))
+                }
+            }
         }
     })
 
