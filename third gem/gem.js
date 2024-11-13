@@ -6,7 +6,7 @@ var musx, musy
 var clickX, clickY
 var ctx = can.getContext("2d")
 //states stuff
-var states = {stopped:0,menu:1,level:2,paused:3,brik:4,pew:5}
+var states = {stopped:0,menu:1,intro:2,level:3,paused:4,brik:5,pew:6}
 var gameState = states.stopped
 var prevState
 //weapon stuff
@@ -44,6 +44,9 @@ var keys
 const SPEED = 2
 var levelInterval
 var fireInterval
+var introTime = 0
+var messageThingY = 0
+var playerX = 125
 //sprites
 var player, pGun, arcadeTest, arcade2
 //brik-brek
@@ -173,7 +176,7 @@ function start() {
     }
     else
     {
-        if (gameState == states.level || gameState == states.brik || gameState == states.pew) 
+        if (gameState == states.level || gameState == states.brik || gameState == states.pew || gameState == states.intro)  
         {clearInterval(levelInterval)}
         
         document.getElementById('butt1').style.backgroundColor = 'red'
@@ -276,8 +279,9 @@ function pause() {
     if (gameState == states.level) {prevState = 1}
     else if (gameState == states.brik) {prevState = 2}
     else if (gameState == states.pew) {prevState = 3}
+    else if (gameState == states.intro) {prevState = 4}
 
-    if (gameState == states.level || gameState == states.brik || gameState == states.pew) {
+    if (gameState == states.level || gameState == states.brik || gameState == states.pew || gameState == states.intro) {
         console.log('paused'); gameState = states.paused; clearInterval(levelInterval)
         ctx.fillStyle = 'gray'; ctx.font = '45px consolas'; ctx.fillText('Paused',220,totH/2)
     }
@@ -290,7 +294,10 @@ function pause() {
             gameState = states.brik; levelInterval = setInterval(brikBrek,20)
         }
         else if (prevState == 3) {
-            gameState = states.brik; levelInterval = setInterval(pewPew,20)
+            gameState = states.pew; levelInterval = setInterval(pewPew,20)
+        }
+        else if (prevState == 4) {
+            gameState = states.intro; levelInterval = setInterval(introLoop,20)
         }
     }
 }
@@ -324,6 +331,9 @@ function checkButt(mButt){
         else if (buttClicked(400,130,100,50)){
             console.log('clicked test button'+dmgLvl+frtLvl+accLvl+crtLvl);
             if (dmgLvl < 5 && frtLvl < 5 && accLvl < 5 && crtLvl < 5) {dmgLvl++; frtLvl++; accLvl++; crtLvl++; loadMenu()}
+        }
+        else if (buttClicked(400,190,100,50)) { console.log('clicked intro button'); can.style.cursor = 'default';
+            gameState = states.intro; levelInterval = setInterval(introLoop,20)
         }
         
         else if (buttClicked(130,270,30,30)){
@@ -372,10 +382,11 @@ function checkButt(mButt){
 }
 
 function buttHoverCheck(){
-    if (gameState == states.menu){
+    if (gameState == states.menu) {
         if (buttHovered(400,250,100,50)){console.log('pointing at play button'); can.style.cursor = 'pointer'}
         else if (buttHovered(400,130,100,50)){console.log('pointing at test button'); can.style.cursor = 'pointer'}
-        
+        else if (buttHovered(400,190,100,50)) {console.log('pointing at intro button'); can.style.cursor = 'pointer'}
+
         else if (buttHovered(130,270,30,30)){
             console.log('pointing at dmg upgrade');
             if (points >= dmgPrice && dmgLvl < 5) {can.style.cursor = 'pointer'}
@@ -435,7 +446,7 @@ class grenade {
         this.centerY = this.y + this.height / 2
         this.gravity = 0.15
         this.fallSpeed = 0
-        this.bounceStrength = -2
+        this.bounceStrength = -4
         this.grounded = false;
         this.type = 'grenade'
         this.targetX = targetX
@@ -445,10 +456,11 @@ class grenade {
         this.dy = Math.sin(this.angle)
         this.lifeTime = 0
         this.gUpdate = function() {
-            this.x += this.dx * 5
-            this.fallSpeed += this.gravity
-            this.y += this.dy * 5 + this.fallSpeed
-            
+            if (!this.grounded) {
+                this.x += this.dx * 5
+                this.fallSpeed += this.gravity
+                this.y += this.dy * 5 + this.fallSpeed
+            }
             if (this.dx > 0) {this.dx -= 0.01}
             else if (this.dx < 0) {this.dx += 0.01}
             
@@ -517,37 +529,7 @@ class grenade {
             belowFloor = true
         }
         return belowFloor
-    }
-    
-    wallLeft(otherobj) {
-        var myleft = this.x
-        var myright = this.x + (this.width)
-        var mytop = this.y
-        var mybottom = this.y + (this.height)
-        var otherleft = otherobj.x
-        var othertop = otherobj.y
-        var otherbottom = otherobj.y + otherobj.height
-        var leftOfWall = false
-        if ((mybottom > othertop) && (mytop < otherbottom) && (myright > otherleft) && (myleft < otherleft)) {
-            leftOfWall = true
-        }
-        return leftOfWall
-    }
-        
-    wallRight(otherobj) {
-        var myleft = this.x
-        var myright = this.x + (this.width)
-        var mytop = this.y
-        var mybottom = this.y + (this.height)
-        var otherright = otherobj.x + otherobj.width
-        var othertop = otherobj.y
-        var otherbottom = otherobj.y + otherobj.height
-        var rightOfWall = false
-        if ((mybottom > othertop) && (mytop < otherbottom) && (myleft < otherright) && (myright > otherright)) {
-            rightOfWall = true
-        }
-        return rightOfWall
-    }    
+    } 
 }
 
 class character {
@@ -786,8 +768,8 @@ function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.f
     ctx.beginPath(); ctx.moveTo(115,147); ctx.lineTo(370,147); ctx.stroke();
     //right buttons
     ctx.strokeRect(385,235,100,50); ctx.font = '30px consolas'; ctx.fillText('play',400,265);
-    ctx.strokeRect(385,115,100,50); ctx.fillText('test',400,145)
-    ctx.strokeRect(385,175,100,50); ctx.fillText('test2',400,205);
+    ctx.strokeRect(385,115,100,50); ctx.fillText('test',400,147.5)
+    ctx.strokeRect(385,175,100,50); ctx.fillText('intro',393,207.5);
     //upgrade buttons 
     ctx.strokeRect(115,255,30,30); ctx.strokeRect(160,255,30,30); ctx.strokeRect(205,255,30,30);
     ctx.strokeRect(250,255,30,30); ctx.strokeRect(295,255,30,30); ctx.strokeRect(340,255,30,30);
@@ -832,6 +814,96 @@ function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.f
     ctx.fillText('gnd',342,273);
 }
 
+function introLoop() {
+    introTime += 0.02; console.log(Math.floor(introTime * 10)/10)
+    if (introTime < 27 || introTime > 30) {
+        ctx.clearRect(0,0,totW,totH); ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH)
+        //grass
+        ctx.beginPath(); ctx.lineWidth = 10; ctx.strokeStyle = 'green'; ctx.moveTo(0,totH); ctx.lineTo(totW,totH); ctx.stroke()
+        //sun
+        ctx.beginPath(); ctx.fillStyle = 'yellow'; ctx.arc(450,120,50,0,360); ctx.fill();
+    }
+    else if (introTime > 27) {ctx.fillStyle = 'white'; ctx.fillRect(0,0,totW,totH)}
+
+    if (introTime < 27) {
+        //house main and windows
+        ctx.beginPath(); ctx.fillStyle = 'maroon'; ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-55); ctx.lineTo(100,totH-80); ctx.lineTo(150,totH-55);
+        ctx.lineTo(150,totH-5); ctx.closePath(); ctx.fill(); ctx.fillStyle = 'cornflowerblue'; ctx.fillRect(60,totH-40,15,15); ctx.fillRect(125,totH-40,15,15);
+        //window frames
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.strokeRect(60,totH-40,15,15); ctx.strokeRect(125,totH-40,15,15);
+        //outline
+        ctx.beginPath(); ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-55); ctx.lineTo(100,totH-80); ctx.lineTo(150,totH-55); ctx.lineTo(150,totH-5);
+        //window detail 1
+        ctx.moveTo(67.5,totH-40); ctx.lineTo(67.5,totH-25); ctx.moveTo(60,totH-32.5); ctx.lineTo(75,totH-32.5);
+        //window detail 2
+        ctx.moveTo(132.5,totH-40); ctx.lineTo(132.5,totH-25); ctx.moveTo(125,totH-32.5); ctx.lineTo(140,totH-32.5); ctx.stroke();
+        //door with window
+        ctx.fillStyle = 'white'; ctx.fillRect(92.5,totH-35,15,30); ctx.fillStyle = 'cornflowerblue'; ctx.fillRect(95,totH-32.5,10,10);
+        //door window detail
+        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(100,totH-32.5); ctx.lineTo(100,totH-22.5); ctx.moveTo(95,totH-27.5); ctx.lineTo(105,totH-27.5); ctx.stroke();
+        //door handle
+        ctx.beginPath(); ctx.fillStyle = 'gray'; ctx.arc(96,totH-18,1.5,0,360); ctx.fill();
+        //smoky roof thing
+        ctx.beginPath(); ctx.moveTo(120,totH-70); ctx.lineTo(130,totH-70); ctx.lineTo(130,totH-65.5); ctx.closePath(); ctx.fill(); ctx.fillRect(120,totH-95,10,25);
+    }
+    else if (introTime > 30) {
+        ctx.beginPath(); ctx.fillStyle = 'black'; ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-35); ctx.lineTo(65,totH-20); 
+        ctx.lineTo(80,totH-42); ctx.lineTo(90,totH-30); ctx.lineTo(105,totH-20); ctx.lineTo(130,totH-50); ctx.lineTo(145,totH-25); 
+        ctx.lineTo(150,totH-30); ctx.lineTo(150,totH-5); ctx.closePath(); ctx.fill();
+    }
+
+    ctx.font = '15px consolas'
+
+    if (introTime > 2 && introTime < 5) {
+        ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(135-20,255); ctx.lineTo(115-20,285); ctx.lineTo(125-20,245); ctx.closePath(); ctx.fill(); 
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(110-20,200,110+295,60); ctx.strokeRect(110-20,200,110+295,60);
+        
+        ctx.fillStyle = 'darkslategray'; ctx.fillText('Aah, finally my first vacation in three years...',115-20,215)
+    }
+    else if (introTime > 6 && introTime < 7) {
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(122.5,messageThingY,5,12); messageThingY += 6
+    }
+    else if (introTime > 8 && introTime < 9) {
+        ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(135-20,255); ctx.lineTo(115-20,285); ctx.lineTo(125-20,245); ctx.closePath(); ctx.fill(); 
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(110-20,200,110+25,60); ctx.strokeRect(110-20,200,110+25,60);
+        
+        ctx.fillStyle = 'darkslategray'; ctx.fillText('A new mission!?',115-20,215)
+    }
+    else if (introTime > 10 && introTime < 22) {
+        ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(135+20,255); ctx.lineTo(115+20,285); ctx.lineTo(125+20,245); ctx.closePath(); ctx.fill(); 
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(110+20,200,110,60); ctx.strokeRect(110+20,200,110,60);
+        
+        ctx.fillStyle = 'darkslategray'; 
+        if (introTime < 13) {ctx.fillText('Agent x, sorry to interrupt your vacation, but we have received some disturbing intel.',115+20,215)}
+        else if (introTime < 16) {ctx.fillText('It seems the evil Doctor Y has yet another plan for world domination; the Z device.',115+20,215)}
+        else if (introTime < 19) {ctx.fillText('Your mission, which you can\'t choose to not accept, will be to infiltrate Doctor Y\'s secret underground lair, identify the Z device, and make sure it\'s never activated.',115+20,215)}
+        else if (introTime < 22) {ctx.fillText('Good luck, the fate of the world is in your hands. this message will self-destruct in five seconds.',115+20,215)}
+    }
+    else if (introTime > 22 && introTime < 23) {
+        ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(135-20,255); ctx.lineTo(115-20,285); ctx.lineTo(125-20,245); ctx.closePath(); ctx.fill(); 
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(110-20,200,110,60); ctx.strokeRect(110-20,200,110,60);
+        
+        ctx.fillStyle = 'darkslategray'; ctx.fillText('Oh no!',115-20,215)
+    }
+    else if ((introTime > 23 && introTime < 27)||(introTime > 30)) {
+        ctx.fillStyle = 'gray'; ctx.fillRect(playerX,totH-30,10,25); 
+        if (introTime < 27) {playerX += 2;}
+        
+    }
+    if (introTime > 30 && introTime < 35) {
+        ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(195+300,255); ctx.lineTo(215+300,285); ctx.lineTo(205+300,245); ctx.closePath(); ctx.fill(); 
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(110+300,200,110,60); ctx.strokeRect(110+300,200,110,60);
+        
+        ctx.fillStyle = 'darkslategray'; 
+        if (introTime < 32) {ctx.fillText('My house!',115+300,215)}
+        else if (introTime < 35) {ctx.fillText('Oh well, i have a mission to complete. Let\'s go!',115+300,215)}
+    }
+}
 
 
 function levelLoop() {
@@ -923,7 +995,7 @@ function levelLoop() {
             if (bullet.type == 'grenade') {
                 if (bullet.floor(floor)) {
                     bullet.y = floor.y - bullet.height;
-                    //bullet.grounded = true;
+                    bullet.grounded = true;
                     bullet.dy = -bullet.dy;
                     console.log('bounce on floor')
                 }
