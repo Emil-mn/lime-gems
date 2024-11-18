@@ -48,6 +48,8 @@ var fireInterval
 var introTime = 0
 var messageThingY = 0
 var playerX = 125
+var playerY = totH-30
+var hueyX, hueyY, hueyAngle = -10
 var hueyArray = [
     370,250,370,240,360,220,345,220,340,205,295,205,290,220,195,220,180,190,
     170,190,180,220,180,230,270,250,280,260,370,260,290,260,290,270,280,270,370,270,375,
@@ -830,14 +832,67 @@ function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.f
 
 function introLoop() {
     introTime += 0.02; console.log(Math.floor(introTime * 10)/10)
-    if (introTime < 28 || introTime > 31) {
+    if (introTime < 28 || (introTime > 31 && introTime < 47)) {
         ctx.clearRect(0,0,totW,totH); ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH)
         //grass
         ctx.beginPath(); ctx.lineWidth = 10; ctx.strokeStyle = 'green'; ctx.moveTo(0,totH); ctx.lineTo(totW,totH); ctx.stroke()
         //sun
         ctx.beginPath(); ctx.fillStyle = 'yellow'; ctx.arc(450,120,50,0,360); ctx.fill();
     }
-    else if (introTime > 28) {ctx.fillStyle = 'white'; ctx.fillRect(0,0,totW,totH)}
+    else if (introTime > 28 && introTime < 31) {ctx.fillStyle = 'white'; ctx.fillRect(0,0,totW,totH)}
+    else if (introTime > 47 && introTime < 50) {ctx.fillStyle = 'black'; ctx.fillRect(0,0,totW,totH)}
+    else if (introTime > 50) {
+        ctx.clearRect(0,0,totW,totH); ctx.fillStyle = 'rgb(40,40,40)'; ctx.fillRect(0,0,totW,totH)
+        //nightgrass
+        ctx.beginPath(); ctx.lineWidth = 10; ctx.strokeStyle = 'darkgreen'; ctx.moveTo(0,totH); ctx.lineTo(totW,totH); ctx.stroke();
+        //moon
+        ctx.beginPath(); ctx.fillStyle = 'khaki'; ctx.arc(450,120,39,0,360); ctx.fill();
+        
+        ctx.beginPath(); ctx.fillStyle = 'rgb(42,42,42)'; ctx.arc(450,120,40,-90 * Math.PI / 180,90 * Math.PI / 180, true); 
+        ctx.ellipse(450,120,20,40,0,-90 * Math.PI / 180,90 * Math.PI / 180); ctx.fill();
+        
+        //lair
+        ctx.beginPath(); ctx.fillStyle = 'rgb(66,66,66)'; ctx.moveTo(525,totH-5); ctx.lineTo(525,totH-60);
+        ctx.lineTo(435,totH-150); ctx.lineTo(350,totH-150); ctx.lineTo(350,totH-5); ctx.closePath(); ctx.fill();
+        
+        var IT = introTime
+
+        if (IT < 51 || (IT > 54.5 && IT < 55) || (IT > 55.5 && IT < 56) || (IT > 56.5 && IT < 57) || (IT > 57.5 && IT < 61.5) || (IT > 65 && IT < 65.5)) 
+        {ctx.fillStyle = 'maroon'} 
+        else {ctx.fillStyle = 'red'}
+        ctx.fillText('Doctor Y\'s',355,totH-125); 
+        
+        if (IT < 51.5 || (IT > 54.5 && IT < 55) || (IT > 55.5 && IT < 56) || (IT > 56.5 && IT < 57) || (IT > 58 && IT < 62) || (IT > 65 && IT < 65.5)) 
+        {ctx.fillStyle = 'maroon'} 
+        else {ctx.fillStyle = 'red'}
+        ctx.fillText('secret',355,totH-107);
+        
+        if (IT < 52 || (IT > 54.5 && IT < 55) || (IT > 55.5 && IT < 56) || (IT > 56.5 && IT < 57) || (IT > 58.5 && IT < 62.5) || (IT > 65 && IT < 65.5)) 
+        {ctx.fillStyle = 'maroon'} 
+        else {ctx.fillStyle = 'red'}
+        ctx.fillText('underground',355,totH-89);
+        
+        if (IT < 52.5 || (IT > 54.5 && IT < 55) || (IT > 55.5 && IT < 56) || (IT > 56.5 && IT < 57) || (IT > 59 && IT < 63) || (IT > 65 && IT < 65.5)) 
+        {ctx.fillStyle = 'maroon'}
+        else {ctx.fillStyle = 'red'}
+        ctx.fillText('lair',355,totH-71); 
+
+        if (IT < 53 || (IT > 54.5 && IT < 55) || (IT > 55.5 && IT < 56) || (IT > 56.5 && IT < 57) || (IT > 59.5 && IT < 63.5) || (IT > 65 && IT < 65.5)) 
+        {ctx.fillStyle = 'maroon'} 
+        else {ctx.fillStyle = 'red'}
+        ctx.fillText('Home of the Z device',355,totH-53);
+        
+        if (IT < 53.5 || (IT > 54.5 && IT < 55) || (IT > 55.5 && IT < 56) || (IT > 56.5 && IT < 57) || (IT > 60 && IT < 64) || (IT > 65 && IT < 65.5)) 
+        {ctx.fillStyle = 'maroon'} 
+        else {ctx.fillStyle = 'red'}
+        ctx.fillText('Visitors welcome!',355,totH-35);
+
+        if (IT < 54 || (IT > 54.5 && IT < 55) || (IT > 55.5 && IT < 56) || (IT > 56.5 && IT < 57) || (IT > 60.5 && IT < 64.5) || (IT > 65 && IT < 65.5)) 
+        {ctx.fillStyle = 'maroon'} 
+        else {ctx.fillStyle = 'red'}
+        ctx.fillText('except you, Agent X',355,totH-17);
+    }
+
 
     if (introTime < 28) {
         //house main and windows
@@ -860,7 +915,7 @@ function introLoop() {
         //smoky roof thing
         ctx.beginPath(); ctx.moveTo(120,totH-70); ctx.lineTo(130,totH-70); ctx.lineTo(130,totH-65.5); ctx.closePath(); ctx.fill(); ctx.fillRect(120,totH-95,10,25);
     }
-    else if (introTime > 31) {
+    else if (introTime > 31 && introTime < 47) {
         ctx.beginPath(); ctx.fillStyle = 'black'; ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-35); ctx.lineTo(65,totH-20); 
         ctx.lineTo(80,totH-42); ctx.lineTo(90,totH-30); ctx.lineTo(105,totH-20); ctx.lineTo(130,totH-50); ctx.lineTo(145,totH-25); 
         ctx.lineTo(150,totH-30); ctx.lineTo(150,totH-5); ctx.closePath(); ctx.fill();
@@ -916,10 +971,9 @@ function introLoop() {
         
         ctx.fillStyle = 'darkslategray'; ctx.fillText('Oh no!',115-20,215)
     }
-    else if ((introTime > 24 && introTime < 28)||(introTime > 31)) {
-        ctx.fillStyle = 'gray'; ctx.fillRect(playerX,totH-30,10,25); 
+    else if ((introTime > 24 && introTime < 28)||(introTime > 31 && introTime < 47)) {
+        ctx.fillStyle = 'gray'; ctx.fillRect(playerX,playerY,10,25); 
         if (introTime < 28) {playerX += 2;}
-        
     }
     if (introTime > 31 && introTime < 36) {
         ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
@@ -933,7 +987,12 @@ function introLoop() {
             ctx.fillText('Let\'s go!',115+90,233)
         }
     }
-    else if (introTime > 38) {
+    else if ((introTime > 38 && introTime < 47) || (introTime > 50 && introTime < 66)) {
+        ctx.save(); 
+        ctx.translate(hueyArray[52], hueyArray[53]); 
+        ctx.rotate(hueyAngle * Math.PI / 180); 
+        ctx.translate(-hueyArray[52], -hueyArray[53]); 
+        
         //main body
         ctx.beginPath(); ctx.lineWidth = 2; ctx.fillStyle = 'gray'; 
         ctx.arc(hueyArray[0],hueyArray[1],10,-90 * Math.PI / 180,90 * Math.PI / 180); 
@@ -973,7 +1032,8 @@ function introLoop() {
         ctx.beginPath(); ctx.arc(hueyArray[76],hueyArray[77],10,0,90 * Math.PI / 180);
         ctx.lineTo(hueyArray[78],hueyArray[79]); ctx.closePath(); ctx.fill();
         //opening
-        ctx.fillStyle = 'skyblue'; ctx.fillRect(hueyArray[80],hueyArray[81],55,30);
+        if (introTime > 50) {ctx.fillStyle = 'rgb(40,40,40)'} else {ctx.fillStyle = 'skyblue'} 
+        ctx.fillRect(hueyArray[80],hueyArray[81],55,30);
         //benches
         ctx.beginPath(); ctx.strokeStyle = 'gray'; 
         ctx.moveTo(hueyArray[82],hueyArray[83]); ctx.lineTo(hueyArray[84],hueyArray[85]); 
@@ -981,20 +1041,71 @@ function introLoop() {
         ctx.moveTo(hueyArray[90],hueyArray[91]); ctx.lineTo(hueyArray[92],hueyArray[93]); 
         ctx.moveTo(hueyArray[94],hueyArray[95]); ctx.lineTo(hueyArray[96],hueyArray[97]);
         ctx.stroke()
-        if (introTime < 43) {
-            console.log(hueyArray)
+        
+        ctx.restore(); 
+
+        if (introTime < 46 || introTime > 50) {
+            console.log(hueyX+' : '+hueyY+' : '+hueyAngle)
+            
+            if (introTime < 40) {hueyX = 2; hueyY = 0.5}
+            else if (introTime < 43) {hueyX = 1.5; hueyY = 0.6}
+            else if (introTime < 44) {hueyX = 0.75; hueyY = 0.75}
+            else if (introTime < 46) {hueyX = 0; hueyY = 0.8}
+            
+            if (introTime > 50 && introTime < 51) {hueyX = 0.8; hueyY = 0.5}
+            else if (introTime > 51 && introTime < 52) {hueyX = 0.5; hueyY = 0.75}
+            else if (introTime > 52 && introTime < 54) {hueyX = 0.25; hueyY = 1}
+            else if (introTime > 54 && introTime < 56) {hueyX = 0; hueyY = 0.75}
+            else if (introTime > 56 && introTime < 58) {hueyX = 0; hueyY = 0}
+            
+            if (introTime > 58 && introTime < 59) {hueyY = -0.5}
+            else if (introTime > 59 && introTime < 60) {hueyY = -1}
+            else if (introTime > 60 && introTime < 61) {hueyX = 0.5}
+            else if (introTime > 61 && introTime < 62) {hueyX = 1}
+            else if (introTime > 62) {hueyX = 1.75}
+            
+
+            if (introTime > 39 && introTime < 40) {hueyAngle -= 0.25}
+            else if (introTime > 43 && introTime < 44) {hueyAngle += 0.45}
+            else if (introTime > 59 && introTime < 61) {hueyAngle += 0.25}
+            
             for (i = 0; i < hueyArray.length; i++) {
                 //x movement
-                if (i % 2 == 0) {hueyArray[i] += 2;}
+                if (i % 2 == 0) {hueyArray[i] += hueyX;}
                 //y movement
-                else {hueyArray[i] += 1;}
+                else {hueyArray[i] += hueyY;}
             }
         }
     }
-    //else if (introTime > 40) { 
-        //clearInterval(levelInterval); introTime = 0; messageThingY = 0; playerX = 125; 
-        //console.log('intro finished'); loadMenu()
-    //}
+
+    if (introTime > 50) {
+        ctx.fillStyle = 'gray'; ctx.fillRect(playerX,playerY,10,25); 
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(playerX+5,playerY+7,12,5)
+        if (introTime > 50 && introTime < 51) {playerX += 0.8; playerY += 0.5}
+        else if (introTime > 51 && introTime < 52) {playerX += 0.5; playerY += 0.75}
+        else if (introTime > 52 && introTime < 54) {playerX += 0.25; playerY += 1}
+        else if (introTime > 54 && introTime < 56) {playerY += 0.75}
+        else if (introTime > 56 && introTime < 57) {playerY += 0}
+        
+        if (introTime > 57) {playerY = totH-30}
+
+        if (introTime > 63) {playerX += 0.75}
+    }
+
+    if (introTime > 48 && introTime < 48.1) {
+        playerX = 125; playerY = 90;
+        for (i = 0; i < hueyArray.length; i++) {
+            //x movement
+            if (i % 2 == 0) {hueyArray[i] -= 50;}
+            //y movement
+            else {hueyArray[i] -= 50;}
+        }
+    }
+     
+    if (introTime > 66) { 
+        clearInterval(levelInterval); introTime = 0; messageThingY = 0; playerX = 125; playerY = totH-30;
+        console.log('intro finished'); ctx.fillStyle = 'black'; ctx.fillRect(0,0,totW,totH); setTimeout(loadMenu,2000)
+    }
 }
 
 
