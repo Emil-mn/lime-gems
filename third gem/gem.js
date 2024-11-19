@@ -13,18 +13,18 @@ var prevState
 var dmgLvl = 0,frtLvl = 0
 var accLvl = 0,crtLvl = 0
 var hltLvl = 0,gndLvl = 0
-var dmgPrice = 10
-var frtPrice = 10
-var accPrice = 10
-var crtPrice = 10
-var hltPrice = 10
-var gndPrice = 10
-var dmg = [1,2,4,6,8,10]
-var frt = [950,800,650,500,350,200]
-var acc = [6,5,4,3,2,1]
-var crt = [5,10,15,20,25,30]
-var hlt = [50,75,100,125,150,200]
-var gnd = [1,2,3,4,5,6]
+var dmgPrice = [10,15,26,48,64,'Max']
+var frtPrice = [10,15,26,48,64,'Max']
+var accPrice = [10,15,26,48,64,'Max']
+var crtPrice = [10,15,26,48,64,'Max']
+var hltPrice = [10,15,26,48,64,'Max']
+var gndPrice = [10,15,26,48,64,'Max']
+var dmg = [1,2,4,6,8,10,'Max']
+var frt = [950,800,650,500,350,200,'Max']
+var acc = [6,5,4,3,2,1,'Max']
+var crt = [5,10,15,20,25,30,'Max']
+var hlt = [50,75,100,125,150,200,'Max']
+var gnd = [1,2,3,4,5,6,'Max']
 //array stuff
 var enemies = []
 var projectiles = []
@@ -32,7 +32,7 @@ var pickups = []
 var floors = []
 var walls = []
 //char stat stuff
-var points = 99
+var points = 999
 var health
 var armor
 var grenades = 9
@@ -44,6 +44,7 @@ var keys
 const SPEED = 2
 var levelInterval
 var fireInterval
+var showingInfo = false
 //intro stuff
 var introTime = 0
 var messageThingY = 0
@@ -51,11 +52,11 @@ var playerX = 125
 var playerY = totH-30
 var hueyX, hueyY, hueyAngle = -10
 var hueyArray = [
-    370,250,370,240,360,220,345,220,340,205,295,205,290,220,195,220,180,190,
-    170,190,180,220,180,230,270,250,280,260,370,260,290,260,290,270,280,270,370,270,375,
-    265,360,260,360,270,310,205,310,200,325,200,325,205,317.5,205,317.5,190,200,190,435,
-    190,185,225,165,225,205,225,185,225,370,240,355,240,355,220,360,220,370,250,370,250,
-    290,225,290,245,300,245,297,245,297,255,345,245,335,245,338,245,338,255
+    370,250,370,240,360,220,345,220,340,205,295,205,290,220,195,220,180,190,170,190,180,
+    220,180,230,270,250,280,260,370,260,290,260,290,270,280,270,370,270,375,265,360,260,
+    360,270,310,205,310,200,325,200,325,205,317.5,205,317.5,190,200,190,435,190,185,225,
+    165,225,205,225,185,225,370,240,355,240,355,220,360,220,370,250,370,250,290,225,290,
+    245,300,245,297,245,297,255,345,245,335,245,338,245,338,255
 ]
 for (i = 0; i < hueyArray.length; i++) {
     //x movement
@@ -345,8 +346,9 @@ function checkButt(mButt){
             levelInterval = setInterval(levelLoop,20); 
         }
         else if (buttClicked(400,130,100,50)){
-            console.log('clicked test button'+dmgLvl+frtLvl+accLvl+crtLvl);
-            if (dmgLvl < 5 && frtLvl < 5 && accLvl < 5 && crtLvl < 5) {dmgLvl++; frtLvl++; accLvl++; crtLvl++; loadMenu()}
+            console.log('clicked info button');
+            if (!showingInfo) {showingInfo = true} 
+            else if (showingInfo) {showingInfo = false} loadMenu()
         }
         else if (buttClicked(400,190,100,50)) { console.log('clicked intro button'); can.style.cursor = 'default';
             gameState = states.intro; levelInterval = setInterval(introLoop,20)
@@ -354,40 +356,40 @@ function checkButt(mButt){
         
         else if (buttClicked(130,270,30,30)){
             console.log('clicked dmg upgrade');
-            if (points >= dmgPrice && dmgLvl < 5) {dmgLvl++; points -= dmgPrice; dmgPrice *= 2; loadMenu()}
-            else {console.log('not allowed, price is: '+dmgPrice+' and level is: '+dmgLvl)}
+            if (points >= dmgPrice[dmgLvl] && dmgLvl < 5) {points -= dmgPrice[dmgLvl]; dmgLvl++; loadMenu()}
+            else {console.log('not allowed, price is: '+dmgPrice[dmgLvl]+' and level is: '+dmgLvl)}
         }        
         else if (buttClicked(175,270,30,30)){
             console.log('clicked frt upgrade');
-            if (points >= frtPrice && frtLvl < 5) {frtLvl++; points -= frtPrice; frtPrice *= 2; loadMenu()}
-            else {console.log('not allowed, price is: '+frtPrice+' and level is: '+frtLvl)}
+            if (points >= frtPrice[frtLvl] && frtLvl < 5) {points -= frtPrice[frtLvl]; frtLvl++;  loadMenu()}
+            else {console.log('not allowed, price is: '+frtPrice[frtLvl]+' and level is: '+frtLvl)}
         }
         else if (buttClicked(220,270,30,30)){
             console.log('clicked acc upgrade');
-            if (points >= accPrice && accLvl < 5) {accLvl++; points -= accPrice; accPrice *= 2; loadMenu()}
-            else {console.log('not allowed, price is: '+accPrice+' and level is: '+accLvl)}
+            if (points >= accPrice[accLvl] && accLvl < 5) {points -= accPrice[accLvl]; accLvl++;  loadMenu()}
+            else {console.log('not allowed, price is: '+accPrice[accLvl]+' and level is: '+accLvl)}
         }
         else if (buttClicked(265,270,30,30)){
             console.log('clicked crt upgrade');
-            if (points >= crtPrice && crtLvl < 5) {crtLvl++; points -= crtPrice; crtPrice *= 2; loadMenu()}
-            else {console.log('not allowed, price is: '+crtPrice+' and level is: '+crtLvl)}
+            if (points >= crtPrice[crtLvl] && crtLvl < 5) {points -= crtPrice[crtLvl]; crtLvl++; loadMenu()}
+            else {console.log('not allowed, price is: '+crtPrice[crtLvl]+' and level is: '+crtLvl)}
         }
         else if (buttClicked(310,270,30,30)){
             console.log('clicked hlt upgrade');
-            if (points >= hltPrice && hltLvl < 5) {hltLvl++; maxHealth = hlt[hltLvl]; points -= hltPrice; hltPrice *= 2; loadMenu()}
-            else {console.log('not allowed, price is: '+hltPrice+' and level is: '+hltLvl)}
+            if (points >= hltPrice[hltLvl] && hltLvl < 5) {maxHealth = hlt[hltLvl]; points -= hltPrice[hltLvl]; hltLvl++; loadMenu()}
+            else {console.log('not allowed, price is: '+hltPrice[hltLvl]+' and level is: '+hltLvl)}
         }
         else if (buttClicked(355,270,30,30)){
             console.log('clicked gnd upgrade');
-            if (points >= gndPrice && gndLvl < 5) {gndLvl++; points -= gndPrice; gndPrice *= 2; loadMenu()}
-            else {console.log('not allowed, price is: '+gndPrice+' and level is: '+gndLvl)}
+            if (points >= gndPrice[gndLvl] && gndLvl < 5) {points -= gndPrice[gndLvl]; gndLvl++; loadMenu()}
+            else {console.log('not allowed, price is: '+gndPrice[gndLvl]+' and level is: '+gndLvl)}
         }
     }
     if (gameState == states.level){
         if (mButt == 0) {
             fireInterval = setInterval(() => {
             projectiles.push(new Projectile(3,3,'gold',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
-            //projectiles.push(new Projectile(3,3,'red',player.x + 50, player.y + 12, player.x,player.y+12,'enemi'))
+            projectiles.push(new Projectile(3,3,'red',player.x + 50, player.y + 12, player.x,player.y+12,'enemi'))
             }, frt[frtLvl])
         }
         if (mButt == 2 && grenadeCool == true && grenades > 0) {
@@ -400,37 +402,37 @@ function checkButt(mButt){
 function buttHoverCheck(){
     if (gameState == states.menu) {
         if (buttHovered(400,250,100,50)){console.log('pointing at play button'); can.style.cursor = 'pointer'}
-        else if (buttHovered(400,130,100,50)){console.log('pointing at test button'); can.style.cursor = 'pointer'}
+        else if (buttHovered(400,130,100,50)){console.log('pointing at info button'); can.style.cursor = 'pointer'}
         else if (buttHovered(400,190,100,50)) {console.log('pointing at intro button'); can.style.cursor = 'pointer'}
 
         else if (buttHovered(130,270,30,30)){
             console.log('pointing at dmg upgrade');
-            if (points >= dmgPrice && dmgLvl < 5) {can.style.cursor = 'pointer'}
+            if (points >= dmgPrice[dmgLvl] && dmgLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }        
         else if (buttHovered(175,270,30,30)){
             console.log('pointing at frt upgrade');
-            if (points >= frtPrice && frtLvl < 5) {can.style.cursor = 'pointer'}
+            if (points >= frtPrice[frtLvl] && frtLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
         else if (buttHovered(220,270,30,30)){
             console.log('pointing at acc upgrade');
-            if (points >= accPrice && accLvl < 5) {can.style.cursor = 'pointer'}
+            if (points >= accPrice[accLvl] && accLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
         else if (buttHovered(265,270,30,30)){
             console.log('pointing at crt upgrade');
-            if (points >= crtPrice && crtLvl < 5) {can.style.cursor = 'pointer'}
+            if (points >= crtPrice[crtLvl] && crtLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
         else if (buttHovered(310,270,30,30)){
             console.log('pointing at hlt upgrade');
-            if (points >= hltPrice && hltLvl < 5) {can.style.cursor = 'pointer'}
+            if (points >= hltPrice[hltLvl] && hltLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
         else if (buttHovered(355,270,30,30)){
             console.log('pointing at gnd upgrade');
-            if (points >= gndPrice && gndLvl < 5) {can.style.cursor = 'pointer'}
+            if (points >= gndPrice[gndLvl] && gndLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
         else {can.style.cursor = 'default'}
@@ -780,12 +782,12 @@ function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.f
     ctx.fillRect(totW/2-200,totH/2-100,400,200); console.log('game loaded'); 
     gameState = states.menu; ctx.strokeStyle = 'black'; ctx.lineWidth = 1;
     ctx.fillStyle = 'black'; ctx.font = '40px consolas'; ctx.fillText('Menu',115,140,100);
-    ctx.font = '20px consolas'; ctx.fillText('points: '+points,230,140)
+    ctx.font = '20px consolas'; ctx.fillText('Points: '+points,230,140)
     ctx.beginPath(); ctx.moveTo(115,147); ctx.lineTo(370,147); ctx.stroke();
     //right buttons
-    ctx.strokeRect(385,235,100,50); ctx.font = '30px consolas'; ctx.fillText('play',400,265);
-    ctx.strokeRect(385,115,100,50); ctx.fillText('test',400,147.5)
-    ctx.strokeRect(385,175,100,50); ctx.fillText('intro',393,207.5);
+    ctx.strokeRect(385,235,100,50); ctx.font = '30px consolas'; ctx.fillText('Play',400,267.5);
+    ctx.strokeRect(385,115,100,50); ctx.fillText('Info',400,147.5)
+    ctx.strokeRect(385,175,100,50); ctx.fillText('Intro',393,207.5);
     //upgrade buttons 
     ctx.strokeRect(115,255,30,30); ctx.strokeRect(160,255,30,30); ctx.strokeRect(205,255,30,30);
     ctx.strokeRect(250,255,30,30); ctx.strokeRect(295,255,30,30); ctx.strokeRect(340,255,30,30);
@@ -828,6 +830,20 @@ function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.f
     ctx.font = '15px consolas'; ctx.fillText('dmg',117,273); ctx.fillText('frt',162,273);
     ctx.fillText('acc',207,273); ctx.fillText('crt',252,273); ctx.fillText('hlt',297,273);
     ctx.fillText('gnd',342,273);
+
+    if (showingInfo == true) {
+        ctx.fillStyle = 'blue'; ctx.fillRect(totW/2 - 200,315,400,60);
+        //damage
+        ctx.fillStyle = 'black'; ctx.fillText('damage ',totW/2-195,330);
+        ctx.fillText(dmg[dmgLvl]+' => '+dmg[dmgLvl+1],totW/2-195,345);
+        ctx.fillText('price: '+dmgPrice[dmgLvl],totW/2-195,360);
+        //firerate
+        ctx.fillText('firerate',195,330); 
+        ctx.fillText(frt[frtLvl]+' => '+frt[frtLvl+1],195,345);
+        ctx.fillText('price: '+frtPrice[frtLvl],195,360);
+        //accuracy
+        ctx.fillText('accuracy',250,330);
+    }
 }
 
 function introLoop() {
@@ -1103,7 +1119,11 @@ function introLoop() {
     }
      
     if (introTime > 66) { 
-        clearInterval(levelInterval); introTime = 0; messageThingY = 0; playerX = 125; playerY = totH-30;
+        clearInterval(levelInterval); introTime = 0; messageThingY = 0; playerX = 125; playerY = totH-30; hueyAngle = -10;
+        hueyArray = [-30,100,-30,90,-40,70,-55,70,-60,55,-105,55,-110,70,-205,70,-220,40,-230,40,-220,70,-220,80,
+            -130,100,-120,110,-30,110,-110,110,-110,120,-120,120,-30,120,-25,115,-40,110,-40,120,-90,55,-90,50,-75,
+            50,-75,55,-82.5,55,-82.5,40,-200,40,35,40,-215,75,-235,75,-195,75,-215,75,-30,90,-45,90,-45,70,-40,70,-30,
+            100,-30,100,-110,75,-110,95,-100,95,-103,95,-103,105,-55,95,-65,95,-62,95,-62,105];
         console.log('intro finished'); ctx.fillStyle = 'black'; ctx.fillRect(0,0,totW,totH); setTimeout(loadMenu,2000)
     }
 }
