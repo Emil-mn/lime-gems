@@ -780,18 +780,21 @@ class Projectile {
 
 function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'blue'; 
     ctx.fillRect(totW/2-200,totH/2-100,400,200); console.log('game loaded'); 
-    gameState = states.menu; ctx.strokeStyle = 'black'; ctx.lineWidth = 1;
+    gameState = states.menu; ctx.strokeStyle = 'black'; ctx.lineWidth = 2;
     ctx.fillStyle = 'black'; ctx.font = '40px consolas'; ctx.fillText('Menu',115,140,100);
     ctx.font = '20px consolas'; ctx.fillText('Points: '+points,230,140)
     ctx.beginPath(); ctx.moveTo(115,147); ctx.lineTo(370,147); ctx.stroke();
     //right buttons
+    ctx.lineWidth = 3;
     ctx.strokeRect(385,235,100,50); ctx.font = '30px consolas'; ctx.fillText('Play',400,267.5);
     ctx.strokeRect(385,115,100,50); ctx.fillText('Info',400,147.5)
     ctx.strokeRect(385,175,100,50); ctx.fillText('Intro',393,207.5);
     //upgrade buttons 
+    ctx.lineWidth = 2;
     ctx.strokeRect(115,255,30,30); ctx.strokeRect(160,255,30,30); ctx.strokeRect(205,255,30,30);
     ctx.strokeRect(250,255,30,30); ctx.strokeRect(295,255,30,30); ctx.strokeRect(340,255,30,30);
     //upgrade indicators 1
+    ctx.lineWidth = 1;
     if (dmgLvl >= 1) {ctx.fillRect(115,235,30,15)} ctx.strokeRect(115,235,30,15)
     if (frtLvl >= 1) {ctx.fillRect(160,235,30,15)} ctx.strokeRect(160,235,30,15)
     if (accLvl >= 1) {ctx.fillRect(205,235,30,15)} ctx.strokeRect(205,235,30,15)
@@ -833,16 +836,32 @@ function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.f
 
     if (showingInfo == true) {
         ctx.fillStyle = 'blue'; ctx.fillRect(totW/2 - 200,315,400,60);
+        ctx.beginPath(); ctx.fillStyle = 'black';
         //damage
-        ctx.fillStyle = 'black'; ctx.fillText('damage ',totW/2-195,330);
-        ctx.fillText(dmg[dmgLvl]+' => '+dmg[dmgLvl+1],totW/2-195,345);
-        ctx.fillText('price: '+dmgPrice[dmgLvl],totW/2-195,360);
+        ctx.fillText('damage ',totW/2-195,330);
+        ctx.fillText(dmg[dmgLvl]+'=>'+dmg[dmgLvl+1],totW/2-195,345);
+        ctx.fillText('price:'+dmgPrice[dmgLvl],totW/2-195,360);
+        ctx.moveTo(185,320); ctx.lineTo(185,370);
         //firerate
-        ctx.fillText('firerate',195,330); 
-        ctx.fillText(frt[frtLvl]+' => '+frt[frtLvl+1],195,345);
-        ctx.fillText('price: '+frtPrice[frtLvl],195,360);
+        ctx.fillText('firerate',190,330); 
+        ctx.fillText(frt[frtLvl]+'=>'+frt[frtLvl+1],190,345);
+        ctx.fillText('price:'+frtPrice[frtLvl],190,360);
+        ctx.moveTo(270,320); ctx.lineTo(270,370);
         //accuracy
-        ctx.fillText('accuracy',250,330);
+        ctx.fillText('accuracy',275,330);
+        ctx.fillText(acc[accLvl]+'=>'+acc[accLvl+1],275,345);
+        ctx.fillText('price:'+accPrice[accLvl],275,360);
+        ctx.moveTo(355,320); ctx.lineTo(355,370);
+        //critical hits
+        ctx.fillText('critchance',360,330);
+        ctx.fillText(crt[crtLvl]+'=>'+crt[crtLvl+1],360,345);
+        ctx.fillText('price:'+crtPrice[crtLvl],360,360);
+        ctx.moveTo(450,320); ctx.lineTo(450,370);
+        //health
+        ctx.fillText('health',455,330);
+        ctx.fillText(hlt[hltLvl]+'=>'+hlt[hltLvl+1],455,345);
+        ctx.fillText('price:'+hltPrice[hltLvl],455,360);
+        ctx.moveTo(535,320); ctx.lineTo(535,370); ctx.stroke();
     }
 }
 
