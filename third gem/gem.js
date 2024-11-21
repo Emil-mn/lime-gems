@@ -45,6 +45,8 @@ const SPEED = 2
 var levelInterval
 var fireInterval
 var showingInfo = false
+var scrolled = false
+var infoX = [105,185,190,270,275,355,360,450,455,535,540]
 //intro stuff
 var introTime = 0
 var messageThingY = 0
@@ -384,6 +386,15 @@ function checkButt(mButt){
             if (points >= gndPrice[gndLvl] && gndLvl < 5) {points -= gndPrice[gndLvl]; gndLvl++; loadMenu()}
             else {console.log('not allowed, price is: '+gndPrice[gndLvl]+' and level is: '+gndLvl)}
         }
+
+        if (showingInfo == true) {
+            if (scrolled == false && buttClicked(495,330,20,55)) {
+                scrolled = true; for (n=0;n<infoX.length;n++) {infoX[n] -= 120}; loadMenu()
+            }
+            else if (scrolled == true && buttClicked(115,330,20,55)) {
+                scrolled = false; for (n=0;n<infoX.length;n++) {infoX[n] += 120}; loadMenu()
+            }
+        }
     }
     if (gameState == states.level){
         if (mButt == 0) {
@@ -401,41 +412,53 @@ function checkButt(mButt){
 
 function buttHoverCheck(){
     if (gameState == states.menu) {
-        if (buttHovered(400,250,100,50)){console.log('pointing at play button'); can.style.cursor = 'pointer'}
-        else if (buttHovered(400,130,100,50)){console.log('pointing at info button'); can.style.cursor = 'pointer'}
+        if (buttHovered(400,250,100,50)) {console.log('pointing at play button'); can.style.cursor = 'pointer'}
+        else if (buttHovered(400,130,100,50)) {console.log('pointing at info button'); can.style.cursor = 'pointer'}
         else if (buttHovered(400,190,100,50)) {console.log('pointing at intro button'); can.style.cursor = 'pointer'}
 
-        else if (buttHovered(130,270,30,30)){
+        else if (buttHovered(130,270,30,30)) {
             console.log('pointing at dmg upgrade');
             if (points >= dmgPrice[dmgLvl] && dmgLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }        
-        else if (buttHovered(175,270,30,30)){
+        else if (buttHovered(175,270,30,30)) {
             console.log('pointing at frt upgrade');
             if (points >= frtPrice[frtLvl] && frtLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
-        else if (buttHovered(220,270,30,30)){
+        else if (buttHovered(220,270,30,30)) {
             console.log('pointing at acc upgrade');
             if (points >= accPrice[accLvl] && accLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
-        else if (buttHovered(265,270,30,30)){
+        else if (buttHovered(265,270,30,30)) {
             console.log('pointing at crt upgrade');
             if (points >= crtPrice[crtLvl] && crtLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
-        else if (buttHovered(310,270,30,30)){
+        else if (buttHovered(310,270,30,30)) {
             console.log('pointing at hlt upgrade');
             if (points >= hltPrice[hltLvl] && hltLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
-        else if (buttHovered(355,270,30,30)){
+        else if (buttHovered(355,270,30,30)) {
             console.log('pointing at gnd upgrade');
             if (points >= gndPrice[gndLvl] && gndLvl < 5) {can.style.cursor = 'pointer'}
             else {can.style.cursor = 'not-allowed'}
         }
         else {can.style.cursor = 'default'}
+        
+        if (showingInfo == true) {
+        
+            if (scrolled == false && buttHovered(495,330,20,55)) {
+                console.log('pointing at right scroll button');
+                can.style.cursor = 'pointer';
+            }
+            else if (scrolled == true && buttHovered(115,330,20,55)) {
+                console.log('pointing at left scroll button');
+                can.style.cursor = 'pointer'
+            }
+        }
     }
 }
 
@@ -835,33 +858,65 @@ function loadMenu() {ctx.fillStyle = 'green'; ctx.fillRect(0,0,totW,totH); ctx.f
     ctx.fillText('gnd',342,273);
 
     if (showingInfo == true) {
-        ctx.fillStyle = 'blue'; ctx.fillRect(totW/2 - 200,315,400,60);
+        ctx.fillStyle = 'blue'; ctx.fillRect(totW/2 - 200,315,400,55);
         ctx.beginPath(); ctx.fillStyle = 'black';
         //damage
-        ctx.fillText('damage ',totW/2-195,330);
-        ctx.fillText(dmg[dmgLvl]+'=>'+dmg[dmgLvl+1],totW/2-195,345);
-        ctx.fillText('price:'+dmgPrice[dmgLvl],totW/2-195,360);
-        ctx.moveTo(185,320); ctx.lineTo(185,370);
+        if (scrolled == false) {
+            ctx.fillText('damage ',infoX[0],330);
+            ctx.fillText(dmg[dmgLvl]+'=>'+dmg[dmgLvl+1],infoX[0],345);
+            ctx.fillText('price:'+dmgPrice[dmgLvl],infoX[0],360);
+            ctx.moveTo(infoX[1],320); ctx.lineTo(infoX[1],365);
+        }
         //firerate
-        ctx.fillText('firerate',190,330); 
-        ctx.fillText(frt[frtLvl]+'=>'+frt[frtLvl+1],190,345);
-        ctx.fillText('price:'+frtPrice[frtLvl],190,360);
-        ctx.moveTo(270,320); ctx.lineTo(270,370);
+        ctx.fillText('firerate',infoX[2],330); 
+        ctx.fillText(frt[frtLvl]+'=>'+frt[frtLvl+1],infoX[2],345);
+        ctx.fillText('price:'+frtPrice[frtLvl],infoX[2],360);
+        ctx.moveTo(infoX[3],320); ctx.lineTo(infoX[3],365);
         //accuracy
-        ctx.fillText('accuracy',275,330);
-        ctx.fillText(acc[accLvl]+'=>'+acc[accLvl+1],275,345);
-        ctx.fillText('price:'+accPrice[accLvl],275,360);
-        ctx.moveTo(355,320); ctx.lineTo(355,370);
+        ctx.fillText('accuracy',infoX[4],330);
+        ctx.fillText(acc[accLvl]+'=>'+acc[accLvl+1],infoX[4],345);
+        ctx.fillText('price:'+accPrice[accLvl],infoX[4],360);
+        ctx.moveTo(infoX[5],320); ctx.lineTo(infoX[5],365);
         //critical hits
-        ctx.fillText('critchance',360,330);
-        ctx.fillText(crt[crtLvl]+'=>'+crt[crtLvl+1],360,345);
-        ctx.fillText('price:'+crtPrice[crtLvl],360,360);
-        ctx.moveTo(450,320); ctx.lineTo(450,370);
+        ctx.fillText('critchance',infoX[6],330);
+        ctx.fillText(crt[crtLvl]+'=>'+crt[crtLvl+1],infoX[6],345);
+        ctx.fillText('price:'+crtPrice[crtLvl],infoX[6],360);
+        ctx.moveTo(infoX[7],320); ctx.lineTo(infoX[7],365); ctx.stroke();
         //health
-        ctx.fillText('health',455,330);
-        ctx.fillText(hlt[hltLvl]+'=>'+hlt[hltLvl+1],455,345);
-        ctx.fillText('price:'+hltPrice[hltLvl],455,360);
-        ctx.moveTo(535,320); ctx.lineTo(535,370); ctx.stroke();
+        ctx.fillText('health',infoX[8],330);
+        ctx.fillText(hlt[hltLvl]+'=>'+hlt[hltLvl+1],infoX[8],345);
+        ctx.fillText('price:'+hltPrice[hltLvl],infoX[8],360);
+        
+        if (scrolled == true) {
+            ctx.beginPath(); ctx.moveTo(infoX[9],320); 
+            ctx.lineTo(infoX[9],365); ctx.stroke();
+        
+            //grenades
+            ctx.fillText('grenades',infoX[10],330);
+            ctx.fillText(gnd[gndLvl]+'=>'+gnd[gndLvl+1],infoX[10],345);
+            ctx.fillText('price:'+gndPrice[gndLvl],infoX[10],360);
+        }
+        
+        if (scrolled == false) {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(totW/2 + 200,315,35,55);
+            
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(totW/2 + 180,315,20,55)
+            
+            ctx.fillStyle = 'black';
+            ctx.fillText('>',totW/2 + 185,349)
+        }
+        else if (scrolled == true) {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(totW/2-235,315,35,55);
+
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(totW/2-200,315,20,55)
+
+            ctx.fillStyle = 'black'
+            ctx.fillText('<',totW/2-195,349)
+        }
     }
 }
 
