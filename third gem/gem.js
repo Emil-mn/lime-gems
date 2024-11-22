@@ -335,13 +335,21 @@ function checkButt(mButt){
             pickups.push(new character(totW/2+20,totH-15,5,5,'darkblue','armor',10))
             pickups.push(new character(totW/2+30,totH-15,5,5,'darkslategrey','grenade',1))
             //obstacle test
-            floors.push(new Obstacle(300,totH-32,60,5,'gray'))
+            //floors
+            floors.push(new Obstacle(240,totH-32,120,5,'gray'))
             floors.push(new Obstacle(430,totH-55,50,5,'gray'))
             floors.push(new Obstacle(515,totH-79,59,5,'gray'))
+            floors.push(new Spikes(400,totH-5,20))
+            //walls
+            walls.push(new Obstacle(260,totH-105,5,45,'gray'))
+            walls.push(new Obstacle(290,totH-105,5,45,'gray'))
             walls.push(new Obstacle(320,totH-105,5,45,'gray'))
             walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
             walls.push(new Obstacle(330,totH-105,5,45,'gray'))
             walls.push(new Obstacle(330,totH-60,5,28,'lightslategray','gBreakable'))
+            //doors
+            walls.push(new Obstacle(260,totH-60,5,28,'green','keycard',1))
+            walls.push(new Obstacle(290,totH-60,5,28,'yellow','lever',1))
             gameState = states.level; can.style.cursor = 'crosshair';
             health = maxHealth
             armor = maxArmor
@@ -399,7 +407,7 @@ function checkButt(mButt){
     if (gameState == states.level){
         if (mButt == 0) {
             fireInterval = setInterval(() => {
-            projectiles.push(new Projectile(3,3,'gold',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
+            projectiles.push(new Projectile(3,3,'goldenrod',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
             projectiles.push(new Projectile(3,3,'red',player.x + 50, player.y + 12, player.x,player.y+12,'enemi'))
             }, frt[frtLvl])
         }
@@ -463,16 +471,47 @@ function buttHoverCheck(){
 }
 
 class Obstacle {
-    constructor(x,y,width,height,color,type) {
+    constructor(x,y,width,height,color,type,id) {
         this.x = x
         this.y = y
         this.width = width
         this.height = height
         ctx.fillStyle = color
         this.type = type
+        this.id = id
         this.update = function() {
+            if (this.type == 'keycard') {
+                ctx.font = '13px consolas'
+                ctx.fillStyle = 'black'
+                ctx.fillText('K'+this.id,this.x-20,this.y+15)
+                ctx.fillText('K'+this.id,this.x+10,this.y+15)
+            }
             ctx.fillStyle = color
             ctx.fillRect(this.x, this.y, this.width, this.height)
+        }
+    }
+}
+
+class Spikes {
+    constructor(x,y,length) {
+        this.x = x
+        this.y = y
+        this.type = 'spikes'
+        this.update = function() {
+            ctx.fillStyle = 'crimson'
+            ctx.beginPath()
+            ctx.moveTo(this.x,this.y)
+            ctx.lineTo(this.x,this.y-2)
+            var spikeX = this.x
+            for (var spike = 0; spike < length; spike++)
+            {
+                spikeX += 3
+                ctx.lineTo(spikeX,this.y-15)
+                spikeX += 3
+                ctx.lineTo(spikeX,this.y-2)
+            }
+            ctx.lineTo(spikeX,this.y)
+            ctx.closePath(); ctx.fill()
         }
     }
 }
@@ -1288,6 +1327,9 @@ function levelLoop() {
             player.y = floor.y + floor.height;
             player.fallSpeed = 0
         }
+        
+        if (player.crashWith(floor) && floor.type == 'spikes') {health = 0}
+
         projectiles.forEach((bullet,index) => {
             if (bullet.type == 'grenade') {
                 if (bullet.floor(floor)) {
@@ -1435,9 +1477,11 @@ function levelLoop() {
             }
             else if (pickup.type == 'health' && health < maxHealth) {
                 health += pickup.amount; console.log('gained '+pickup.amount+' health, have '+health);
+                if (health > maxHealth) {health = maxHealth}
             }
             else if (pickup.type == 'armor' && armor < maxArmor) {
-                armor += pickup.amount; console.log('gained '+pickup.amount+' armor, have '+armor); 
+                armor += pickup.amount; console.log('gained '+pickup.amount+' armor, have '+armor);
+                if (armor > maxArmor) {armor = maxArmor}
             }
             else if (pickup.type == 'grenade' && grenades < 9) {
                 grenades += pickup.amount; console.log('picked '+pickup.amount+' grenade(s), have '+grenades)
@@ -1615,7 +1659,10 @@ function brikBrek() {
                         if (explodeTime <= 0) {b.status -= 1;}
                         else {
                             b.status -= 2;
-                            brickArray[c][r].status -= 1
+                            //brickArray[c][r-1].status -= 1
+                            //brickArray[c][r+1].status -= 1
+                            //brickArray[c-1][r].status -= 1
+                            //brickArray[c+1][r].status -= 1
                         }
                         if (b.status <= 0) {
                            brickCount-- 
@@ -1693,7 +1740,7 @@ function pewPew() {
     ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Pew-Pew',185,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
     if (fireCool > 0) {fireCool -= 0.02}
-    if (spawnCool > 0) {spawnCool -= 0.02}
+    if (spawnCool > 0 && pewEnemies.length < 10) {spawnCool -= 0.02}
     if (hurtCool > 0) {hurtCool -= 0.02}
     time += 0.02;
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
@@ -2100,7 +2147,7 @@ function showHighScores() {
     if (pos4 == null) {ctx.fillText('4 NAME - NaN - NaN', 300, 295)}
     else {ctx.fillText('4 '+pos4Name+' - '+pos4Score+' - '+pos4Time, 300, 295);}
 
-    ctx.beginPath(); 
+    ctx.beginPath(); ctx.strokeStyle = 'white';
     ctx.moveTo(200, 180); ctx.lineTo(400, 180);
     ctx.moveTo(200, 210); ctx.lineTo(400, 210); 
     ctx.moveTo(200, 240); ctx.lineTo(400, 240); 
