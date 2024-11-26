@@ -39,6 +39,7 @@ var grenades = 9
 var grenadeCool = true
 var maxHealth = hlt[hltLvl]
 var maxArmor = 25
+var keyCards = {1:false,2:false,3:false,4:false,5:false}
 //inputs n stuff
 var keys
 const SPEED = 2
@@ -334,21 +335,22 @@ function checkButt(mButt){
             pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
             pickups.push(new character(totW/2+20,totH-15,5,5,'darkblue','armor',10))
             pickups.push(new character(totW/2+30,totH-15,5,5,'darkslategrey','grenade',1))
+            pickups.push(new Obstacle(80,totH-15,15,10,'green','card',1))
             //obstacle test
             //floors
-            floors.push(new Obstacle(240,totH-32,120,5,'gray'))
+            floors.push(new Obstacle(170,totH-32,190,5,'gray'))
             floors.push(new Obstacle(430,totH-55,50,5,'gray'))
             floors.push(new Obstacle(515,totH-79,59,5,'gray'))
             floors.push(new Spikes(400,totH-5,20))
             //walls
-            walls.push(new Obstacle(260,totH-105,5,45,'gray'))
+            walls.push(new Obstacle(225,totH-105,5,45,'gray'))
             walls.push(new Obstacle(290,totH-105,5,45,'gray'))
             walls.push(new Obstacle(320,totH-105,5,45,'gray'))
             walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
             walls.push(new Obstacle(330,totH-105,5,45,'gray'))
             walls.push(new Obstacle(330,totH-60,5,28,'lightslategray','gBreakable'))
             //doors
-            walls.push(new Obstacle(260,totH-60,5,28,'green','keycard',1))
+            walls.push(new Obstacle(225,totH-60,5,28,'green','keycard',1))
             walls.push(new Obstacle(290,totH-60,5,28,'yellow','lever',1))
             gameState = states.level; can.style.cursor = 'crosshair';
             health = maxHealth
@@ -479,15 +481,34 @@ class Obstacle {
         ctx.fillStyle = color
         this.type = type
         this.id = id
+        this.unlocked = false
         this.update = function() {
-            if (this.type == 'keycard') {
-                ctx.font = '13px consolas'
-                ctx.fillStyle = 'black'
-                ctx.fillText('K'+this.id,this.x-20,this.y+15)
-                ctx.fillText('K'+this.id,this.x+10,this.y+15)
+            if ((this.type != 'keycard' && this.type != 'lever') || this.unlocked == false)
+            { 
+                ctx.fillStyle = color; ctx.fillRect(this.x, this.y, this.width, this.height)
             }
-            ctx.fillStyle = color
-            ctx.fillRect(this.x, this.y, this.width, this.height)
+            if (this.type == 'keycard') {
+                ctx.font = '13px consolas';
+                ctx.fillStyle = 'gray';
+                ctx.fillRect(this.x-17,this.y+12,8,10);
+                ctx.fillRect(this.x+13,this.y+12,8,10);
+                ctx.fillStyle = 'black'; ctx.lineWidth = 1;
+                ctx.fillText('K'+this.id,this.x-20,this.y+10);
+                ctx.fillText('K'+this.id,this.x+10,this.y+10);
+                ctx.beginPath(); ctx.moveTo(this.x-11,this.y+12);
+                ctx.lineTo(this.x-11,this.y+22); 
+                ctx.moveTo(this.x+19,this.y+12);
+                ctx.lineTo(this.x+19,this.y+22); ctx.stroke();
+                if (!this.unlocked) {ctx.fillStyle = 'red';}
+                else {ctx.fillStyle = 'green'}
+                ctx.fillRect(this.x-16,this.y+13,3,3);
+                ctx.fillRect(this.x+14,this.y+13,3,3);
+            }
+            else if (this.type == 'card') {
+                ctx.font = '10px consolas';
+                ctx.fillStyle = 'black';
+                ctx.fillText('K'+this.id,this.x+2,this.y+this.height-2);
+            }
         }
     }
 }
@@ -1280,8 +1301,10 @@ function levelLoop() {
     ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.strokeRect(15,15,170,15)
     ctx.font = '15px consolas'; ctx.fillStyle = 'black'; ctx.fillText(Math.round(health),17,28)
     //points counter
-    ctx.fillText(points,17,45); ctx.fillStyle = 'gold'; if (points.toString().length == 3) {ctx.fillRect(45,35,10,10);}
-    else if (points.toString().length == 2) {ctx.fillRect(35,35,10,10)};
+    ctx.fillText(points,17,45); ctx.fillStyle = 'gold'; 
+    if (points.toString().length == 2) {ctx.fillRect(35,35,10,10);}
+    else if (points.toString().length == 3) {ctx.fillRect(45,35,10,10)}
+    else if (points.toString().length == 4) {ctx.fillRect(55,35,10,10)}
     //grenade counter
     ctx.fillStyle = 'black'
     ctx.fillText(grenades,17,60); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,50,10,10)
@@ -1311,11 +1334,6 @@ function levelLoop() {
 
         if (keys && keys['e']) {console.log('starting pew-pew'); clearInterval(levelInterval); gameState = states.pew; startPewPew()}
     }
-
-    //render player
-    player.update(xInput, yInput); pGun.x = player.x + 20; pGun.y = player.y + 22; pGun.update();
-    //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
-    
 
     floors.forEach(floor => {
         floor.update()
@@ -1353,13 +1371,15 @@ function levelLoop() {
 
     walls.forEach((wall,windex) => {
         wall.update()
-        if (player.wallLeft(wall)) {
-            player.x = wall.x - player.width
+        if (wall.unlocked == false) {
+            if (player.wallLeft(wall)) {
+                player.x = wall.x - player.width
+            }
+            else if (player.wallRight(wall)) {
+                player.x = wall.x + wall.width
+            }
         }
-        else if (player.wallRight(wall)) {
-            player.x = wall.x + wall.width
-        }
-
+        
         if (wall.type == 'breakable') {
             projectiles.forEach((bullet,bundex) => {
                 if (bullet.crashWith(wall))
@@ -1395,10 +1415,10 @@ function levelLoop() {
                 }
             })
         }
-
+        
         else {
             projectiles.forEach((bullet,bundex) => {
-                if (bullet.crashWith(wall)) {
+                if (bullet.crashWith(wall) && wall.unlocked == false) {
                     if (bullet.type == 'frend' || bullet.type == 'enemi' || bullet.type == 'fragment') {
                         projectiles.splice(bundex,1)
                     }
@@ -1408,7 +1428,38 @@ function levelLoop() {
                 }
             })
         }
+
+        if (wall.type == 'keycard' && wall.unlocked == false) {
+            if (player.x + player.width > wall.x - 20 && player.x + player.width < wall.x && player.y + player.height > wall.y - 10 && player.y < wall.y + wall.height + 10) {
+                ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
+                if (keyCards[wall.id] == false) {
+                    ctx.fillText('Keycard',wall.x-55,wall.y-15);
+                    ctx.fillText('required',wall.x-55,wall.y-3);
+                }
+                else if (keyCards[wall.id] == true) {
+                    ctx.fillText('[E]Insert',wall.x-65,wall.y-15);
+                    ctx.fillText('keycard',wall.x-50,wall.y-3);
+                    if (keys && keys['e']) {console.log('unlocking door '+wall.id); wall.unlocked = true}
+                }
+            }
+            else if (player.x < wall.x + wall.width + 20 && player.x > wall.x + wall.width && player.y + player.height > wall.y - 10 && player.y < wall.y + wall.height + 10) {
+                ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
+                if (keyCards[wall.id] == false) {
+                    ctx.fillText('Keycard',wall.x+8,wall.y-15);
+                    ctx.fillText('required',wall.x+8,wall.y-3);
+                }
+                else if (keyCards[wall.id] == true) {
+                    ctx.fillText('[E]Insert',wall.x+8,wall.y-15);
+                    ctx.fillText('keycard',wall.x+23,wall.y-3);
+                    if (keys && keys['e']) {console.log('unlocking door '+wall.id); wall.unlocked = true}
+                }
+            }
+        }
     })
+
+    //render player
+    player.update(xInput, yInput); pGun.x = player.x + 20; pGun.y = player.y + 22; pGun.update();
+    //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
 
     projectiles.forEach((bullet,index) => {
         if (bullet.type != 'grenade') {
@@ -1486,6 +1537,7 @@ function levelLoop() {
             else if (pickup.type == 'grenade' && grenades < 9) {
                 grenades += pickup.amount; console.log('picked '+pickup.amount+' grenade(s), have '+grenades)
             }
+            else if (pickup.type == 'card') {var index = pickup.id; keyCards[index] = true; console.log(keyCards)}
         }
     })
     
