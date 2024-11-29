@@ -6,7 +6,7 @@ var musx, musy
 var clickX, clickY
 var ctx = can.getContext("2d")
 //states stuff
-var states = {stopped:0,menu:1,intro:2,level:3,paused:4,brik:5,pew:6}
+var states = {stopped:0,menu:1,intro:2,level:3,paused:4,brik:5,pew:6,slot:7}
 var gameState = states.stopped
 var prevState
 //weapon stuff
@@ -68,7 +68,7 @@ for (i = 0; i < hueyArray.length; i++) {
     else {hueyArray[i] -= 150;}
 }
 //sprites
-var player, pGun, arcadeTest, arcade2
+var player, pGun, arcadeTest, arcade2, arcade3
 //brik-brek
 var ball, paddle, bricks, brikBalls = [], brikLives = 0 
 var brickArray = [], brickCount = 0, brikLvl = 1
@@ -76,6 +76,11 @@ var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 //pew-pew
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
+//slot-man
+var credits = 0
+var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
+var roll1 = [], roll2 = [], roll3 = []
+var roll4 = [], roll5 = [], roll6 = []
 //highscore stuff
 var key,keyPress,canEnterName = false, ready = false
 var keysEntered = 0, nameListener
@@ -196,7 +201,7 @@ function start() {
     }
     else
     {
-        if (gameState == states.level || gameState == states.brik || gameState == states.pew || gameState == states.intro)  
+        if (gameState != states.menu)  
         {clearInterval(levelInterval)}
         
         document.getElementById('butt1').style.backgroundColor = 'red'
@@ -295,13 +300,46 @@ function startPewPew() {
     levelInterval = setInterval(pewPew,20)
 }
 
+function startSlotMan() {
+    for (var r = 0; r < 6; r++) {
+        var roll
+        switch (r) {
+            case 0: 
+                roll = roll1
+                break
+            case 1:
+                roll = roll2
+                break
+            case 2:
+                roll = roll3
+                break
+            case 3:
+                roll = roll4
+                break
+            case 4:
+                roll = roll5
+                break
+            case 5:
+                roll = roll6
+        }
+        for (var t = 0; t < 10; t++) {
+            var rand = Math.floor(Math.random() * 10)
+            roll.push(rewards[rand])
+        }
+    }
+    console.log(roll1); console.log(roll2); console.log(roll3);
+    console.log(roll4); console.log(roll5); console.log(roll6);
+    levelInterval = setInterval(slotMan,20)
+}
+
 function pause() {
     if (gameState == states.level) {prevState = 1}
     else if (gameState == states.brik) {prevState = 2}
     else if (gameState == states.pew) {prevState = 3}
     else if (gameState == states.intro) {prevState = 4}
+    else if (gameState == states.slot) {prevState = 5}
 
-    if (gameState == states.level || gameState == states.brik || gameState == states.pew || gameState == states.intro) {
+    if (gameState == states.level || gameState == states.brik || gameState == states.pew || gameState == states.intro || gameState == states.slot) {
         console.log('paused'); gameState = states.paused; clearInterval(levelInterval)
         ctx.fillStyle = 'gray'; ctx.font = '45px consolas'; ctx.fillText('Paused',220,totH/2)
     }
@@ -319,6 +357,9 @@ function pause() {
         else if (prevState == 4) {
             gameState = states.intro; levelInterval = setInterval(introLoop,20)
         }
+        else if (prevState == 5) {
+            gameState = states.slot; levelInterval = setInterval(slotMan,20)
+        }
     }
 }
 
@@ -330,6 +371,7 @@ function checkButt(mButt){
             pGun = new gun(40,300,12,5)
             arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
             arcade2 = new Obstacle(536,totH-99,10,20,'black')
+            arcade3 = new Obstacle(380,295,10,20,'yellow')
             //pickup test
             pickups.push(new character(totW/2,totH-15,5,5,'gold','points',15))
             pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
@@ -341,6 +383,7 @@ function checkButt(mButt){
             floors.push(new Obstacle(170,totH-32,190,5,'gray'))
             floors.push(new Obstacle(430,totH-55,50,5,'gray'))
             floors.push(new Obstacle(515,totH-79,59,5,'gray'))
+            floors.push(new Obstacle(360,315,50,5,'gray'))
             floors.push(new Spikes(400,totH-5,20))
             //walls
             walls.push(new Obstacle(225,totH-105,5,45,'gray'))
@@ -1353,11 +1396,21 @@ function levelLoop() {
     //pewpew
     arcade2.update();
     ctx.fillStyle = 'green'; ctx.fillRect(arcade2.x+2,arcade2.y+2,6,6)
-    if (player.x + player.width > arcade2.x -20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 20 && player.y < arcade2.y + arcade2.height + 20) {
+    if (player.x + player.width > arcade2.x - 20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 20 && player.y < arcade2.y + arcade2.height + 20) {
         ctx.fillStyle = 'black'; ctx.font = '12px consolas';
         ctx.fillText('[E]Play Pew-Pew',arcade2.x-47,arcade2.y-8);
 
         if (keys && keys['e']) {console.log('starting pew-pew'); clearInterval(levelInterval); gameState = states.pew; startPewPew()}
+    }
+
+    //slotman
+    arcade3.update()
+    ctx.fillStyle = 'green'; ctx.fillRect(arcade3.x+2,arcade3.y+2,6,6)
+    if (player.x + player.width > arcade3.x - 20 && player.x < arcade3.x + arcade3.width + 20 && player.y + player.height > arcade3.y - 20 && player.y < arcade3.y + arcade3.height + 20) {
+        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
+        ctx.fillText('[E]Play Slot-Man',arcade3.x-47,arcade3.y-8);
+
+        if (keys && keys['e']) {console.log('starting slot-man'); clearInterval(levelInterval); gameState = states.slot; startSlotMan()}
     }
 
     floors.forEach(floor => {
@@ -2185,6 +2238,28 @@ function pewPew() {
         clearInterval(levelInterval); gameState = states.level; console.log('exiting pew-pew');
         levelInterval = setInterval(levelLoop,20)
     }
+}
+
+function slotMan() {
+    ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'yellow'; ctx.fillRect(135,50,335,350);
+    ctx.fillStyle = 'black'; ctx.font = '60px consolas'; ctx.fillText('Slot-Man',170,100);
+    ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
+
+    ctx.strokeStyle = 'black'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(200,325); ctx.lineTo(200,375); ctx.stroke()
+
+    //main button
+    if (keys && keys[' ']) {
+        ctx.fillStyle = 'crimson'; 
+        ctx.fillRect(240,335,120,40)
+    }
+    else {
+        ctx.fillStyle = 'maroon'; 
+        ctx.fillRect(240,335,120,40)
+        ctx.fillStyle = 'crimson';
+        ctx.fillRect(240,325,120,40)
+    }
+
+    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
 }
 
 function showHighScores() {
