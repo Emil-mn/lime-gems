@@ -351,7 +351,7 @@ function checkButt(mButt){
             walls.push(new Obstacle(330,totH-60,5,28,'lightslategray','gBreakable'))
             //doors
             walls.push(new Obstacle(225,totH-60,5,28,'green','keycard',1))
-            walls.push(new Obstacle(290,totH-60,5,28,'yellow','lever',1))
+            walls.push(new Obstacle(290,totH-60,5,28,'yellow','button',1,550,375))
             gameState = states.level; can.style.cursor = 'crosshair';
             health = maxHealth
             armor = maxArmor
@@ -473,7 +473,7 @@ function buttHoverCheck(){
 }
 
 class Obstacle {
-    constructor(x,y,width,height,color,type,id) {
+    constructor(x,y,width,height,color,type,id,lx,ly) {
         this.x = x
         this.y = y
         this.width = width
@@ -481,9 +481,11 @@ class Obstacle {
         ctx.fillStyle = color
         this.type = type
         this.id = id
+        this.lx = lx
+        this.ly = ly
         this.unlocked = false
         this.update = function() {
-            if ((this.type != 'keycard' && this.type != 'lever') || this.unlocked == false)
+            if ((this.type != 'keycard' && this.type != 'button') || this.unlocked == false)
             { 
                 ctx.fillStyle = color; ctx.fillRect(this.x, this.y, this.width, this.height)
             }
@@ -492,10 +494,11 @@ class Obstacle {
                 ctx.fillStyle = 'gray';
                 ctx.fillRect(this.x-17,this.y+12,8,10);
                 ctx.fillRect(this.x+13,this.y+12,8,10);
-                ctx.fillStyle = 'black'; ctx.lineWidth = 1;
+                ctx.fillStyle = 'black'; 
                 ctx.fillText('K'+this.id,this.x-20,this.y+10);
                 ctx.fillText('K'+this.id,this.x+10,this.y+10);
-                ctx.beginPath(); ctx.moveTo(this.x-11,this.y+12);
+                ctx.beginPath(); ctx.lineWidth = 1;
+                ctx.moveTo(this.x-11,this.y+12);
                 ctx.lineTo(this.x-11,this.y+22); 
                 ctx.moveTo(this.x+19,this.y+12);
                 ctx.lineTo(this.x+19,this.y+22); ctx.stroke();
@@ -503,6 +506,20 @@ class Obstacle {
                 else {ctx.fillStyle = 'green'}
                 ctx.fillRect(this.x-16,this.y+13,3,3);
                 ctx.fillRect(this.x+14,this.y+13,3,3);
+            }
+            else if (this.type == 'button') {
+                ctx.font = '13px consolas'
+                ctx.fillStyle = 'black'
+                ctx.fillText('B'+this.id,this.x-20,this.y+10);
+                ctx.fillText('B'+this.id,this.x+10,this.y+10);
+                ctx.fillText('B'+this.id,this.lx-3,this.ly-2)
+                ctx.fillStyle = 'gray'
+                ctx.fillRect(this.lx,this.ly,8,8);
+                if (!this.unlocked) {ctx.fillStyle = 'red';}
+                else {ctx.fillStyle = 'green'}
+                ctx.fillRect(this.x-16,this.y+13,5,5);
+                ctx.fillRect(this.x+14,this.y+13,5,5);
+                ctx.fillRect(this.lx+1.5,this.ly+1.5,5,5)
             }
             else if (this.type == 'card') {
                 ctx.font = '10px consolas';
@@ -518,6 +535,7 @@ class Spikes {
         this.x = x
         this.y = y
         this.type = 'spikes'
+        this.length = length
         this.update = function() {
             ctx.fillStyle = 'crimson'
             ctx.beginPath()
@@ -683,9 +701,16 @@ class character {
             var mytop = this.y
             var mybottom = this.y + (this.height)
             var otherleft = otherobj.x
-            var otherright = otherobj.x + otherobj.width
-            var othertop = otherobj.y
-            var otherbottom = otherobj.y + otherobj.height
+            if (otherobj.type != 'spikes') {
+                var otherright = otherobj.x + otherobj.width
+                var othertop = otherobj.y
+                var otherbottom = otherobj.y + otherobj.height
+            }
+            else {
+                var otherright = otherobj.x + otherobj.length * 6 
+                var othertop = otherobj.y - 15
+                var otherbottom = otherobj.y
+            }
             var crash = true
             if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
                 crash = false
@@ -1453,6 +1478,14 @@ function levelLoop() {
                     ctx.fillText('keycard',wall.x+23,wall.y-3);
                     if (keys && keys['e']) {console.log('unlocking door '+wall.id); wall.unlocked = true}
                 }
+            }
+        }
+
+        else if (wall.type == 'button' && wall.unlocked == false) {
+            if (player.x + player.width > wall.lx - 20 && player.x < wall.lx + 28 && player.y + player.height > wall.ly - 10 && player.y < wall.ly + 28) {
+                ctx.fillStyle = 'black'; ctx.font = '12px consolas'
+                ctx.fillText('[E]Press button',wall.lx - 50,wall.ly - 15)
+                if (keys && keys['e']) {console.log('opening door '+wall.id); wall.unlocked = true}
             }
         }
     })
