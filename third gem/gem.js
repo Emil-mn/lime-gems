@@ -79,6 +79,9 @@ var time, score, pewEnemies = [], spawnCool, justReleased = false
 //slot-man
 var credits = 0
 var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
+var coin = new Image(), twoCoins = new Image(), threeCoins = new Image(), moneyBag = new Image(), moneyChest = new Image();
+coin.src = 'oneCoin.png'; twoCoins.src = 'twoCoins.png'; threeCoins.src = 'threeCoins.png'; moneyBag.src = 'moneyBag.png'; moneyChest.src = 'moneyChest.png';
+
 var roll1 = [], roll2 = [], roll3 = []
 var roll4 = [], roll5 = [], roll6 = []
 //highscore stuff
@@ -2244,8 +2247,36 @@ function slotMan() {
     ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'yellow'; ctx.fillRect(135,50,335,350);
     ctx.fillStyle = 'black'; ctx.font = '60px consolas'; ctx.fillText('Slot-Man',170,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
+    //coin slot
+    ctx.strokeStyle = 'black'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(200,335); ctx.lineTo(200,375); ctx.stroke();
 
-    ctx.strokeStyle = 'black'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(200,325); ctx.lineTo(200,375); ctx.stroke()
+    //roll dividers vertical
+    ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = 'black'; 
+    ctx.moveTo(200.833,115); ctx.lineTo(200.833,315);ctx.moveTo(251.666,115); ctx.lineTo(251.666,315); 
+    ctx.moveTo(302.5,115); ctx.lineTo(302.5,315); ctx.moveTo(353.333,115); ctx.lineTo(353.333,315);
+    ctx.moveTo(404.166,115); ctx.lineTo(404.166,315); ctx.stroke()
+    //horizontal
+    ctx.beginPath(); ctx.moveTo(150,155); ctx.lineTo(455,155); ctx.moveTo(150,275); ctx.lineTo(455,275); ctx.stroke()
+
+    //win area
+    ctx.beginPath(); ctx.strokeStyle = 'crimson'; ctx.moveTo(150,195); ctx.lineTo(455,195); 
+    ctx.moveTo(150,235); ctx.lineTo(455,235); ctx.stroke();
+    
+
+    //symbol/icon test grenade,twoGrenades,oneHeart,twoHearts,armor
+    var roll1X = 150
+    var roll2X = 200.833
+    var roll3X = 251.666
+    var roll4X = 302.5
+    var roll5X = 353.333
+    var roll6X = 404.166
+    var testY = 195
+    ctx.drawImage(coin,roll1X,testY,50,40)
+    ctx.drawImage(twoCoins,roll2X,testY,50,40)
+    ctx.drawImage(threeCoins,roll3X,testY,50,40)
+    ctx.drawImage(moneyBag,roll4X,testY,50,40)
+    ctx.drawImage(moneyChest,roll5X,testY,50,40)
+
 
     //main button
     if (keys && keys[' ']) {
@@ -2260,6 +2291,11 @@ function slotMan() {
     }
 
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
+
+    if (keys && keys['q']) {
+        clearInterval(levelInterval); gameState = states.level; console.log('exiting slot-man');
+        levelInterval = setInterval(levelLoop,20)
+    }
 }
 
 function showHighScores() {
