@@ -77,7 +77,7 @@ var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
 //slot-man
-var credits = 0
+var credits = 0, showingHud = 0, pressed = false
 var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
 var coin = new Image(), twoCoins = new Image(), threeCoins = new Image(), moneyBag = new Image(), moneyChest = new Image();
 coin.src = 'oneCoin.png'; twoCoins.src = 'twoCoins.png'; threeCoins.src = 'threeCoins.png'; moneyBag.src = 'moneyBag.png'; moneyChest.src = 'moneyChest.png';
@@ -1366,7 +1366,15 @@ function levelLoop() {
     ctx.fillStyle = 'white'
     ctx.fillRect(15,15,170,15)
     ctx.fillStyle = 'red';
-    ctx.fillRect(45,20,140*healthPercentage,10)
+    if (health <= maxHealth) {
+        ctx.fillRect(45,20,140*healthPercentage,10)
+    }
+    else if (health > maxHealth) {
+        ctx.fillRect(45,20,140,10)
+        var overflowHealthPercentage = (health - maxHealth) / maxHealth
+        ctx.fillStyle = 'maroon'; 
+        ctx.fillRect(45,20,140*overflowHealthPercentage,10)
+    }
     ctx.fillStyle = 'blue';
     ctx.fillRect(45,15,140*armorPercentage,5)
     ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.strokeRect(15,15,170,15)
@@ -1687,13 +1695,13 @@ function brikBrek() {
                 }
                 else if (brikLvl >= 4) {
                     if (b.pUp == false) {
-                        if (b.status == 4) {ctx.fillStyle = 'black'}
+                        if (b.status >= 4) {ctx.fillStyle = 'black'}
                         else if (b.status == 3) {ctx.fillStyle = 'darkslategray'}
                         else if (b.status == 2) {ctx.fillStyle = 'lightslategray'}
                         else if (b.status == 1) {ctx.fillStyle = 'white'}
                     }
                     else {
-                        if (b.status == 4) {ctx.fillStyle = 'goldenrod'}
+                        if (b.status >= 4) {ctx.fillStyle = 'goldenrod'}
                         else if (b.status == 3) {ctx.fillStyle = 'gold'}
                         else if (b.status == 2) {ctx.fillStyle = 'yellow'}
                         else if (b.status == 1) {ctx.fillStyle = 'khaki'}
@@ -2278,6 +2286,11 @@ function slotMan() {
     ctx.drawImage(moneyChest,roll5X,testY,50,40)
 
 
+    //bottom thing
+    ctx.fillStyle = 'blue'; ctx.fillRect(150,275,305,40)
+    ctx.font = '20px consolas'
+    ctx.fillStyle = 'black'; ctx.fillText('credits: '+credits,160,300)
+
     //main button
     if (keys && keys[' ']) {
         ctx.fillStyle = 'crimson'; 
@@ -2291,6 +2304,47 @@ function slotMan() {
     }
 
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
+    ctx.fillText('[C]insert coins',10,totH-25)
+
+    //inserting coins
+    if (keys && keys['c'] && pressed == false) {
+        pressed = true
+        showingHud = 3; console.log('inserted 5 coins')
+        setTimeout(()=>{points -= 5; credits += 5; pressed = false},2000)
+    }
+    
+    
+    if (showingHud > 0) {
+        showingHud -= 0.02
+        console.log(showingHud)
+        var healthPercentage = health / maxHealth;
+        var armorPercentage = armor / maxArmor;
+        ctx.fillStyle = 'white'
+        ctx.fillRect(15,15,170,15)
+        ctx.fillStyle = 'red';
+        if (health <= maxHealth) {
+            ctx.fillRect(45,20,140*healthPercentage,10)
+        }
+        else if (health > maxHealth) {
+            ctx.fillRect(45,20,140,10)
+            var overflowHealthPercentage = (health - maxHealth) / maxHealth
+            ctx.fillStyle = 'maroon'; 
+            ctx.fillRect(45,20,140*overflowHealthPercentage,10)
+        }
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(45,15,140*armorPercentage,5)
+        ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.strokeRect(15,15,170,15)
+        ctx.font = '15px consolas'; ctx.fillStyle = 'black'; ctx.fillText(Math.round(health),17,28)
+        //points counter
+        ctx.fillText(points,17,45); ctx.fillStyle = 'gold'; 
+        if (points.toString().length == 2) {ctx.fillRect(35,35,10,10);}
+        else if (points.toString().length == 3) {ctx.fillRect(45,35,10,10)}
+        else if (points.toString().length == 4) {ctx.fillRect(55,35,10,10)}
+        //grenade counter
+        ctx.fillStyle = 'black'
+        ctx.fillText(grenades,17,60); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,50,10,10)
+    }
+
 
     if (keys && keys['q']) {
         clearInterval(levelInterval); gameState = states.level; console.log('exiting slot-man');
