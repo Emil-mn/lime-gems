@@ -77,13 +77,16 @@ var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
 //slot-man
-var credits = 0, showingHud = 0, pressed = false
+var credits = 0, showingHud = 0, pressed = false, lit = 1
 var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
 var coin = new Image(), twoCoins = new Image(), threeCoins = new Image(), moneyBag = new Image(), moneyChest = new Image();
+var grenade = new Image(), twoGrenades = new Image(), oneHeart = new Image(), twoHearts = new Image(), newArmor = new Image();
 coin.src = 'oneCoin.png'; twoCoins.src = 'twoCoins.png'; threeCoins.src = 'threeCoins.png'; moneyBag.src = 'moneyBag.png'; moneyChest.src = 'moneyChest.png';
-
+grenade.src = 'grenade.png'; twoGrenades.src = 'twoGrenades.png'; oneHeart.src = 'oneHeart.png'; twoHearts.src = 'twoHearts.png'; newArmor.src = 'armor.png';
 var roll1 = [], roll2 = [], roll3 = []
 var roll4 = [], roll5 = [], roll6 = []
+var roll1X = 150, roll2X = 200.833, roll3X = 251.666
+var roll4X = 302.5, roll5X = 353.333, roll6X = 404.166
 //highscore stuff
 var key,keyPress,canEnterName = false, ready = false
 var keysEntered = 0, nameListener
@@ -325,9 +328,9 @@ function startSlotMan() {
             case 5:
                 roll = roll6
         }
-        for (var t = 0; t < 10; t++) {
+        for (var t = 0; t < 11; t++) {
             var rand = Math.floor(Math.random() * 10)
-            roll.push(rewards[rand])
+            roll.push({icon:rewards[rand],yPos:-5+(40*t)})
         }
     }
     console.log(roll1); console.log(roll2); console.log(roll3);
@@ -460,7 +463,7 @@ function checkButt(mButt){
             }, frt[frtLvl])
         }
         if (mButt == 2 && grenadeCool == true && grenades > 0) {
-            projectiles.push(new grenade(player.x,player.y,5,5,'darkslategray',musx,musy))
+            projectiles.push(new Grenade(player.x,player.y,4,4,'darkslategray',musx,musy))
             grenades--; grenadeCool = false; setTimeout(() => {grenadeCool = true},1000)
         }
     }
@@ -601,7 +604,7 @@ class Spikes {
     }
 }
 
-class grenade {
+class Grenade {
     constructor(x,y,width,height,color,targetX,targetY) {
         this.x = x
         this.y = y
@@ -2271,20 +2274,54 @@ function slotMan() {
     ctx.moveTo(150,235); ctx.lineTo(455,235); ctx.stroke();
     
 
-    //symbol/icon test grenade,twoGrenades,oneHeart,twoHearts,armor
-    var roll1X = 150
-    var roll2X = 200.833
-    var roll3X = 251.666
-    var roll4X = 302.5
-    var roll5X = 353.333
-    var roll6X = 404.166
-    var testY = 195
-    ctx.drawImage(coin,roll1X,testY,50,40)
-    ctx.drawImage(twoCoins,roll2X,testY,50,40)
-    ctx.drawImage(threeCoins,roll3X,testY,50,40)
-    ctx.drawImage(moneyBag,roll4X,testY,50,40)
-    ctx.drawImage(moneyChest,roll5X,testY,50,40)
-
+    //symbol/icon drawing
+    for (var r = 0; r < 6; r++) {
+        var roll, rollNumber
+        switch (r) {
+            case 0: 
+                roll = roll1
+                rollNumber = roll1X
+                break
+            case 1:
+                roll = roll2
+                rollNumber = roll2X
+                break
+            case 2:
+                roll = roll3
+                rollNumber = roll3X
+                break
+            case 3:
+                roll = roll4
+                rollNumber = roll4X
+                break
+            case 4:
+                roll = roll5
+                rollNumber = roll5X
+                break
+            case 5:
+                roll = roll6
+                rollNumber = roll6X
+                break
+        }
+        roll.forEach(symbol => {
+            var icon
+            if (symbol.icon == 'oneCoin') {icon = coin}
+            else if (symbol.icon == 'twoCoins') {icon = twoCoins}
+            else if (symbol.icon == 'threeCoins') {icon = threeCoins}
+            else if (symbol.icon == 'moneyBag') {icon = moneyBag}
+            else if (symbol.icon == 'moneyChest') {icon = moneyChest}
+            else if (symbol.icon == 'grenade') {icon = grenade}
+            else if (symbol.icon == 'twoGrenades') {icon = twoGrenades}
+            else if (symbol.icon == 'oneHeart') {icon = oneHeart}
+            else if (symbol.icon == 'twoHearts') {icon = twoHearts}
+            else if (symbol.icon == 'armor') {icon = newArmor}
+            
+            if (symbol.yPos > 75 && symbol.yPos < 315) {
+                ctx.drawImage(icon,rollNumber,symbol.yPos,50,40)
+            }
+        })
+    }
+    
 
     //bottom thing
     ctx.fillStyle = 'blue'; ctx.fillRect(150,275,305,40)
@@ -2299,7 +2336,16 @@ function slotMan() {
     else {
         ctx.fillStyle = 'maroon'; 
         ctx.fillRect(240,335,120,40)
-        ctx.fillStyle = 'crimson';
+        if (credits == 0 || lit <= 0) {ctx.fillStyle = 'crimson';}
+        else if (lit > 0) {
+            lit -= 0.02
+            var gradient = ctx.createRadialGradient(300,345,5,300,345,30)
+            gradient.addColorStop(0,'yellow')
+            gradient.addColorStop(0.5,'orange')
+            gradient.addColorStop(1,'red')
+            ctx.fillStyle = gradient
+            if (lit <= 0) {setTimeout(() => {lit = 1},1000)}
+        }
         ctx.fillRect(240,325,120,40)
     }
 
@@ -2310,7 +2356,7 @@ function slotMan() {
     if (keys && keys['c'] && pressed == false) {
         pressed = true
         showingHud = 3; console.log('inserted 5 coins')
-        setTimeout(()=>{points -= 5; credits += 5; pressed = false},2000)
+        setTimeout(()=>{points -= 5; credits += 5; pressed = false},1500)
     }
     
     
