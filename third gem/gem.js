@@ -77,7 +77,7 @@ var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
 //slot-man
-var credits = 0, showingHud = 0, pressed = false, lit = 1
+var credits = 0, showingHud = 0, cPressed = false, mPressed = false, lit = 1, spinning = false, mode = 'auto', cost = 5
 var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
 var coin = new Image(), twoCoins = new Image(), threeCoins = new Image(), moneyBag = new Image(), moneyChest = new Image();
 var grenade = new Image(), twoGrenades = new Image(), oneHeart = new Image(), twoHearts = new Image(), newArmor = new Image();
@@ -87,6 +87,9 @@ var roll1 = [], roll2 = [], roll3 = []
 var roll4 = [], roll5 = [], roll6 = []
 var roll1X = 150, roll2X = 200.833, roll3X = 251.666
 var roll4X = 302.5, roll5X = 353.333, roll6X = 404.166
+var rolls = [[roll1,roll1X],[roll2,roll2X],[roll3,roll3X],[roll4,roll4X],[roll5,roll5X],[roll6,roll6X]]
+var spinTime = 0, spinDuration, offset1, offset2, offset3, offset4, offset5;
+var speed1 = 0, speed2 = 0, speed3 = 0, speed4 = 0, speed5 = 0, speed6 = 0;
 //highscore stuff
 var key,keyPress,canEnterName = false, ready = false
 var keysEntered = 0, nameListener
@@ -307,30 +310,10 @@ function startPewPew() {
 }
 
 function startSlotMan() {
-    for (var r = 0; r < 6; r++) {
-        var roll
-        switch (r) {
-            case 0: 
-                roll = roll1
-                break
-            case 1:
-                roll = roll2
-                break
-            case 2:
-                roll = roll3
-                break
-            case 3:
-                roll = roll4
-                break
-            case 4:
-                roll = roll5
-                break
-            case 5:
-                roll = roll6
-        }
+    for (var r = 0; r < rolls.length; r++) {
         for (var t = 0; t < 11; t++) {
             var rand = Math.floor(Math.random() * 10)
-            roll.push({icon:rewards[rand],yPos:-5+(40*t)})
+            rolls[r][0].push({icon:rewards[rand],yPos:-5+(40*t)})
         }
     }
     console.log(roll1); console.log(roll2); console.log(roll3);
@@ -2256,54 +2239,18 @@ function pewPew() {
 
 function slotMan() {
     ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'yellow'; ctx.fillRect(135,50,335,350);
-    ctx.fillStyle = 'black'; ctx.font = '60px consolas'; ctx.fillText('Slot-Man',170,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
-    //coin slot
-    ctx.strokeStyle = 'black'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(200,335); ctx.lineTo(200,375); ctx.stroke();
 
     //roll dividers vertical
     ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = 'black'; 
     ctx.moveTo(200.833,115); ctx.lineTo(200.833,315);ctx.moveTo(251.666,115); ctx.lineTo(251.666,315); 
     ctx.moveTo(302.5,115); ctx.lineTo(302.5,315); ctx.moveTo(353.333,115); ctx.lineTo(353.333,315);
     ctx.moveTo(404.166,115); ctx.lineTo(404.166,315); ctx.stroke()
-    //horizontal
-    ctx.beginPath(); ctx.moveTo(150,155); ctx.lineTo(455,155); ctx.moveTo(150,275); ctx.lineTo(455,275); ctx.stroke()
 
-    //win area
-    ctx.beginPath(); ctx.strokeStyle = 'crimson'; ctx.moveTo(150,195); ctx.lineTo(455,195); 
-    ctx.moveTo(150,235); ctx.lineTo(455,235); ctx.stroke();
-    
 
     //symbol/icon drawing
-    for (var r = 0; r < 6; r++) {
-        var roll, rollNumber
-        switch (r) {
-            case 0: 
-                roll = roll1
-                rollNumber = roll1X
-                break
-            case 1:
-                roll = roll2
-                rollNumber = roll2X
-                break
-            case 2:
-                roll = roll3
-                rollNumber = roll3X
-                break
-            case 3:
-                roll = roll4
-                rollNumber = roll4X
-                break
-            case 4:
-                roll = roll5
-                rollNumber = roll5X
-                break
-            case 5:
-                roll = roll6
-                rollNumber = roll6X
-                break
-        }
-        roll.forEach(symbol => {
+    for (var r = 0; r < 6; r++) { 
+        rolls[r][0].forEach(symbol => {
             var icon
             if (symbol.icon == 'oneCoin') {icon = coin}
             else if (symbol.icon == 'twoCoins') {icon = twoCoins}
@@ -2317,52 +2264,103 @@ function slotMan() {
             else if (symbol.icon == 'armor') {icon = newArmor}
             
             if (symbol.yPos > 75 && symbol.yPos < 315) {
-                ctx.drawImage(icon,rollNumber,symbol.yPos,50,40)
+                ctx.beginPath();ctx.moveTo(rolls[r][1],symbol.yPos);
+                ctx.lineTo(rolls[r][1]+50.833,symbol.yPos); ctx.stroke()
+                ctx.drawImage(icon,rolls[r][1],symbol.yPos,50,40)
             }
         })
     }
     
+    ctx.fillStyle = 'yellow'; ctx.fillRect(150,60,305,55); ctx.fillRect(150,315,305,50);
+    ctx.fillStyle = 'black'; ctx.font = '60px consolas'; ctx.fillText('Slot-Man',170,100);
+
+    //win area
+    ctx.beginPath(); ctx.strokeStyle = 'crimson'; ctx.moveTo(150,195); ctx.lineTo(455,195); 
+    ctx.moveTo(150,235); ctx.lineTo(455,235); ctx.stroke();
+
+    //coin slot
+    ctx.strokeStyle = 'black'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(200,337.5); ctx.lineTo(200,377.5); ctx.stroke();
 
     //bottom thing
-    ctx.fillStyle = 'blue'; ctx.fillRect(150,275,305,40)
-    ctx.font = '20px consolas'
-    ctx.fillStyle = 'black'; ctx.fillText('credits: '+credits,160,300)
+    if (spinning != true) {
+        ctx.fillStyle = 'blue'; ctx.fillRect(150,275,305,40)
+        ctx.font = '18px consolas'; ctx.fillStyle = 'black';
+        ctx.fillText('credits:'+credits+'|mode:'+mode+'|cost:'+cost,155,300,290)
+    }
+
+    //mode button
+    if (keys && keys['m']) {
+        ctx.fillStyle = 'crimson';
+        ctx.fillRect(400,342.5,30,30)
+        if (mPressed == false && spinning == false) {
+            mPressed = true
+            if (mode == 'auto') {mode = 'manual'; cost = 10}
+            else {mode = 'auto'; cost = 5}
+            setTimeout(() => {mPressed = false},1000)
+        }
+    }
+    else {
+        ctx.fillStyle = 'maroon';
+        ctx.fillRect(400,342.5,30,30)
+        ctx.fillStyle = 'crimson';
+        ctx.fillRect(400,332.5,30,30)
+    }
 
     //main button
     if (keys && keys[' ']) {
         ctx.fillStyle = 'crimson'; 
-        ctx.fillRect(240,335,120,40)
+        ctx.fillRect(240,337.5,120,40)
+        if (spinning == false && credits >= cost) {
+            spinning = true; credits -= cost; console.log('spinning!!!');
+            spinDuration = 5 + Math.random() * 2 - 1; 
+            offset1 = 0.5 + Math.random() / 2 - 0.25;
+            offset2 = 0.5 + Math.random() / 2 - 0.25;
+            offset3 = 0.5 + Math.random() / 2 - 0.25;
+            offset4 = 0.5 + Math.random() / 2 - 0.25;
+            offset5 = 0.5 + Math.random() / 2 - 0.25;
+            console.log(spinDuration+' '+offset1+' '+offset2+' '+offset3+' '+offset4+' '+offset5)
+        }
     }
     else {
         ctx.fillStyle = 'maroon'; 
-        ctx.fillRect(240,335,120,40)
-        if (credits == 0 || lit <= 0) {ctx.fillStyle = 'crimson';}
+        ctx.fillRect(240,337.5,120,40)
+        if (credits < cost || lit <= 0 || spinning == true) {ctx.fillStyle = 'crimson';}
         else if (lit > 0) {
-            lit -= 0.02
-            var gradient = ctx.createRadialGradient(300,345,5,300,345,30)
+            lit -= 0.02; //console.log(lit)
+            var gradient = ctx.createRadialGradient(300,347.5,5,300,347.5,30)
             gradient.addColorStop(0,'yellow')
             gradient.addColorStop(0.5,'orange')
             gradient.addColorStop(1,'red')
             ctx.fillStyle = gradient
             if (lit <= 0) {setTimeout(() => {lit = 1},1000)}
         }
-        ctx.fillRect(240,325,120,40)
+        ctx.fillRect(240,327.5,120,40)
     }
 
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
     ctx.fillText('[C]insert coins',10,totH-25)
 
     //inserting coins
-    if (keys && keys['c'] && pressed == false) {
-        pressed = true
+    if (keys && keys['c'] && cPressed == false && spinning == false) {
+        cPressed = true
         showingHud = 3; console.log('inserted 5 coins')
-        setTimeout(()=>{points -= 5; credits += 5; pressed = false},1500)
+        setTimeout(()=>{points -= 5; credits += 5; cPressed = false},1500)
     }
     
-    
+    if (spinning == true) {
+        //speed stuff
+        rolls.forEach(roller => {
+            roller[0].forEach(symbol => {
+                symbol.yPos += 2
+                if (symbol.yPos > 435) {symbol.yPos = -5}
+            })
+        })
+    }
+
+
     if (showingHud > 0) {
         showingHud -= 0.02
-        console.log(showingHud)
+        //console.log(showingHud)
         var healthPercentage = health / maxHealth;
         var armorPercentage = armor / maxArmor;
         ctx.fillStyle = 'white'
