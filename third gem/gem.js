@@ -88,8 +88,9 @@ var roll4 = [], roll5 = [], roll6 = []
 var roll1X = 150, roll2X = 200.833, roll3X = 251.666
 var roll4X = 302.5, roll5X = 353.333, roll6X = 404.166
 var rolls = [[roll1,roll1X],[roll2,roll2X],[roll3,roll3X],[roll4,roll4X],[roll5,roll5X],[roll6,roll6X]]
-var spinTime = 0, spinDuration, offset1, offset2, offset3, offset4, offset5;
+var spinTime = 0, spinDuration, offset1 = 0, offset2 = 0, offset3 = 0, offset4 = 0, offset5 = 0;
 var speed1 = 0, speed2 = 0, speed3 = 0, speed4 = 0, speed5 = 0, speed6 = 0;
+var speeds = [speed1,speed2,speed3,speed4,speed5,speed6]
 //highscore stuff
 var key,keyPress,canEnterName = false, ready = false
 var keysEntered = 0, nameListener
@@ -2343,15 +2344,31 @@ function slotMan() {
     //inserting coins
     if (keys && keys['c'] && cPressed == false && spinning == false) {
         cPressed = true
-        showingHud = 3; console.log('inserted 5 coins')
-        setTimeout(()=>{points -= 5; credits += 5; cPressed = false},1500)
+        showingHud = 2; console.log('inserted 5 coins')
+        setTimeout(()=>{points -= 5; credits += 5; cPressed = false},1000)
     }
     
     if (spinning == true) {
         //speed stuff
-        rolls.forEach(roller => {
+        console.log('s1:'+speeds[0]+'|s2:'+speeds[1]+'|s3:'+speeds[2]+'|s4:'+speeds[3]+'|s5:'+speeds[4]+'|s6:'+speeds[5])
+        if (spinTime < 1) {speeds[0] += 0.2}
+        spinTime += 0.02; //console.log(Math.floor(spinTime));
+        if (spinTime > offset1 && spinTime < offset1 + 1) {speeds[1] += 0.2}
+        if (spinTime > offset1 + offset2 && spinTime < offset1 + offset2 + 1) {speeds[2] += 0.2}
+        if (spinTime > offset1 + offset2 + offset3 && spinTime < offset1 + offset2 + offset3 + 1) {speeds[3] += 0.2}
+        if (spinTime > offset1 + offset2 + offset3 + offset4 && spinTime < offset1 + offset2 + offset3 + offset4 + 1) {speeds[4] += 0.2}
+        if (spinTime > offset1 + offset2 + offset3 + offset4 + offset5 && spinTime < offset1 + offset2 + offset3 + offset4 + offset5 + 1) {speeds[5] += 0.2}
+
+        if (spinTime > spinDuration && spinTime < spinDuration + 1) {speeds[0] -= 0.2}
+        if (spinTime > spinDuration + offset1 && spinTime < spinDuration + offset1 + 1) {speeds[1] -= 0.2}
+        if (spinTime > spinDuration + offset1 + offset2 && spinTime < spinDuration + offset1 + offset2 + 1) {speeds[2] -= 0.2}
+        if (spinTime > spinDuration + offset1 + offset2 + offset3 && spinTime < spinDuration + offset1 + offset2 + offset3 + 1) {speeds[3] -= 0.2}
+        if (spinTime > spinDuration + offset1 + offset2 + offset3 + offset4 && spinTime < spinDuration + offset1 + offset2 + offset3 + offset4 + 1) {speeds[4] -= 0.2}
+        if (spinTime > spinDuration + offset1 + offset2 + offset3 + offset4 + offset5 && spinTime < spinDuration + offset1 + offset2 + offset3 + offset4 + offset5 + 1) {speeds[5] -= 0.2}
+        
+        rolls.forEach((roller, index) => {
             roller[0].forEach(symbol => {
-                symbol.yPos += 2
+                symbol.yPos += speeds[index]
                 if (symbol.yPos > 435) {symbol.yPos = -5}
             })
         })
@@ -2392,6 +2409,7 @@ function slotMan() {
 
     if (keys && keys['q']) {
         clearInterval(levelInterval); gameState = states.level; console.log('exiting slot-man');
+        for (var s = 0; s < 6; s++) {speeds[s] = 0; rolls[s][0] = []}; spinTime = 0; spinning = false;
         levelInterval = setInterval(levelLoop,20)
     }
 }
