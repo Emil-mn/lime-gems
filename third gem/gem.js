@@ -362,6 +362,8 @@ function checkButt(mButt){
             arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
             arcade2 = new Obstacle(536,totH-99,10,20,'black')
             arcade3 = new Obstacle(380,295,10,20,'yellow')
+            //enemy test
+            enemies.push(new character(265,240,10,25,'crimson','enemy',25))
             //pickup test
             pickups.push(new character(totW/2,totH-15,5,5,'gold','points',15))
             pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
@@ -375,6 +377,7 @@ function checkButt(mButt){
             floors.push(new Obstacle(515,totH-79,59,5,'gray'))
             floors.push(new Obstacle(360,315,50,5,'gray'))
             floors.push(new Spikes(400,totH-5,20))
+            floors.push(new Obstacle(260,260,69,5,'red'))
             //walls
             walls.push(new Obstacle(225,totH-105,5,45,'gray'))
             walls.push(new Obstacle(290,totH-105,5,45,'gray'))
@@ -695,6 +698,7 @@ class character {
         ctx.fillStyle = color
         this.type = type
         this.amount = amount
+        this.health = amount
         this.gravity = 0.15
         this.fallSpeed = 0
         this.jumpStrength = -3.5;
@@ -1494,7 +1498,7 @@ function levelLoop() {
         
         else {
             projectiles.forEach((bullet,bundex) => {
-                if (bullet.crashWith(wall) && wall.unlocked == false) {
+                if (bullet.crashWith(wall) && wall?.unlocked == false) {
                     if (bullet.type == 'frend' || bullet.type == 'enemi' || bullet.type == 'fragment') {
                         projectiles.splice(bundex,1)
                     }
@@ -1515,7 +1519,7 @@ function levelLoop() {
                 else if (keyCards[wall.id] == true) {
                     ctx.fillText('[E]Insert',wall.x-65,wall.y-15);
                     ctx.fillText('keycard',wall.x-50,wall.y-3);
-                    if (keys && keys['e']) {console.log('unlocking door '+wall.id); wall.unlocked = true}
+                    if (keys && keys['e']) {console.log('unlocking key door '+wall.id); wall.unlocked = true}
                 }
             }
             else if (player.x < wall.x + wall.width + 20 && player.x > wall.x + wall.width && player.y + player.height > wall.y - 10 && player.y < wall.y + wall.height + 10) {
@@ -1527,7 +1531,7 @@ function levelLoop() {
                 else if (keyCards[wall.id] == true) {
                     ctx.fillText('[E]Insert',wall.x+8,wall.y-15);
                     ctx.fillText('keycard',wall.x+23,wall.y-3);
-                    if (keys && keys['e']) {console.log('unlocking door '+wall.id); wall.unlocked = true}
+                    if (keys && keys['e']) {console.log('unlocking key door '+wall.id); wall.unlocked = true}
                 }
             }
         }
@@ -1536,7 +1540,7 @@ function levelLoop() {
             if (player.x + player.width > wall.lx - 20 && player.x < wall.lx + 28 && player.y + player.height > wall.ly - 10 && player.y < wall.ly + 28) {
                 ctx.fillStyle = 'black'; ctx.font = '12px consolas'
                 ctx.fillText('[E]Press button',wall.lx - 50,wall.ly - 15)
-                if (keys && keys['e']) {console.log('opening door '+wall.id); wall.unlocked = true}
+                if (keys && keys['e']) {console.log('opening butt door '+wall.id); wall.unlocked = true}
             }
         }
     })
@@ -1544,6 +1548,31 @@ function levelLoop() {
     //render player
     player.update(xInput, yInput); pGun.x = player.x + 20; pGun.y = player.y + 22; pGun.update();
     //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
+
+    enemies.forEach((enemy,index) => {
+        enemy.update(); enemy.x += 0.02
+        if (enemy.health <= 0) {enemies.splice(index,1)}
+        floors.forEach(floor => {
+            if (enemy.floor(floor)) {
+                enemy.y = floor.y - enemy.height;
+                enemy.grounded = true;
+            }
+            else if (enemy.floorBottom(floor)) {
+                enemy.y = floor.y + floor.height;
+                enemy.fallSpeed = 0
+            }
+        })
+        walls.forEach(wall => {
+            if (wall.unlocked == false) {
+                if (enemy.wallLeft(wall)) {
+                    enemy.x = wall.x - enemy.width
+                }
+                else if (enemy.wallRight(wall)) {
+                    enemy.x = wall.x + wall.width
+                }
+            }
+        })
+    })
 
     projectiles.forEach((bullet,index) => {
         if (bullet.type != 'grenade') {
@@ -1580,12 +1609,13 @@ function levelLoop() {
                 console.log('received '+reducedDamage+' damage, '+protected+' damage absorbed by armor')
             }
         }
-        else if (bullet.type == 'frend')
+        else if (bullet.type == 'frend' || bullet.type == 'fragment')
         {
             enemies.forEach(enemi => {
                 if (bullet.crashWith(enemi)){
                     projectiles.splice(index,1)
                     enemi.health -= bullet.damage
+                    console.log(enemi.health)
                 }
             })
         }
@@ -2350,9 +2380,9 @@ function slotMan() {
     
     if (spinning == true) {
         //speed stuff
-        console.log('s1:'+speeds[0]+'|s2:'+speeds[1]+'|s3:'+speeds[2]+'|s4:'+speeds[3]+'|s5:'+speeds[4]+'|s6:'+speeds[5])
+        //console.log('s1:'+speeds[0]+'|s2:'+speeds[1]+'|s3:'+speeds[2]+'|s4:'+speeds[3]+'|s5:'+speeds[4]+'|s6:'+speeds[5])
         if (spinTime < 1) {speeds[0] += 0.2}
-        spinTime += 0.02; //console.log(Math.floor(spinTime));
+        spinTime += 0.02; console.log(Math.floor(spinTime));
         if (spinTime > offset1 && spinTime < offset1 + 1) {speeds[1] += 0.2}
         if (spinTime > offset1 + offset2 && spinTime < offset1 + offset2 + 1) {speeds[2] += 0.2}
         if (spinTime > offset1 + offset2 + offset3 && spinTime < offset1 + offset2 + offset3 + 1) {speeds[3] += 0.2}
@@ -2360,16 +2390,42 @@ function slotMan() {
         if (spinTime > offset1 + offset2 + offset3 + offset4 + offset5 && spinTime < offset1 + offset2 + offset3 + offset4 + offset5 + 1) {speeds[5] += 0.2}
 
         if (spinTime > spinDuration && spinTime < spinDuration + 1) {speeds[0] -= 0.2}
-        if (spinTime > spinDuration + offset1 && spinTime < spinDuration + offset1 + 1) {speeds[1] -= 0.2}
-        if (spinTime > spinDuration + offset1 + offset2 && spinTime < spinDuration + offset1 + offset2 + 1) {speeds[2] -= 0.2}
-        if (spinTime > spinDuration + offset1 + offset2 + offset3 && spinTime < spinDuration + offset1 + offset2 + offset3 + 1) {speeds[3] -= 0.2}
-        if (spinTime > spinDuration + offset1 + offset2 + offset3 + offset4 && spinTime < spinDuration + offset1 + offset2 + offset3 + offset4 + 1) {speeds[4] -= 0.2}
-        if (spinTime > spinDuration + offset1 + offset2 + offset3 + offset4 + offset5 && spinTime < spinDuration + offset1 + offset2 + offset3 + offset4 + offset5 + 1) {speeds[5] -= 0.2}
+        else if (spinTime > spinDuration + 1) {
+            if (!rolls[0][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub1')}
+        }
+        if (spinTime > spinDuration + offset3 && spinTime < spinDuration + offset3 + 1) {speeds[1] -= 0.2}
+        else if (spinTime > spinDuration + offset3 + 1) {
+            if (!rolls[1][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub2')}
+        }
+        if (spinTime > spinDuration + offset3 + offset5 && spinTime < spinDuration + offset3 + offset5 + 1) {speeds[2] -= 0.2}
+        else if (spinTime > spinDuration + offset3 + offset5 + 1) {
+            if (!rolls[2][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub3')}
+        }
+        if (spinTime > spinDuration + offset3 + offset5 + offset2 && spinTime < spinDuration + offset3 + offset5 + offset2 + 1) {speeds[3] -= 0.2}
+        else if (spinTime > spinDuration + offset3 + offset5 + offset2 + 1) {
+            if (!rolls[3][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub4')}
+        }
+        if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {speeds[4] -= 0.2}
+        else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {
+            if (!rolls[4][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub5')}
+        }
+        if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {speeds[5] -= 0.2}
+        else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {
+            if (!rolls[5][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub6')}
+        }
+        
+        if (spinTime > 10) {
+            console.log(rolls)
+            spinning = false; spinTime = 0
+        }
         
         rolls.forEach((roller, index) => {
             roller[0].forEach(symbol => {
                 symbol.yPos += speeds[index]
-                if (symbol.yPos > 435) {symbol.yPos = -5}
+                if (symbol.yPos > 435) {
+                    var overflow = symbol.yPos - 435;
+                    symbol.yPos = -5 + overflow;
+                }
             })
         })
     }
