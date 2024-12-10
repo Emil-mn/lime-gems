@@ -27,6 +27,7 @@ var hlt = [50,75,100,125,150,200,'Max']
 var gnd = [1,2,3,4,5,6,'Max']
 //array stuff
 var enemies = []
+var guns = []
 var projectiles = []
 var pickups = []
 var floors = []
@@ -358,12 +359,13 @@ function checkButt(mButt){
         if (buttClicked(400,250,100,50)){
             console.log('clicked play button'); 
             player = new character(520,20,10,25,'gray');
-            pGun = new gun(40,300,12,5)
+            pGun = new gun(40,300,12,5,'yes')
             arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
             arcade2 = new Obstacle(536,totH-99,10,20,'black')
             arcade3 = new Obstacle(380,295,10,20,'yellow')
             //enemy test
             enemies.push(new character(265,240,10,25,'crimson','enemy',25))
+            guns.push(new gun(265,240,12,5))
             //pickup test
             pickups.push(new character(totW/2,totH-15,5,5,'gold','points',15))
             pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
@@ -377,7 +379,7 @@ function checkButt(mButt){
             floors.push(new Obstacle(515,totH-79,59,5,'gray'))
             floors.push(new Obstacle(360,315,50,5,'gray'))
             floors.push(new Spikes(400,totH-5,20))
-            floors.push(new Obstacle(260,260,69,5,'red'))
+            floors.push(new Obstacle(260,280,69,5,'red'))
             //walls
             walls.push(new Obstacle(225,totH-105,5,45,'gray'))
             walls.push(new Obstacle(290,totH-105,5,45,'gray'))
@@ -444,9 +446,9 @@ function checkButt(mButt){
     }
     if (gameState == states.level){
         if (mButt == 0) {
-            fireInterval = setInterval(() => {
             projectiles.push(new Projectile(3,3,'goldenrod',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
-            projectiles.push(new Projectile(3,3,'red',player.x + 50, player.y + 12, player.x,player.y+12,'enemi'))
+            fireInterval = setInterval(() => {
+                projectiles.push(new Projectile(3,3,'goldenrod',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
             }, frt[frtLvl])
         }
         if (mButt == 2 && grenadeCool == true && grenades > 0) {
@@ -703,6 +705,7 @@ class character {
         this.fallSpeed = 0
         this.jumpStrength = -3.5;
         this.grounded = false;
+        this.shootTime = 0
         this.update = function (x, y) {
             if (x == 1) {
                 this.x += SPEED
@@ -824,7 +827,7 @@ class character {
 
 
 class gun {
-    constructor(x, y, width, height) {
+    constructor(x, y, width, height, isPlayer) {
         this.x = x
         this.y = y
         this.width = width
@@ -836,7 +839,10 @@ class gun {
 
         this.update = function () {
             // Calculate the angle in radians
-            this.angle = Math.atan2(musy - this.centerY, musx - this.x);
+            if (isPlayer == 'yes') {
+                this.angle = Math.atan2(musy - this.centerY, musx - this.x);
+            }
+            else {this.angle = Math.atan2((player.y+20) - this.centerY, (player.x+20) - this.x)}
             this.centerY = this.y + this.height / 2
             // Save the current context state
             ctx.save();
@@ -889,7 +895,7 @@ class Projectile {
 
         if (rand < crt[crtLvl]) { crit = true}
 
-        console.log('damage: ' + this.damage + ' rand: ' + rand + ' crit: ' + crit)
+        //console.log('damage: ' + this.damage + ' rand: ' + rand + ' crit: ' + crit)
 
         if (crit == true) { this.damage *= 1.5; console.log('crit damage: ' + this.damage)} 
 
@@ -1550,8 +1556,23 @@ function levelLoop() {
     //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
 
     enemies.forEach((enemy,index) => {
-        enemy.update(); enemy.x += 0.02
-        if (enemy.health <= 0) {enemies.splice(index,1)}
+        enemy.update();
+        if (enemy.health <= 0) {enemies.splice(index,1); guns.splice(index,1)}
+        enemy.shootTime += 0.02;
+        if (enemy.shootTime > 0.5) {
+            projectiles.push(new Projectile(3,3,'maroon',enemy.x,enemy.y+5,player.x,player.y+5,'enemi'))
+            enemy.shootTime = 0; 
+        }
+        
+        if (player.x < enemy.x) {
+            if (player.x < enemy.x - 80) {enemy.x -= 1.5; console.log('following to left')}
+            else if (player.x > enemy.x - 50) {enemy.x += 1.5; console.log('retreating to rigth')}
+        }
+        else if (player.x > enemy.x) {
+            if (player.x > enemy.x + 80) {enemy.x += 1.5; console.log('following to right')}
+            else if (player.x < enemy.x + 50) {enemy.x -= 1.5; console.log('retreating to left')}
+        }
+
         floors.forEach(floor => {
             if (enemy.floor(floor)) {
                 enemy.y = floor.y - enemy.height;
@@ -1574,6 +1595,12 @@ function levelLoop() {
         })
     })
 
+    guns.forEach((gunner,index) => {
+        gunner.x = enemies[index].x + 20;
+        gunner.y = enemies[index].y + 22;
+        gunner.update()
+    })
+
     projectiles.forEach((bullet,index) => {
         if (bullet.type != 'grenade') {
             bullet.update();
@@ -1590,14 +1617,14 @@ function levelLoop() {
             {
                 projectiles.splice(index,1)
                 health -= bullet.damage
-                console.log('received '+bullet.damage+' damage')
+                //console.log('received '+bullet.damage+' damage')
             }   
             else if (armor > bullet.damage)
             {
                 projectiles.splice(index,1)
                 armor -= bullet.damage / 2
                 health -= bullet.damage / 2
-                console.log('received '+bullet.damage / 2+' damage, '+bullet.damage / 2+' damage absorbed by armor')
+                //console.log('received '+bullet.damage / 2+' damage, '+bullet.damage / 2+' damage absorbed by armor')
             }
             else if (armor > 0)
             {
@@ -1606,7 +1633,7 @@ function levelLoop() {
                 var protected = bullet.damage - reducedDamage
                 armor = 0
                 health -= reducedDamage
-                console.log('received '+reducedDamage+' damage, '+protected+' damage absorbed by armor')
+                //console.log('received '+reducedDamage+' damage, '+protected+' damage absorbed by armor')
             }
         }
         else if (bullet.type == 'frend' || bullet.type == 'fragment')
@@ -2391,27 +2418,55 @@ function slotMan() {
 
         if (spinTime > spinDuration && spinTime < spinDuration + 1) {speeds[0] -= 0.2}
         else if (spinTime > spinDuration + 1) {
-            if (!rolls[0][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub1')}
+            if (rolls[0][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned1')}
+            else {
+                var reward = rolls[0][0].find(element => element.yPos > 195 && element.yPos < 235);
+                console.log(reward); var move; 
+                if (reward.yPos > 215) {
+                    move = 235 - reward.yPos;
+                    rolls.forEach(roller => {
+                        roller[0].forEach(symbol => {
+                            symbol.yPos += move
+                            if (symbol.yPos > 435) {
+                                var overflow = symbol.yPos - 435;
+                                symbol.yPos = -5 + overflow;
+                            }
+                        })
+                    })
+                }
+                else {
+                    move = reward.yPos - 195;
+                    rolls.forEach(roller => {
+                        roller[0].forEach(symbol => {
+                            symbol.yPos -= move
+                            if (symbol.yPos > 435) {
+                                var overflow = symbol.yPos - 435;
+                                symbol.yPos = -5 + overflow;
+                            }
+                        })
+                    })
+                }
+            }
         }
         if (spinTime > spinDuration + offset3 && spinTime < spinDuration + offset3 + 1) {speeds[1] -= 0.2}
         else if (spinTime > spinDuration + offset3 + 1) {
-            if (!rolls[1][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub2')}
+            if (rolls[1][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned2')}
         }
         if (spinTime > spinDuration + offset3 + offset5 && spinTime < spinDuration + offset3 + offset5 + 1) {speeds[2] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + 1) {
-            if (!rolls[2][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub3')}
+            if (rolls[2][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned3')}
         }
         if (spinTime > spinDuration + offset3 + offset5 + offset2 && spinTime < spinDuration + offset3 + offset5 + offset2 + 1) {speeds[3] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + offset2 + 1) {
-            if (!rolls[3][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub4')}
+            if (rolls[3][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned4')}
         }
         if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {speeds[4] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {
-            if (!rolls[4][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub5')}
+            if (rolls[4][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned5')}
         }
         if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {speeds[5] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {
-            if (!rolls[5][0].some(element => {if (element.yPos > 34.9 && element.yPos < 35){return true}})) {console.log('blub6')}
+            if (rolls[5][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned6')}
         }
         
         if (spinTime > 10) {
@@ -2419,15 +2474,18 @@ function slotMan() {
             spinning = false; spinTime = 0
         }
         
-        rolls.forEach((roller, index) => {
-            roller[0].forEach(symbol => {
-                symbol.yPos += speeds[index]
-                if (symbol.yPos > 435) {
-                    var overflow = symbol.yPos - 435;
-                    symbol.yPos = -5 + overflow;
-                }
+        if (spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {
+            rolls.forEach((roller, index) => {
+                roller[0].forEach(symbol => {
+                    symbol.yPos += speeds[index]
+                    if (symbol.yPos > 435) {
+                        var overflow = symbol.yPos - 435;
+                        symbol.yPos = -5 + overflow;
+                    }
+                })
             })
-        })
+        }
+        
     }
 
 
