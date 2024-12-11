@@ -20,7 +20,7 @@ var crtPrice = [10,15,26,48,64,'Max']
 var hltPrice = [10,15,26,48,64,'Max']
 var gndPrice = [10,15,26,48,64,'Max']
 var dmg = [1,2,4,6,8,10,'Max']
-var frt = [950,800,650,500,350,200,'Max']
+var frt = [800,700,600,500,400,300,'Max']
 var acc = [6,5,4,3,2,1,'Max']
 var crt = [5,10,15,20,25,30,'Max']
 var hlt = [50,75,100,125,150,200,'Max']
@@ -40,12 +40,14 @@ var grenades = 9
 var grenadeCool = true
 var maxHealth = hlt[hltLvl]
 var maxArmor = 25
-var keyCards = {1:false,2:false,3:false,4:false,5:false}
-//inputs n stuff
+var keyCards = [false,false,false,false,false]
+//inputs n misc stuff
 var keys
 const SPEED = 2
 var levelInterval
 var fireInterval
+var level = 1
+var demo = false
 var showingInfo = false
 var scrolled = false
 var infoX = [105,185,190,270,275,355,360,450,455,535,540]
@@ -889,7 +891,9 @@ class Projectile {
         this.dy = Math.sin(this.angle)
 
         //this.damage = Math.floor((Math.random() * (mg.damageMax - mg.damageMin + 1)) + mg.damageMin)
-        this.damage = dmg[dmgLvl]
+        if (this.type == 'frend') {this.damage = dmg[dmgLvl]}
+        else if (this.type == 'enemi') {this.damage = 5}
+        else if (this.type == 'fragment') [this.damage = gnd[gndLvl]]
 
         var rand = Math.random() * 100
 
@@ -1373,7 +1377,15 @@ function levelLoop() {
         ctx.fillRect(45,20,140*overflowHealthPercentage,10)
     }
     ctx.fillStyle = 'blue';
-    ctx.fillRect(45,15,140*armorPercentage,5)
+    if (armor <= maxArmor) {
+        ctx.fillRect(45,15,140*armorPercentage,5)
+    }
+    else if (armor > maxArmor) {
+        ctx.fillRect(45,15,140,5)
+        var overflowArmorPercentage = (armor - maxArmor) / maxArmor
+        ctx.fillStyle = 'darkblue';
+        ctx.fillRect(45,15,140*overflowArmorPercentage,5)
+    }
     ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.strokeRect(15,15,170,15)
     ctx.font = '15px consolas'; ctx.fillStyle = 'black'; ctx.fillText(Math.round(health),17,28)
     //points counter
@@ -1385,7 +1397,7 @@ function levelLoop() {
     ctx.fillStyle = 'black'
     ctx.fillText(grenades,17,60); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,50,10,10)
 
-    if (keys && keys['g']) {grenades = 9}
+    if (keys && keys['g']) {grenades = 9; health += 0.2; armor += 0.2}
 
     //walk and jump
     var xInput, yInput; if(keys && (keys['a'] || keys['ArrowLeft'])) {xInput = -1}; 
@@ -1518,11 +1530,11 @@ function levelLoop() {
         if (wall.type == 'keycard' && wall.unlocked == false) {
             if (player.x + player.width > wall.x - 20 && player.x + player.width < wall.x && player.y + player.height > wall.y - 10 && player.y < wall.y + wall.height + 10) {
                 ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
-                if (keyCards[wall.id] == false) {
+                if (keyCards[wall.id-1] == false) {
                     ctx.fillText('Keycard',wall.x-55,wall.y-15);
                     ctx.fillText('required',wall.x-55,wall.y-3);
                 }
-                else if (keyCards[wall.id] == true) {
+                else if (keyCards[wall.id-1] == true) {
                     ctx.fillText('[E]Insert',wall.x-65,wall.y-15);
                     ctx.fillText('keycard',wall.x-50,wall.y-3);
                     if (keys && keys['e']) {console.log('unlocking key door '+wall.id); wall.unlocked = true}
@@ -1530,11 +1542,11 @@ function levelLoop() {
             }
             else if (player.x < wall.x + wall.width + 20 && player.x > wall.x + wall.width && player.y + player.height > wall.y - 10 && player.y < wall.y + wall.height + 10) {
                 ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
-                if (keyCards[wall.id] == false) {
+                if (keyCards[wall.id-1] == false) {
                     ctx.fillText('Keycard',wall.x+8,wall.y-15);
                     ctx.fillText('required',wall.x+8,wall.y-3);
                 }
-                else if (keyCards[wall.id] == true) {
+                else if (keyCards[wall.id-1] == true) {
                     ctx.fillText('[E]Insert',wall.x+8,wall.y-15);
                     ctx.fillText('keycard',wall.x+23,wall.y-3);
                     if (keys && keys['e']) {console.log('unlocking key door '+wall.id); wall.unlocked = true}
@@ -1556,23 +1568,24 @@ function levelLoop() {
     //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
 
     enemies.forEach((enemy,index) => {
-        enemy.update();
         if (enemy.health <= 0) {enemies.splice(index,1); guns.splice(index,1)}
         enemy.shootTime += 0.02;
         if (enemy.shootTime > 0.5) {
             projectiles.push(new Projectile(3,3,'maroon',enemy.x,enemy.y+5,player.x,player.y+5,'enemi'))
             enemy.shootTime = 0; 
         }
-        
+        var jump = 0
         if (player.x < enemy.x) {
-            if (player.x < enemy.x - 80) {enemy.x -= 1.5; console.log('following to left')}
-            else if (player.x > enemy.x - 50) {enemy.x += 1.5; console.log('retreating to rigth')}
+            if (player.x < enemy.x - 120) {enemy.x -= 1.5; console.log('following to left')}
+            else if (player.x > enemy.x - 75) {enemy.x += 1.5; console.log('retreating to rigth')}
         }
         else if (player.x > enemy.x) {
-            if (player.x > enemy.x + 80) {enemy.x += 1.5; console.log('following to right')}
-            else if (player.x < enemy.x + 50) {enemy.x -= 1.5; console.log('retreating to left')}
+            if (player.x > enemy.x + 120) {enemy.x += 1.5; console.log('following to right')}
+            else if (player.x < enemy.x + 75) {enemy.x -= 1.5; console.log('retreating to left')}
         }
-
+        if (player.y < enemy.y) {jump = 1; console.log('jumping')}
+        
+        enemy.update(0,jump);
         floors.forEach(floor => {
             if (enemy.floor(floor)) {
                 enemy.y = floor.y - enemy.height;
@@ -1582,6 +1595,7 @@ function levelLoop() {
                 enemy.y = floor.y + floor.height;
                 enemy.fallSpeed = 0
             }
+            if (enemy.crashWith(floor) && floor.type == 'spikes') {enemy.health = 0}
         })
         walls.forEach(wall => {
             if (wall.unlocked == false) {
@@ -1678,7 +1692,7 @@ function levelLoop() {
             else if (pickup.type == 'grenade' && grenades < 9) {
                 grenades += pickup.amount; console.log('picked '+pickup.amount+' grenade(s), have '+grenades)
             }
-            else if (pickup.type == 'card') {var index = pickup.id; keyCards[index] = true; console.log(keyCards)}
+            else if (pickup.type == 'card') {var index = pickup.id; keyCards[index-1] = true; console.log(keyCards)}
         }
     })
     
@@ -1861,7 +1875,7 @@ function brikBrek() {
                            brickCount-- 
                            console.log(brickCount)
                            if (b.pUp == true) {
-                                var pup = Math.floor(Math.random() * 5)
+                                var pup = Math.floor(Math.random() * 7)
                                 msgTime = 2
                                 switch (pup) {
                                     case 0:
@@ -1883,6 +1897,14 @@ function brikBrek() {
                                     case 4:
                                         msgText = 'explosive ball';
                                         explodeTime = 8;
+                                    break;
+                                    case 5:
+                                        msgText = 'bigger ball';
+                                        ball.size += 3
+                                    break;
+                                    case 6:
+                                        msgText = 'smaller ball';
+                                        ball.size -= 2
                                     break;
                                 }
                             }
@@ -2406,7 +2428,6 @@ function slotMan() {
     }
     
     if (spinning == true) {
-        //speed stuff
         //console.log('s1:'+speeds[0]+'|s2:'+speeds[1]+'|s3:'+speeds[2]+'|s4:'+speeds[3]+'|s5:'+speeds[4]+'|s6:'+speeds[5])
         if (spinTime < 1) {speeds[0] += 0.2}
         spinTime += 0.02; console.log(Math.floor(spinTime));
@@ -2418,61 +2439,173 @@ function slotMan() {
 
         if (spinTime > spinDuration && spinTime < spinDuration + 1) {speeds[0] -= 0.2}
         else if (spinTime > spinDuration + 1) {
-            if (rolls[0][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned1')}
+            if (rolls[0][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned1')}
             else {
                 var reward = rolls[0][0].find(element => element.yPos > 195 && element.yPos < 235);
                 console.log(reward); var move; 
                 if (reward.yPos > 215) {
                     move = 235 - reward.yPos;
-                    rolls.forEach(roller => {
-                        roller[0].forEach(symbol => {
-                            symbol.yPos += move
-                            if (symbol.yPos > 435) {
-                                var overflow = symbol.yPos - 435;
-                                symbol.yPos = -5 + overflow;
-                            }
-                        })
+                    rolls[0][0].forEach(symbol => {
+                        symbol.yPos += move
+                        if (symbol.yPos > 435) {
+                            var overflow = symbol.yPos - 435;
+                            symbol.yPos = -5 + overflow;
+                        }
                     })
                 }
-                else {
+                else if (reward.yPos < 215) {
                     move = reward.yPos - 195;
-                    rolls.forEach(roller => {
-                        roller[0].forEach(symbol => {
-                            symbol.yPos -= move
-                            if (symbol.yPos > 435) {
-                                var overflow = symbol.yPos - 435;
-                                symbol.yPos = -5 + overflow;
-                            }
-                        })
+                    rolls[0][0].forEach(symbol => {
+                        symbol.yPos -= move
+                        if (symbol.yPos < -5) {
+                            var overflow = -5 - symbol.yPos;
+                            symbol.yPos = 435 - overflow;
+                        }
                     })
                 }
             }
         }
         if (spinTime > spinDuration + offset3 && spinTime < spinDuration + offset3 + 1) {speeds[1] -= 0.2}
         else if (spinTime > spinDuration + offset3 + 1) {
-            if (rolls[1][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned2')}
+            if (rolls[1][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned2')}
+            else {
+                var reward = rolls[1][0].find(element => element.yPos > 195 && element.yPos < 235);
+                console.log(reward); var move; 
+                if (reward.yPos > 215) {
+                    move = 235 - reward.yPos;
+                    rolls[1][0].forEach(symbol => {
+                        symbol.yPos += move
+                        if (symbol.yPos > 435) {
+                            var overflow = symbol.yPos - 435;
+                            symbol.yPos = -5 + overflow;
+                        }
+                    })
+                }
+                else if (reward.yPos < 215) {
+                    move = reward.yPos - 195;
+                    rolls[1][0].forEach(symbol => {
+                        symbol.yPos -= move
+                        if (symbol.yPos < -5) {
+                            var overflow = -5 - symbol.yPos;
+                            symbol.yPos = 435 - overflow;
+                        }
+                    })
+                }
+            }
         }
         if (spinTime > spinDuration + offset3 + offset5 && spinTime < spinDuration + offset3 + offset5 + 1) {speeds[2] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + 1) {
-            if (rolls[2][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned3')}
+            if (rolls[2][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned3')}
+            else {
+                var reward = rolls[2][0].find(element => element.yPos > 195 && element.yPos < 235);
+                console.log(reward); var move; 
+                if (reward.yPos > 215) {
+                    move = 235 - reward.yPos;
+                    rolls[2][0].forEach(symbol => {
+                        symbol.yPos += move
+                        if (symbol.yPos > 435) {
+                            var overflow = symbol.yPos - 435;
+                            symbol.yPos = -5 + overflow;
+                        }
+                    })
+                }
+                else if (reward.yPos < 215) {
+                    move = reward.yPos - 195;
+                    rolls[2][0].forEach(symbol => {
+                        symbol.yPos -= move
+                        if (symbol.yPos < -5) {
+                            var overflow = -5 - symbol.yPos;
+                            symbol.yPos = 435 - overflow;
+                        }
+                    })
+                }
+            }
         }
         if (spinTime > spinDuration + offset3 + offset5 + offset2 && spinTime < spinDuration + offset3 + offset5 + offset2 + 1) {speeds[3] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + offset2 + 1) {
-            if (rolls[3][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned4')}
+            if (rolls[3][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned4')}
+            else {
+                var reward = rolls[3][0].find(element => element.yPos > 195 && element.yPos < 235);
+                console.log(reward); var move; 
+                if (reward.yPos > 215) {
+                    move = 235 - reward.yPos;
+                    rolls[3][0].forEach(symbol => {
+                        symbol.yPos += move
+                        if (symbol.yPos > 435) {
+                            var overflow = symbol.yPos - 435;
+                            symbol.yPos = -5 + overflow;
+                        }
+                    })
+                }
+                else if (reward.yPos < 215) {
+                    move = reward.yPos - 195;
+                    rolls[3][0].forEach(symbol => {
+                        symbol.yPos -= move
+                        if (symbol.yPos < -5) {
+                            var overflow = -5 - symbol.yPos;
+                            symbol.yPos = 435 - overflow;
+                        }
+                    })
+                }
+            }
         }
         if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {speeds[4] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {
-            if (rolls[4][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned5')}
+            if (rolls[4][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned5')}
+            else {
+                var reward = rolls[4][0].find(element => element.yPos > 195 && element.yPos < 235);
+                console.log(reward); var move; 
+                if (reward.yPos > 215) {
+                    move = 235 - reward.yPos;
+                    rolls[4][0].forEach(symbol => {
+                        symbol.yPos += move
+                        if (symbol.yPos > 435) {
+                            var overflow = symbol.yPos - 435;
+                            symbol.yPos = -5 + overflow;
+                        }
+                    })
+                }
+                else if (reward.yPos < 215) {
+                    move = reward.yPos - 195;
+                    rolls[4][0].forEach(symbol => {
+                        symbol.yPos -= move
+                        if (symbol.yPos < -5) {
+                            var overflow = -5 - symbol.yPos;
+                            symbol.yPos = 435 - overflow;
+                        }
+                    })
+                }
+            }
         }
         if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {speeds[5] -= 0.2}
         else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {
-            if (rolls[5][0].some(element => element.yPos > 34.9 && element.yPos < 35)) {console.log('kinda aligned6')}
+            if (rolls[5][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned6')}
+            else {
+                var reward = rolls[5][0].find(element => element.yPos > 195 && element.yPos < 235);
+                console.log(reward); var move; 
+                if (reward.yPos > 215) {
+                    move = 235 - reward.yPos;
+                    rolls[5][0].forEach(symbol => {
+                        symbol.yPos += move
+                        if (symbol.yPos > 435) {
+                            var overflow = symbol.yPos - 435;
+                            symbol.yPos = -5 + overflow;
+                        }
+                    })
+                }
+                else if (reward.yPos < 215) {
+                    move = reward.yPos - 195;
+                    rolls[5][0].forEach(symbol => {
+                        symbol.yPos -= move
+                        if (symbol.yPos < -5) {
+                            var overflow = -5 - symbol.yPos;
+                            symbol.yPos = 435 - overflow;
+                        }
+                    })
+                }
+            }
         }
-        
-        if (spinTime > 10) {
-            console.log(rolls)
-            spinning = false; spinTime = 0
-        }
+                
         
         if (spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {
             rolls.forEach((roller, index) => {
@@ -2485,7 +2618,16 @@ function slotMan() {
                 })
             })
         }
-        
+        else {
+            console.log(rolls); var currRewards = [];
+            rolls.forEach(rolly => {
+                var reward = rolly[0].find(symbol => symbol.yPos > 194.9 && symbol.yPos < 195.1)
+                currRewards.push(reward.icon)
+            })
+            console.log(currRewards) //'oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor'
+            
+            //spinning = false; spinTime = 0
+        }
     }
 
 
@@ -2507,7 +2649,15 @@ function slotMan() {
             ctx.fillRect(45,20,140*overflowHealthPercentage,10)
         }
         ctx.fillStyle = 'blue';
-        ctx.fillRect(45,15,140*armorPercentage,5)
+        if (armor <= maxArmor) {
+            ctx.fillRect(45,15,140*armorPercentage,5)
+        }
+        else if (armor > maxArmor) {
+            ctx.fillRect(45,15,140,5)
+            var overflowArmorPercentage = (armor - maxArmor) / maxArmor
+            ctx.fillStyle = 'darkblue';
+            ctx.fillRect(45,15,140*overflowArmorPercentage,5)
+        }
         ctx.lineWidth = 2; ctx.strokeStyle = 'black'; ctx.strokeRect(15,15,170,15)
         ctx.font = '15px consolas'; ctx.fillStyle = 'black'; ctx.fillText(Math.round(health),17,28)
         //points counter
