@@ -33,10 +33,10 @@ var pickups = []
 var floors = []
 var walls = []
 //char stat stuff
-var points = 999
+var points = 0
 var health
 var armor
-var grenades = 9
+var grenades = 0
 var grenadeCool = true
 var maxHealth = hlt[hltLvl]
 var maxArmor = 25
@@ -276,8 +276,11 @@ function startBrikBrek() {
                 case 4:
                     var pUpChance = 7
                     break;
-                default:
+                case 5:
                     var pUpChance = 6
+                    break;
+                default:
+                    var pUpChance = 5
                     break;
             }
             var pUp = Math.floor(Math.random()*pUpChance)
@@ -325,6 +328,84 @@ function startSlotMan() {
     levelInterval = setInterval(slotMan,20)
 }
 
+function startLevel1() {
+    player = new character(70,50,10,25,'gray');
+    pGun = new gun(80,50,12,5,'yes')
+    //floor beginning
+    floors.push(new Obstacle(60,75,260,5,'gray'))
+    //ceiling beginning
+    floors.push(new Obstacle(60,40,250,5,'gray'))
+    //entrance
+    walls.push(new Obstacle(60,45,5,30,'crimson'))
+    //upper left wall spikebutton
+    walls.push(new Obstacle(305,20,5,20,'gray'))
+    //lower left wall spikebutton && guardpost wall
+    walls.push(new Obstacle(305,80,5,80,'gray'))
+    //floor spikebutton and grenadewall
+    floors.push(new Obstacle(305,120,260,5,'gray'))
+    //ceiling spikebutton
+    floors.push(new Obstacle(305,20,160,5,'gray'))
+    //spikes spikebutton
+    floors.push(new Spikes(310,120,17))
+    //platform spikebutton
+    floors.push(new Obstacle(375,75,40,5,'gray'))
+    //buttonplatform spikebutton && ceiling grenadewall
+    floors.push(new Obstacle(435,55,150,5,'gray'))
+    //right wall spikebutton
+    walls.push(new Obstacle(465,20,5,70,'gray'))
+    //door spikebutton
+    walls.push(new Obstacle(465,90,5,30,'yellow','button',1,450,40))  
+    //spikes grenadewall
+    floors.push(new Spikes(510,120,9))
+    //right wall grenadewall
+    walls.push(new Obstacle(585,55,5,150,'gray'))
+    //platform grenadewall
+    floors.push(new Obstacle(510,90,55,5,'gray'))
+    //grenade grenadewall
+    pickups.push(new character(525,80,5,5,'darkslategrey','grenade',1))
+    //lower floor grenadewall
+    floors.push(new Obstacle(495,200,90,5,'gray'))
+    //lower wall grenadewall
+    walls.push(new Obstacle(505,125,5,45,'gray'))
+    //grenadewall
+    //walls.push(new Obstacle(505,170,5,30,'lightslategray','gBreakable'))
+    //right spikepit wall spikearea
+    walls.push(new Obstacle(505,205,5,30,'gray'))
+    //spikepit floor spikearea
+    floors.push(new Obstacle(50,230,455,5,'gray'))
+    //spikes spikearea
+    floors.push(new Spikes(50,230,76))
+    //right guardpost spikearea
+    floors.push(new Obstacle(275,160,65,5,'gray'))
+    //rightmost guard spikearea
+    //enemies.push(new character(315,140,10,25,'crimson','enemy',15))
+    //guns.push(new gun(315,155,12,5))
+    //second rightmost guard spikearea
+    //enemies.push(new character(290,140,10,25,'crimson','enemy',15))
+    //guns.push(new gun(290,155,12,5))
+    //right guardpost right railing spikearea
+    walls.push(new Obstacle(335,150,5,10,'gray'))
+    //right guardpost left railing spikearea
+    walls.push(new Obstacle(275,150,5,10,'gray'))
+    //left guardpost wall spikearea
+    walls.push(new Obstacle(90,80,5,35,'gray'))
+    //left guardpost floor spikearea
+    floors.push(new Obstacle(60,115,65,5,'gray'))
+    //left guardpost right railing spikearea
+    walls.push(new Obstacle(120,105,5,10,'gray'))
+    //first platform spikearea
+    floors.push(new Obstacle(440,200,40,5,'gray'))
+
+    
+    
+    walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
+    walls.push(new Obstacle(225,totH-60,5,28,'green','keycard',1))
+    
+    arcadeTest = new Obstacle(450,totH-20,10,20,'blue')
+    arcade2 = new Obstacle(536,totH-20,10,20,'black')
+    arcade3 = new Obstacle(380,totH-20,10,20,'yellow')
+}
+
 function pause() {
     if (gameState == states.level) {prevState = 1}
     else if (gameState == states.brik) {prevState = 2}
@@ -360,38 +441,46 @@ function checkButt(mButt){
     if (gameState == states.menu){
         if (buttClicked(400,250,100,50)){
             console.log('clicked play button'); 
-            player = new character(520,20,10,25,'gray');
-            pGun = new gun(40,300,12,5,'yes')
-            arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
-            arcade2 = new Obstacle(536,totH-99,10,20,'black')
-            arcade3 = new Obstacle(380,295,10,20,'yellow')
-            //enemy test
-            enemies.push(new character(265,240,10,25,'crimson','enemy',25))
-            guns.push(new gun(265,240,12,5))
-            //pickup test
-            pickups.push(new character(totW/2,totH-15,5,5,'gold','points',15))
-            pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
-            pickups.push(new character(totW/2+20,totH-15,5,5,'darkblue','armor',10))
-            pickups.push(new character(totW/2+30,totH-15,5,5,'darkslategrey','grenade',1))
-            pickups.push(new Obstacle(80,totH-15,15,10,'green','card',1))
-            //obstacle test
-            //floors
-            floors.push(new Obstacle(170,totH-32,190,5,'gray'))
-            floors.push(new Obstacle(430,totH-55,50,5,'gray'))
-            floors.push(new Obstacle(515,totH-79,59,5,'gray'))
-            floors.push(new Obstacle(360,315,50,5,'gray'))
-            floors.push(new Spikes(400,totH-5,20))
-            floors.push(new Obstacle(260,280,69,5,'red'))
-            //walls
-            walls.push(new Obstacle(225,totH-105,5,45,'gray'))
-            walls.push(new Obstacle(290,totH-105,5,45,'gray'))
-            walls.push(new Obstacle(320,totH-105,5,45,'gray'))
-            walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
-            walls.push(new Obstacle(330,totH-105,5,45,'gray'))
-            walls.push(new Obstacle(330,totH-60,5,28,'lightslategray','gBreakable'))
-            //doors
-            walls.push(new Obstacle(225,totH-60,5,28,'green','keycard',1))
-            walls.push(new Obstacle(290,totH-60,5,28,'yellow','button',1,550,375))
+            enemies = []; guns = []; pickups = []; 
+            floors = []; walls = []
+            if (mButt == 2) {
+                demo = true
+                player = new character(520,20,10,25,'gray');
+                pGun = new gun(40,300,12,5,'yes')
+                arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
+                arcade2 = new Obstacle(536,totH-99,10,20,'black')
+                arcade3 = new Obstacle(380,295,10,20,'yellow')
+                //enemy test
+                enemies.push(new character(265,240,10,25,'crimson','enemy',25))
+                guns.push(new gun(265,240,12,5))
+                //pickup test
+                pickups.push(new character(totW/2,totH-15,5,5,'gold','points',15))
+                pickups.push(new character(totW/2+10,totH-15,5,5,'red','health',20))
+                pickups.push(new character(totW/2+20,totH-15,5,5,'darkblue','armor',10))
+                pickups.push(new character(totW/2+30,totH-15,5,5,'darkslategrey','grenade',1))
+                pickups.push(new Obstacle(80,totH-15,15,10,'green','card',1))
+                //obstacle test
+                //floors
+                floors.push(new Obstacle(170,totH-32,190,5,'gray'))
+                floors.push(new Obstacle(430,totH-55,50,5,'gray'))
+                floors.push(new Obstacle(515,totH-79,59,5,'gray'))
+                floors.push(new Obstacle(360,315,50,5,'gray'))
+                floors.push(new Spikes(400,totH-5,20))
+                floors.push(new Obstacle(260,280,69,5,'red'))
+                //walls
+                walls.push(new Obstacle(225,totH-105,5,45,'gray'))
+                walls.push(new Obstacle(290,totH-105,5,45,'gray'))
+                walls.push(new Obstacle(320,totH-105,5,45,'gray'))
+                walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
+                walls.push(new Obstacle(330,totH-105,5,45,'gray'))
+                walls.push(new Obstacle(330,totH-60,5,28,'lightslategray','gBreakable'))
+                //doors
+                walls.push(new Obstacle(225,totH-60,5,28,'green','keycard',1))
+                walls.push(new Obstacle(290,totH-60,5,28,'yellow','button',1,550,375))
+            }
+            else if (mButt == 0) {
+                startLevel1(); console.log('starting level 1')
+            }
             gameState = states.level; can.style.cursor = 'crosshair';
             health = maxHealth
             armor = maxArmor
@@ -1336,31 +1425,33 @@ function introLoop() {
 
 
 function levelLoop() {
-    ctx.clearRect(0,0,totW,totH); ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH)
-    //grass
-    ctx.beginPath(); ctx.lineWidth = 10; ctx.strokeStyle = 'green'; ctx.moveTo(0,totH); ctx.lineTo(totW,totH); ctx.stroke()
-    //sun
-    ctx.beginPath(); ctx.fillStyle = 'yellow'; ctx.arc(450,120,50,0,360); ctx.fill();
-    //house main and windows
-    ctx.beginPath(); ctx.fillStyle = 'maroon'; ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-55); ctx.lineTo(100,totH-80); ctx.lineTo(150,totH-55);
-    ctx.lineTo(150,totH-5); ctx.closePath(); ctx.fill(); ctx.fillStyle = 'cornflowerblue'; ctx.fillRect(60,totH-40,15,15); ctx.fillRect(125,totH-40,15,15);
-    //window frames
-    ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.strokeRect(60,totH-40,15,15); ctx.strokeRect(125,totH-40,15,15);
-    //outline
-    ctx.beginPath(); ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-55); ctx.lineTo(100,totH-80); ctx.lineTo(150,totH-55); ctx.lineTo(150,totH-5);
-    //window detail 1
-    ctx.moveTo(67.5,totH-40); ctx.lineTo(67.5,totH-25); ctx.moveTo(60,totH-32.5); ctx.lineTo(75,totH-32.5);
-    //window detail 2
-    ctx.moveTo(132.5,totH-40); ctx.lineTo(132.5,totH-25); ctx.moveTo(125,totH-32.5); ctx.lineTo(140,totH-32.5); ctx.stroke();
-    //door with window
-    ctx.fillStyle = 'white'; ctx.fillRect(92.5,totH-35,15,30); ctx.fillStyle = 'cornflowerblue'; ctx.fillRect(95,totH-32.5,10,10);
-    //door window detail
-    ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(100,totH-32.5); ctx.lineTo(100,totH-22.5); ctx.moveTo(95,totH-27.5); ctx.lineTo(105,totH-27.5); ctx.stroke();
-    //door handle
-    ctx.beginPath(); ctx.fillStyle = 'gray'; ctx.arc(96,totH-18,1.5,0,360); ctx.fill();
-    //smoky roof thing
-    ctx.beginPath(); ctx.moveTo(120,totH-70); ctx.lineTo(130,totH-70); ctx.lineTo(130,totH-65.5); ctx.closePath(); ctx.fill(); ctx.fillRect(120,totH-95,10,25);
-
+    if (demo == true) {
+        ctx.clearRect(0,0,totW,totH); ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH)
+        //grass
+        ctx.beginPath(); ctx.lineWidth = 10; ctx.strokeStyle = 'green'; ctx.moveTo(0,totH); ctx.lineTo(totW,totH); ctx.stroke()
+        //sun
+        ctx.beginPath(); ctx.fillStyle = 'yellow'; ctx.arc(450,120,50,0,360); ctx.fill();
+        //house main and windows
+        ctx.beginPath(); ctx.fillStyle = 'maroon'; ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-55); ctx.lineTo(100,totH-80); ctx.lineTo(150,totH-55);
+        ctx.lineTo(150,totH-5); ctx.closePath(); ctx.fill(); ctx.fillStyle = 'cornflowerblue'; ctx.fillRect(60,totH-40,15,15); ctx.fillRect(125,totH-40,15,15);
+        //window frames
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.strokeRect(60,totH-40,15,15); ctx.strokeRect(125,totH-40,15,15);
+        //outline
+        ctx.beginPath(); ctx.moveTo(50,totH-5); ctx.lineTo(50,totH-55); ctx.lineTo(100,totH-80); ctx.lineTo(150,totH-55); ctx.lineTo(150,totH-5);
+        //window detail 1
+        ctx.moveTo(67.5,totH-40); ctx.lineTo(67.5,totH-25); ctx.moveTo(60,totH-32.5); ctx.lineTo(75,totH-32.5);
+        //window detail 2
+        ctx.moveTo(132.5,totH-40); ctx.lineTo(132.5,totH-25); ctx.moveTo(125,totH-32.5); ctx.lineTo(140,totH-32.5); ctx.stroke();
+        //door with window
+        ctx.fillStyle = 'white'; ctx.fillRect(92.5,totH-35,15,30); ctx.fillStyle = 'cornflowerblue'; ctx.fillRect(95,totH-32.5,10,10);
+        //door window detail
+        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(100,totH-32.5); ctx.lineTo(100,totH-22.5); ctx.moveTo(95,totH-27.5); ctx.lineTo(105,totH-27.5); ctx.stroke();
+        //door handle
+        ctx.beginPath(); ctx.fillStyle = 'gray'; ctx.arc(96,totH-18,1.5,0,360); ctx.fill();
+        //smoky roof thing
+        ctx.beginPath(); ctx.moveTo(120,totH-70); ctx.lineTo(130,totH-70); ctx.lineTo(130,totH-65.5); ctx.closePath(); ctx.fill(); ctx.fillRect(120,totH-95,10,25);
+    }
+    else {ctx.fillStyle = 'lightgray'; ctx.fillRect(0,0,totW,totH)}
     //healtbar+armorbar
     var healthPercentage = health / maxHealth;
     var armorPercentage = armor / maxArmor;
@@ -1390,7 +1481,8 @@ function levelLoop() {
     ctx.font = '15px consolas'; ctx.fillStyle = 'black'; ctx.fillText(Math.round(health),17,28)
     //points counter
     ctx.fillText(points,17,45); ctx.fillStyle = 'gold'; 
-    if (points.toString().length == 2) {ctx.fillRect(35,35,10,10);}
+    if (points.toString().length == 1) {ctx.fillRect(27,35,10,10)}
+    else if (points.toString().length == 2) {ctx.fillRect(35,35,10,10);}
     else if (points.toString().length == 3) {ctx.fillRect(45,35,10,10)}
     else if (points.toString().length == 4) {ctx.fillRect(55,35,10,10)}
     //grenade counter
@@ -1667,7 +1759,7 @@ function levelLoop() {
             bullet.lifeTime += 0.02;
             if (bullet.lifeTime > 3) {
                 projectiles.splice(index,1)
-                for (var g = 0; g < 10; g++) {
+                for (var g = 0; g < 20; g++) {
                     projectiles.push(new Projectile(2,2,'darkslategrey',bullet.x,bullet.y,bullet.x + Math.random() * (2 * 10) - 10,bullet.y + Math.random() * (2 * 10) - 10,'fragment'))
                 }
             }
@@ -1676,6 +1768,12 @@ function levelLoop() {
 
     pickups.forEach((pickup,index) => {
         pickup.update()
+        floors.forEach(floor => {
+            if (pickup.floor(floor)) {
+                pickup.y = floor.y - pickup.height;
+                pickup.grounded = true;
+            }
+        })
         if (player.crashWith(pickup)) {
             pickups.splice(index,1)
             if (pickup.type == 'points') {
@@ -1701,8 +1799,12 @@ function levelLoop() {
         console.log('deeeed'); clearInterval(levelInterval); ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH)
         ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; ctx.fillText('You died...',totW/2-200,totH/2);
         ctx.fillStyle = 'gray'; ctx.fillRect(player.x,totH-10,25,10); ctx.fillStyle = 'lightslategrey';
-        ctx.fillRect(player.x+5,totH-16,5,12); setTimeout(loadMenu,3000);
-    }  
+        ctx.fillRect(player.x+5,totH-16,5,12); setTimeout(loadMenu,3000); demo = false
+    }
+    if (keys && keys['q']) {
+        clearInterval(levelInterval); console.log('exiting level');
+        setTimeout(loadMenu,1000); demo = false
+    }
 }
 
 
