@@ -342,7 +342,7 @@ function startLevel1() {
     //lower left wall spikebutton && guardpost wall
     walls.push(new Obstacle(305,80,5,80,'gray'))
     //floor spikebutton and grenadewall
-    floors.push(new Obstacle(305,120,260,5,'gray'))
+    floors.push(new Obstacle(310,120,255,5,'gray'))
     //ceiling spikebutton
     floors.push(new Obstacle(305,20,160,5,'gray'))
     //spikes spikebutton
@@ -368,7 +368,7 @@ function startLevel1() {
     //lower wall grenadewall
     walls.push(new Obstacle(505,125,5,45,'gray'))
     //grenadewall
-    //walls.push(new Obstacle(505,170,5,30,'lightslategray','gBreakable'))
+    walls.push(new Obstacle(505,170,5,30,'lightslategray','gBreakable'))
     //right spikepit wall spikearea
     walls.push(new Obstacle(505,205,5,30,'gray'))
     //spikepit floor spikearea
@@ -378,25 +378,60 @@ function startLevel1() {
     //right guardpost spikearea
     floors.push(new Obstacle(275,160,65,5,'gray'))
     //rightmost guard spikearea
-    //enemies.push(new character(315,140,10,25,'crimson','enemy',15))
-    //guns.push(new gun(315,155,12,5))
+    enemies.push(new character(315,140,10,25,'crimson','enemy',2))
+    guns.push(new gun(315,155,12,5))
     //second rightmost guard spikearea
-    //enemies.push(new character(290,140,10,25,'crimson','enemy',15))
-    //guns.push(new gun(290,155,12,5))
+    enemies.push(new character(290,140,10,25,'crimson','enemy',2))
+    guns.push(new gun(290,155,12,5))
     //right guardpost right railing spikearea
-    walls.push(new Obstacle(335,150,5,10,'gray'))
+    walls.push(new Obstacle(335,153,5,7,'gray'))
     //right guardpost left railing spikearea
-    walls.push(new Obstacle(275,150,5,10,'gray'))
+    walls.push(new Obstacle(275,153,5,7,'gray'))
     //left guardpost wall spikearea
     walls.push(new Obstacle(90,80,5,35,'gray'))
     //left guardpost floor spikearea
     floors.push(new Obstacle(60,115,65,5,'gray'))
     //left guardpost right railing spikearea
-    walls.push(new Obstacle(120,105,5,10,'gray'))
+    walls.push(new Obstacle(120,108,5,7,'gray'))
+    //left guardpost left railing spikearea
+    walls.push(new Obstacle(60,108,5,7,'gray'))
+    //leftmost guard spikearea
+    enemies.push(new character(70,85,10,25,'crimson','enemy',2))
+    guns.push(new gun(70,85,12,5))
+    //second leftmost guard spikearea
+    enemies.push(new character(95,85,10,25,'crimson','enemy',2))
+    guns.push(new gun(95,85,12,5))
     //first platform spikearea
-    floors.push(new Obstacle(440,200,40,5,'gray'))
+    floors.push(new Obstacle(400,190,40,5,'gray'))
+    //second platform spikearea
+    floors.push(new Obstacle(320,210,40,5,'gray'))
+    //third platform spikearea
+    floors.push(new Obstacle(250,210,40,5,'gray'))
+    //fourth platform spikearea
+    floors.push(new Obstacle(200,180,40,5,'gray'))
+    //fifth platform spikearea
+    floors.push(new Obstacle(170,130,40,5,'gray'))
+    //sixth platform spikearea
+    floors.push(new Obstacle(115,190,40,5,'gray'))
+    //seventh platform spikearea
+    floors.push(new Obstacle(50,170,40,5,'gray'))
+    //eight platform spikearea
+    floors.push(new Obstacle(10,130,20,5,'gray'))
+    //left wall spikearea
+    walls.push(new Obstacle(0,75,5,250,'gray'))
+    //platform traparea
+    floors.push(new Obstacle(10,260,20,5,'gray'))
+    //keycard
+    pickups.push(new Obstacle(70,105,15,10,'green','card',1))
+    //floor traparea
+    floors.push(new Obstacle(50,290,400,5,'gray'))
+    //bottom spikepit traparea
+    floors.push(new Obstacle(5,320,45,5,'gray'))
+    //right spikepit traparea
+    walls.push(new Obstacle(50,295,5,30,'gray'))
+    //spikes traparea
+    floors.push(new Spikes(5,320,8))
 
-    
     
     walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
     walls.push(new Obstacle(225,totH-60,5,28,'green','keycard',1))
@@ -981,7 +1016,7 @@ class Projectile {
 
         //this.damage = Math.floor((Math.random() * (mg.damageMax - mg.damageMin + 1)) + mg.damageMin)
         if (this.type == 'frend') {this.damage = dmg[dmgLvl]}
-        else if (this.type == 'enemi') {this.damage = 5}
+        else if (this.type == 'enemi') {this.damage = 2}
         else if (this.type == 'fragment') [this.damage = gnd[gndLvl]]
 
         var rand = Math.random() * 100
@@ -1009,9 +1044,16 @@ class Projectile {
             var mytop = this.y
             var mybottom = this.y + (this.height)
             var otherleft = otherobj.x
-            var otherright = otherobj.x + otherobj.width
-            var othertop = otherobj.y
-            var otherbottom = otherobj.y + otherobj.height
+            if (otherobj.type != 'spikes') {
+                var otherright = otherobj.x + otherobj.width
+                var othertop = otherobj.y
+                var otherbottom = otherobj.y + otherobj.height
+            }
+            else {
+                var otherright = otherobj.x + otherobj.length * 6 
+                var othertop = otherobj.y - 15
+                var otherbottom = otherobj.y
+            }
             var crash = true
             if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
                 crash = false
@@ -1554,6 +1596,7 @@ function levelLoop() {
             else {
                 if (bullet.crashWith(floor)) {
                     projectiles.splice(index,1)
+                    //console.log('bullet spliced by floor:'+floor)
                 }
             }
         })
@@ -1611,6 +1654,7 @@ function levelLoop() {
                 if (bullet.crashWith(wall) && wall?.unlocked == false) {
                     if (bullet.type == 'frend' || bullet.type == 'enemi' || bullet.type == 'fragment') {
                         projectiles.splice(bundex,1)
+                        console.log('bullet spliced by wall')
                     }
                     else if (bullet.type == 'grenade') {
                         bullet.dx = -bullet.dx
@@ -1668,14 +1712,14 @@ function levelLoop() {
         }
         var jump = 0
         if (player.x < enemy.x) {
-            if (player.x < enemy.x - 120) {enemy.x -= 1.5; console.log('following to left')}
-            else if (player.x > enemy.x - 75) {enemy.x += 1.5; console.log('retreating to rigth')}
+            if (player.x < enemy.x - 120) {enemy.x -= 1.5; /*console.log('following to left')*/}
+            else if (player.x > enemy.x - 75) {enemy.x += 1.5; /*console.log('retreating to rigth')*/}
         }
         else if (player.x > enemy.x) {
-            if (player.x > enemy.x + 120) {enemy.x += 1.5; console.log('following to right')}
-            else if (player.x < enemy.x + 75) {enemy.x -= 1.5; console.log('retreating to left')}
+            if (player.x > enemy.x + 120) {enemy.x += 1.5; /*console.log('following to right')*/}
+            else if (player.x < enemy.x + 75) {enemy.x -= 1.5; /*console.log('retreating to left')*/}
         }
-        if (player.y < enemy.y) {jump = 1; console.log('jumping')}
+        //if (player.y < enemy.y) {jump = 1; console.log('jumping')}
         
         enemy.update(0,jump);
         floors.forEach(floor => {
@@ -1769,7 +1813,7 @@ function levelLoop() {
     pickups.forEach((pickup,index) => {
         pickup.update()
         floors.forEach(floor => {
-            if (pickup.floor(floor)) {
+            if (pickup.type != 'card' && pickup.floor(floor)) {
                 pickup.y = floor.y - pickup.height;
                 pickup.grounded = true;
             }
