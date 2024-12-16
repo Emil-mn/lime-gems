@@ -332,7 +332,7 @@ function startLevel1() {
     player = new character(70,50,10,25,'gray');
     pGun = new gun(80,50,12,5,'yes')
     //floor beginning
-    floors.push(new Obstacle(60,75,260,5,'gray'))
+    floors.push(new Obstacle(5,75,315,5,'gray'))
     //ceiling beginning
     floors.push(new Obstacle(60,40,250,5,'gray'))
     //entrance
@@ -424,21 +424,47 @@ function startLevel1() {
     //keycard
     pickups.push(new Obstacle(70,105,15,10,'green','card',1))
     //floor traparea
-    floors.push(new Obstacle(50,290,400,5,'gray'))
+    floors.push(new Obstacle(50,290,450,5,'gray'))
     //bottom spikepit traparea
     floors.push(new Obstacle(5,320,45,5,'gray'))
     //right spikepit traparea
     walls.push(new Obstacle(50,295,5,30,'gray'))
     //spikes traparea
     floors.push(new Spikes(5,320,8))
+    //keycard door traparea
+    walls.push(new Obstacle(150,260,5,30,'green','keycard',1))
+    //enemy traparea
+    enemies.push(new character(100,260,10,25,'crimson','enemy',2))
+    guns.push(new gun(100,260,12,5))
+    //barricade traparea
+    walls.push(new Obstacle(90,280,5,10,'gray'))
+    //wall traparea
+    walls.push(new Obstacle(150,235,5,25,'grey'))
+    //left trap wall traparea
+    walls.push(new Obstacle(250,235,5,25,'grey'))
+    //right trap wall traparea
+    walls.push(new Obstacle(350,235,5,25,'grey'))
+    //shootable wall traparea
+    walls.push(new Obstacle(350,260,5,30,'darkslategray','breakable'))
+    //arcade machines breakarea
+    arcadeTest = new Obstacle(380,270,10,20,'blue')
+    arcade2 = new Obstacle(420,270,10,20,'black')
+    arcade3 = new Obstacle(460,270,10,20,'yellow')
 
-    
-    walls.push(new Obstacle(320,totH-60,5,28,'darkslategray','breakable'))
-    walls.push(new Obstacle(225,totH-60,5,28,'green','keycard',1))
-    
-    arcadeTest = new Obstacle(450,totH-20,10,20,'blue')
-    arcade2 = new Obstacle(536,totH-20,10,20,'black')
-    arcade3 = new Obstacle(380,totH-20,10,20,'yellow')
+}
+
+function runLevel1() {
+    //dialog
+    //well well well if it isnt my favorite agent, x! I guess you came for the z device. well, you definetly wont survive that far mwahahahaha
+    //oh no a locked door, maybe you should just give up and jump into the spikes...
+    //too bad it would take explosives to get through this wall. wait, who put that there!?
+    //heres a massive spikepit for you, and some guards. ypure definitly not surviving this mwaahahah
+    //no keycard? well, all  you can do is jump into the spikepit...
+    //hey you cant grab that!
+    //go inside, its definetly not a trap
+    //ha, i got you now, try shootingg your way out of this. no wait, dont!
+    //i put this room here to congratulate you on your surprising survival, its definetly not just the guards' breakroom
+    ctx.font = '15px consolas'; ctx.fillText('trap area 1',270,250); ctx.font = '15px comic sans'; ctx.fillText('definitly not a',270,260)
 }
 
 function pause() {
@@ -832,6 +858,8 @@ class character {
         this.jumpStrength = -3.5;
         this.grounded = false;
         this.shootTime = 0
+        this.attacking = false
+        this.attackTimer = 0
         this.update = function (x, y) {
             if (x == 1) {
                 this.x += SPEED
@@ -968,28 +996,23 @@ class gun {
             if (isPlayer == 'yes') {
                 this.angle = Math.atan2(musy - this.centerY, musx - this.x);
             }
-            else {this.angle = Math.atan2((player.y+20) - this.centerY, (player.x+20) - this.x)}
+             
             this.centerY = this.y + this.height / 2
-            // Save the current context state
             ctx.save();
         
             // Translate the context to the point where the angle is calculated
             ctx.translate(this.x - 15, this.centerY - 15);
         
-            // Rotate the context by the calculated angle
             ctx.rotate(this.angle);
 
             // Translate the context to the middle of the left end of the object
             ctx.translate(0, -this.height / 2);
 
-            // Set the fill color and draw the rectangle
             ctx.fillStyle = 'lightslategray';
             ctx.fillRect(0, 0, this.width, this.height);
         
-            // Reset the transformation matrix to the identity matrix
             ctx.setTransform(1, 0, 0, 1, 0, 0);
         
-            // Restore the context to its original state
             ctx.restore();
         }
         
@@ -998,11 +1021,12 @@ class gun {
 
 
 class Projectile {
-    constructor(width, height, color, x, y, targetX, targetY, type) {
+    constructor(width, height, color, x, y, targetX, targetY, type, enemyIndex) {
         this.type = type
         this.width = width
         this.height = height
         ctx.fillStyle = color
+        this.enemyIndex = enemyIndex
         this.x = x
         this.y = y
         var crit = false
@@ -1010,7 +1034,10 @@ class Projectile {
         this.targetY = targetY
         this.centerX = this.x + this.width / 2
         this.centerY = this.y + this.height / 2
-        this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX) + (Math.random() * (2 * acc[accLvl]) - acc[accLvl]) * Math.PI / 180
+        if (this.type != 'detector') {
+            this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX) + (Math.random() * (2 * acc[accLvl]) - acc[accLvl]) * Math.PI / 180
+        }
+        else {this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX)}
         this.dx = Math.cos(this.angle)
         this.dy = Math.sin(this.angle)
 
@@ -1019,20 +1046,26 @@ class Projectile {
         else if (this.type == 'enemi') {this.damage = 2}
         else if (this.type == 'fragment') [this.damage = gnd[gndLvl]]
 
-        var rand = Math.random() * 100
-
-        if (rand < crt[crtLvl]) { crit = true}
-
-        //console.log('damage: ' + this.damage + ' rand: ' + rand + ' crit: ' + crit)
-
-        if (crit == true) { this.damage *= 1.5; console.log('crit damage: ' + this.damage)} 
+        if (this.type != 'detector') {
+            var rand = Math.random() * 100
+            if (rand < crt[crtLvl]) { crit = true}
+            //console.log('damage: ' + this.damage + ' rand: ' + rand + ' crit: ' + crit)
+            if (crit == true) { this.damage *= 1.5; console.log('crit damage: ' + this.damage)}
+        }
 
         this.update = function () {
             if (crit == true) { ctx.fillStyle = 'red'} 
             else { ctx.fillStyle = color} 
-            this.x += this.dx * 7
-            this.y += this.dy * 7
-            ctx.fillRect(this.x, this.y, this.width, this.height)
+            if (this.type != 'detector')
+            {this.x += this.dx * 7
+            this.y += this.dy * 7}
+            else {
+                this.x += this.dx * 4
+                this.y += this.dy * 4
+            }
+            if (this.type != 'detector') {
+                ctx.fillRect(this.x, this.y, this.width, this.height)
+            }
         }
         this.newPos = function () {
             if (this.x > totW || this.x < 0 || this.y > totH || this.y < 0) { return true} 
@@ -1537,35 +1570,6 @@ function levelLoop() {
     var xInput, yInput; if(keys && (keys['a'] || keys['ArrowLeft'])) {xInput = -1}; 
     if (keys && (keys['d'] || keys['ArrowRight'])) {xInput = 1}; if (keys && (keys['w'] || keys['ArrowUp'])) {yInput = 1}
     
-    //brikbrek
-    arcadeTest.update();
-    ctx.fillStyle = 'green'; ctx.fillRect(arcadeTest.x+2,arcadeTest.y+2,6,6)    
-    if (player.x + player.width > arcadeTest.x - 20 && player.x < arcadeTest.x + arcadeTest.width + 20 && player.y + player.height > arcadeTest.y - 20 && player.y < arcadeTest.y + arcadeTest.height + 20) {
-        ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
-        ctx.fillText('[E]Play Brik-Brek',arcadeTest.x-50,arcadeTest.y-8);
-
-        if (keys && keys['e']) {console.log('starting brik-brek'); clearInterval(levelInterval); gameState = states.brik; startBrikBrek()}
-    }
-    
-    //pewpew
-    arcade2.update();
-    ctx.fillStyle = 'green'; ctx.fillRect(arcade2.x+2,arcade2.y+2,6,6)
-    if (player.x + player.width > arcade2.x - 20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 20 && player.y < arcade2.y + arcade2.height + 20) {
-        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
-        ctx.fillText('[E]Play Pew-Pew',arcade2.x-47,arcade2.y-8);
-
-        if (keys && keys['e']) {console.log('starting pew-pew'); clearInterval(levelInterval); gameState = states.pew; startPewPew()}
-    }
-
-    //slotman
-    arcade3.update()
-    ctx.fillStyle = 'green'; ctx.fillRect(arcade3.x+2,arcade3.y+2,6,6)
-    if (player.x + player.width > arcade3.x - 20 && player.x < arcade3.x + arcade3.width + 20 && player.y + player.height > arcade3.y - 20 && player.y < arcade3.y + arcade3.height + 20) {
-        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
-        ctx.fillText('[E]Play Slot-Man',arcade3.x-47,arcade3.y-8);
-
-        if (keys && keys['e']) {console.log('starting slot-man'); clearInterval(levelInterval); gameState = states.slot; startSlotMan()}
-    }
 
     floors.forEach(floor => {
         floor.update()
@@ -1627,6 +1631,9 @@ function levelLoop() {
                         walls.splice(windex,1)
                         projectiles.splice(bundex,1)
                     }
+                    else {
+                        projectiles.splice(bundex,1)
+                    }
                 }
             })
         }
@@ -1645,6 +1652,9 @@ function levelLoop() {
                         walls.splice(windex,1)
                         projectiles.splice(bundex,1)
                     }
+                    else {
+                        projectiles.splice(bundex,1)
+                    }
                 }
             })
         }
@@ -1658,6 +1668,9 @@ function levelLoop() {
                     }
                     else if (bullet.type == 'grenade') {
                         bullet.dx = -bullet.dx
+                    }
+                    else {
+                        projectiles.splice(bundex,1)
                     }
                 }
             })
@@ -1699,29 +1712,61 @@ function levelLoop() {
         }
     })
 
+    //brikbrek
+    arcadeTest.update();
+    ctx.fillStyle = 'green'; ctx.fillRect(arcadeTest.x+2,arcadeTest.y+2,6,6)    
+    if (player.x + player.width > arcadeTest.x - 20 && player.x < arcadeTest.x + arcadeTest.width + 20 && player.y + player.height > arcadeTest.y - 20 && player.y < arcadeTest.y + arcadeTest.height + 20) {
+        ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
+        ctx.fillText('[E]Play Brik-Brek',arcadeTest.x-50,arcadeTest.y-8);
+
+        if (keys && keys['e']) {console.log('starting brik-brek'); clearInterval(levelInterval); gameState = states.brik; startBrikBrek()}
+    }
+
+    //pewpew
+    arcade2.update();
+    ctx.fillStyle = 'green'; ctx.fillRect(arcade2.x+2,arcade2.y+2,6,6)
+    if (player.x + player.width > arcade2.x - 20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 20 && player.y < arcade2.y + arcade2.height + 20) {
+        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
+        ctx.fillText('[E]Play Pew-Pew',arcade2.x-47,arcade2.y-8);
+
+        if (keys && keys['e']) {console.log('starting pew-pew'); clearInterval(levelInterval); gameState = states.pew; startPewPew()}
+    }
+
+    //slotman
+    arcade3.update()
+    ctx.fillStyle = 'green'; ctx.fillRect(arcade3.x+2,arcade3.y+2,6,6)
+    if (player.x + player.width > arcade3.x - 20 && player.x < arcade3.x + arcade3.width + 20 && player.y + player.height > arcade3.y - 20 && player.y < arcade3.y + arcade3.height + 20) {
+        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
+        ctx.fillText('[E]Play Slot-Man',arcade3.x-47,arcade3.y-8);
+
+        if (keys && keys['e']) {console.log('starting slot-man'); clearInterval(levelInterval); gameState = states.slot; startSlotMan()}
+    }
+
+    runLevel1()
     //render player
     player.update(xInput, yInput); pGun.x = player.x + 20; pGun.y = player.y + 22; pGun.update();
     //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
 
     enemies.forEach((enemy,index) => {
-        if (enemy.health <= 0) {enemies.splice(index,1); guns.splice(index,1)}
         enemy.shootTime += 0.02;
-        if (enemy.shootTime > 0.5) {
-            projectiles.push(new Projectile(3,3,'maroon',enemy.x,enemy.y+5,player.x,player.y+5,'enemi'))
-            enemy.shootTime = 0; 
-        }
-        var jump = 0
-        if (player.x < enemy.x) {
-            if (player.x < enemy.x - 120) {enemy.x -= 1.5; /*console.log('following to left')*/}
-            else if (player.x > enemy.x - 75) {enemy.x += 1.5; /*console.log('retreating to rigth')*/}
-        }
-        else if (player.x > enemy.x) {
-            if (player.x > enemy.x + 120) {enemy.x += 1.5; /*console.log('following to right')*/}
-            else if (player.x < enemy.x + 75) {enemy.x -= 1.5; /*console.log('retreating to left')*/}
-        }
-        //if (player.y < enemy.y) {jump = 1; console.log('jumping')}
-        
-        enemy.update(0,jump);
+        if (enemy.attacking == true) {
+            if (enemy.shootTime > 0.5) {
+                projectiles.push(new Projectile(3,3,'maroon',enemy.x,enemy.y+5,player.x,player.y+5,'enemi'))
+            }
+            var jump = 0
+            if (player.x < enemy.x) {
+                if (player.x < enemy.x - 120) {enemy.x -= 1.5; /*console.log('following to left')*/}
+                else if (player.x > enemy.x - 75) {enemy.x += 1.5; /*console.log('retreating to rigth')*/}
+            }
+            else if (player.x > enemy.x) {
+                if (player.x > enemy.x + 120) {enemy.x += 1.5; /*console.log('following to right')*/}
+                else if (player.x < enemy.x + 75) {enemy.x -= 1.5; /*console.log('retreating to left')*/}
+            }
+            if (player.y < enemy.y) {jump = 1; console.log('jumping')}
+            enemy.attackTimer -= 0.02
+        }    
+        if (enemy.attackTimer <= 0) {enemy.attacking = false}
+
         floors.forEach(floor => {
             if (enemy.floor(floor)) {
                 enemy.y = floor.y - enemy.height;
@@ -1743,11 +1788,25 @@ function levelLoop() {
                 }
             }
         })
+        
+        
+        if (enemy.shootTime > 0.5) {
+            projectiles.push(new Projectile(2,2,'white',enemy.x,enemy.y+5,player.x,player.y+5,'detector',index))
+            enemy.shootTime = 0
+        }
+        if (enemy.health <= 0) {enemies.splice(index,1); guns.splice(index,1)}
+        enemy.update(0,jump);
     })
 
     guns.forEach((gunner,index) => {
         gunner.x = enemies[index].x + 20;
         gunner.y = enemies[index].y + 22;
+        if (gunner.isPlayer != 'yes') {
+            if (enemies[index].attacking == true) {
+                gunner.angle = Math.atan2((player.y+20) - gunner.centerY, (player.x+20) - gunner.x)
+            }
+            else (gunner.angle = gunner.angle)
+        }
         gunner.update()
     })
 
@@ -1808,6 +1867,11 @@ function levelLoop() {
                 }
             }
         }
+        else if (bullet.type == 'detector' && bullet.crashWith(player)) {
+            projectiles.splice(index,1)
+            enemies[bullet.enemyIndex].attackTimer = 2
+            enemies[bullet.enemyIndex].attacking = true
+        }
     })
 
     pickups.forEach((pickup,index) => {
@@ -1845,7 +1909,7 @@ function levelLoop() {
         ctx.fillStyle = 'gray'; ctx.fillRect(player.x,totH-10,25,10); ctx.fillStyle = 'lightslategrey';
         ctx.fillRect(player.x+5,totH-16,5,12); setTimeout(loadMenu,3000); demo = false
     }
-    if (keys && keys['q']) {
+    if (keys && keys['Escape']) {
         clearInterval(levelInterval); console.log('exiting level');
         setTimeout(loadMenu,1000); demo = false
     }
