@@ -246,7 +246,7 @@ function startBrikBrek() {
         ySpeed: -3 
     }
     
-    brikBalls = [{x:ball.x,y:ball.y,xSpeed:ball.xSpeed,ySpeed:ball.ySpeed}]
+    brikBalls = [{x:ball.x,y:ball.y,xSpeed:ball.xSpeed,ySpeed:ball.ySpeed,extraSize:0}]
 
     bricks = {
         rows:4,
@@ -329,9 +329,10 @@ function startSlotMan() {
 }
 
 function startLevel1() {
-    player = new character(70,50,10,25,'gray');
+    //player = new character(70,50,10,25,'gray');
+    player = new character(420,260,10,25,'gray');
     pGun = new gun(80,50,12,5,'yes')
-    //floor beginning
+    //floor beginning and left top spikearea
     floors.push(new Obstacle(5,75,315,5,'gray'))
     //ceiling beginning
     floors.push(new Obstacle(60,40,250,5,'gray'))
@@ -357,8 +358,8 @@ function startLevel1() {
     walls.push(new Obstacle(465,90,5,30,'yellow','button',1,450,40))  
     //spikes grenadewall
     floors.push(new Spikes(510,120,9))
-    //right wall grenadewall
-    walls.push(new Obstacle(585,55,5,150,'gray'))
+    //right wall grenadewall and right wall breakarea
+    walls.push(new Obstacle(585,55,5,240,'gray'))
     //platform grenadewall
     floors.push(new Obstacle(510,90,55,5,'gray'))
     //grenade grenadewall
@@ -368,11 +369,11 @@ function startLevel1() {
     //lower wall grenadewall
     walls.push(new Obstacle(505,125,5,45,'gray'))
     //grenadewall
-    walls.push(new Obstacle(505,170,5,30,'lightslategray','gBreakable'))
+    //walls.push(new Obstacle(505,170,5,30,'lightslategray','gBreakable'))
     //right spikepit wall spikearea
     walls.push(new Obstacle(505,205,5,30,'gray'))
     //spikepit floor spikearea
-    floors.push(new Obstacle(50,230,455,5,'gray'))
+    floors.push(new Obstacle(50,230,495,5,'gray'))
     //spikes spikearea
     floors.push(new Spikes(50,230,76))
     //right guardpost spikearea
@@ -430,7 +431,7 @@ function startLevel1() {
     //right spikepit traparea
     walls.push(new Obstacle(50,295,5,30,'gray'))
     //spikes traparea
-    floors.push(new Spikes(5,320,8))
+    floors.push(new Spikes(2,320,8))
     //keycard door traparea
     walls.push(new Obstacle(150,260,5,30,'green','keycard',1))
     //enemy traparea
@@ -450,21 +451,48 @@ function startLevel1() {
     arcadeTest = new Obstacle(380,270,10,20,'blue')
     arcade2 = new Obstacle(420,270,10,20,'black')
     arcade3 = new Obstacle(460,270,10,20,'yellow')
+    //right floor breakarea
+    floors.push(new Obstacle(540,290,50,5,'gray'))
+    //shootable wall breakarea
+    walls.push(new Obstacle(545,260,5,30,'darkslategrey','breakable'))
+    //upper wall breakarea
+    walls.push(new Obstacle(545,230,5,30,'gray'))
+    //jumping thing breakarea
+    floors.push(new Obstacle(575,255,10,5,'gray'))
+    //hatch thing and that other thing?
 
-}
+    //rightmost floor gunarea
+    floors.push(new Obstacle(460,365,130,5,'grey'))
+    //right side of first pit gunarea
+    walls.push(new Obstacle(460,370,5,25,'grey'))
+    //bottom of first pit gunarea
+    floors.push(new Obstacle(430,390,30,5,'grey'))
+    //left side of first pit gunarea
+    walls.push(new Obstacle(425,370,5,25,'grey'))
+    //second floor gunarea
+    floors.push(new Obstacle(375,365,55,5,'gray'))
+
+
+
+
+    //leftmost floor gunarea
+    floors.push(new Obstacle(5,365,100,5,'gray'))
+}   
+
 
 function runLevel1() {
     //dialog
-    //well well well if it isnt my favorite agent, x! I guess you came for the z device. well, you definetly wont survive that far mwahahahaha
+    //well well well if it isnt my favorite agent, x! I guess you came for the z device. well, you definitely wont survive that far mwahahahaha
     //oh no a locked door, maybe you should just give up and jump into the spikes...
     //too bad it would take explosives to get through this wall. wait, who put that there!?
-    //heres a massive spikepit for you, and some guards. ypure definitly not surviving this mwaahahah
+    //heres a massive spikepit for you, and some guards. you're definitely not surviving this mwaahahah
     //no keycard? well, all  you can do is jump into the spikepit...
     //hey you cant grab that!
-    //go inside, its definetly not a trap
-    //ha, i got you now, try shootingg your way out of this. no wait, dont!
-    //i put this room here to congratulate you on your surprising survival, its definetly not just the guards' breakroom
-    ctx.font = '15px consolas'; ctx.fillText('trap area 1',270,250); ctx.font = '15px comic sans'; ctx.fillText('definitly not a',270,260)
+    //go inside, its definitely not a trap
+    //ha, i got you now, try shooting your way out of this. no wait, dont!
+    //i put this room here to congratulate you on your surprising survival, its definitely not just the guards' breakroom
+    ctx.fillStyle = 'red'; ctx.font = '11px cursive'; ctx.fillText('definitely not a',165,245)
+    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('trap area 1',165,255); 
 }
 
 function pause() {
@@ -2036,7 +2064,8 @@ function brikBrek() {
         bBall.y += bBall.ySpeed;
         if (explodeTime > 0) {ctx.fillStyle = 'red'}
         else {ctx.fillStyle = 'black'}
-        ctx.fillRect(bBall.x,bBall.y,ball.size,ball.size);
+        ctx.fillRect(bBall.x,bBall.y,ball.size+bBall.extraSize,ball.size+bBall.extraSize);
+        console.log(bBall.extraSize)
     })
     
     
@@ -2102,7 +2131,7 @@ function brikBrek() {
                                     break;
                                     case 3:
                                         msgText = 'extra ball';
-                                        brikBalls.push({x:ball.x,y:ball.y,xSpeed:ball.xSpeed,ySpeed:ball.ySpeed});
+                                        brikBalls.push({x:ball.x,y:ball.y,xSpeed:ball.xSpeed,ySpeed:ball.ySpeed,extraSize:0});
                                     break;
                                     case 4:
                                         msgText = 'explosive ball';
@@ -2110,11 +2139,17 @@ function brikBrek() {
                                     break;
                                     case 5:
                                         msgText = 'bigger ball';
-                                        ball.size += 3
+                                        baller.extraSize += 3
                                     break;
                                     case 6:
-                                        msgText = 'smaller ball';
-                                        ball.size -= 2
+                                        if (baller.extraSize == -2) {
+                                            msgText = 'bigger ball';
+                                            baller.extraSize += 2
+                                        }
+                                        else {
+                                            msgText = 'smaller ball';
+                                            baller.extraSize -= 2
+                                        }
                                     break;
                                 }
                             }
@@ -2631,7 +2666,7 @@ function slotMan() {
     ctx.fillText('[C]insert coins',10,totH-25)
 
     //inserting coins
-    if (keys && keys['c'] && cPressed == false && spinning == false) {
+    if (keys && keys['c'] && cPressed == false && spinning == false && points >= cost) {
         cPressed = true
         showingHud = 2; console.log('inserted 5 coins')
         setTimeout(()=>{points -= 5; credits += 5; cPressed = false},1000)
