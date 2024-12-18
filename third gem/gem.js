@@ -330,7 +330,9 @@ function startSlotMan() {
 
 function startLevel1() {
     //player = new character(70,50,10,25,'gray');
-    player = new character(420,260,10,25,'gray');
+    //player = new character(420,260,10,25,'gray');
+    player = new character(530,340,10,25,'gray');
+
     pGun = new gun(80,50,12,5,'yes')
     //floor beginning and left top spikearea
     floors.push(new Obstacle(5,75,315,5,'gray'))
@@ -369,7 +371,7 @@ function startLevel1() {
     //lower wall grenadewall
     walls.push(new Obstacle(505,125,5,45,'gray'))
     //grenadewall
-    //walls.push(new Obstacle(505,170,5,30,'lightslategray','gBreakable'))
+    walls.push(new Obstacle(505,170,5,30,'lightslategray','gBreakable'))
     //right spikepit wall spikearea
     walls.push(new Obstacle(505,205,5,30,'gray'))
     //spikepit floor spikearea
@@ -418,8 +420,8 @@ function startLevel1() {
     floors.push(new Obstacle(50,170,40,5,'gray'))
     //eight platform spikearea
     floors.push(new Obstacle(10,130,20,5,'gray'))
-    //left wall spikearea
-    walls.push(new Obstacle(0,75,5,250,'gray'))
+    //left wall spikearea && left wall gunarea
+    walls.push(new Obstacle(0,75,5,295,'gray'))
     //platform traparea
     floors.push(new Obstacle(10,260,20,5,'gray'))
     //keycard
@@ -429,7 +431,7 @@ function startLevel1() {
     //bottom spikepit traparea
     floors.push(new Obstacle(5,320,45,5,'gray'))
     //right spikepit traparea
-    walls.push(new Obstacle(50,295,5,30,'gray'))
+    walls.push(new Obstacle(50,295,5,40,'gray'))
     //spikes traparea
     floors.push(new Spikes(2,320,8))
     //keycard door traparea
@@ -452,17 +454,21 @@ function startLevel1() {
     arcade2 = new Obstacle(420,270,10,20,'black')
     arcade3 = new Obstacle(460,270,10,20,'yellow')
     //right floor breakarea
-    floors.push(new Obstacle(540,290,50,5,'gray'))
-    //shootable wall breakarea
-    walls.push(new Obstacle(545,260,5,30,'darkslategrey','breakable'))
+    floors.push(new Obstacle(540,290,60,5,'gray'))
+    //grenadewall breakarea
+    walls.push(new Obstacle(545,260,5,30,'lightslategrey','gBreakable'))
     //upper wall breakarea
     walls.push(new Obstacle(545,230,5,30,'gray'))
     //jumping thing breakarea
     floors.push(new Obstacle(575,255,10,5,'gray'))
-    //hatch thing and that other thing?
-
+    //floor hatch and power box breakarea
+    floors.push(new Obstacle(500,290,40,5,'crimson','shootToOpen',1,516,212))
     //rightmost floor gunarea
-    floors.push(new Obstacle(460,365,130,5,'grey'))
+    floors.push(new Obstacle(460,365,140,5,'grey'))
+    //exit door gunarea
+    walls.push(new Obstacle(totW-30,335,5,30,'yellow','button',2,20,345))
+    //rigth wall gunarea
+    walls.push(new Obstacle(totW-30,295,5,40,'grey')) 
     //right side of first pit gunarea
     walls.push(new Obstacle(460,370,5,25,'grey'))
     //bottom of first pit gunarea
@@ -470,13 +476,33 @@ function startLevel1() {
     //left side of first pit gunarea
     walls.push(new Obstacle(425,370,5,25,'grey'))
     //second floor gunarea
-    floors.push(new Obstacle(375,365,55,5,'gray'))
-
-
-
-
+    floors.push(new Obstacle(355,365,75,5,'gray'))
+    //right side of second pit gunarea
+    walls.push(new Obstacle(355,370,5,25,'grey'))
+    //bottom of second pit gunarea
+    floors.push(new Obstacle(325,390,30,5,'grey'))
+    //left side of second pit gunarea
+    walls.push(new Obstacle(320,370,5,25,'grey'))
+    //third floor gunarea
+    floors.push(new Obstacle(250,365,75,5,'gray'))
+    //right side of third pit gunarea
+    walls.push(new Obstacle(250,370,5,25,'grey'))
+    //bottom of third pit gunarea
+    floors.push(new Obstacle(220,390,30,5,'grey'))
+    //left side of third pit gunarea
+    walls.push(new Obstacle(215,370,5,25,'grey'))
+    //fourth floor gunarea
+    floors.push(new Obstacle(145,365,75,5,'gray'))
+    //right side of fourth pit gunarea
+    walls.push(new Obstacle(145,370,5,25,'grey'))
+    //bottom of fourth pit gunarea
+    floors.push(new Obstacle(115,390,30,5,'grey'))
+    //left side of fourth pit gunarea
+    walls.push(new Obstacle(110,370,5,25,'grey'))
     //leftmost floor gunarea
-    floors.push(new Obstacle(5,365,100,5,'gray'))
+    floors.push(new Obstacle(5,365,110,5,'gray'))
+    //grenadewall gunarea
+    walls.push(new Obstacle(50,335,5,30,'lightslategrey','gBreakable'))
 }   
 
 
@@ -492,7 +518,14 @@ function runLevel1() {
     //ha, i got you now, try shooting your way out of this. no wait, dont!
     //i put this room here to congratulate you on your surprising survival, its definitely not just the guards' breakroom
     ctx.fillStyle = 'red'; ctx.font = '11px cursive'; ctx.fillText('definitely not a',165,245)
-    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('trap area 1',165,255); 
+    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('trap area 1',165,255);
+
+    ctx.fillStyle = 'green'; ctx.fillRect(530,310,25,12); ctx.beginPath();
+    ctx.moveTo(555,310); ctx.lineTo(563,316); ctx.lineTo(555,322); ctx.fill()
+    ctx.fillStyle = 'white'; ctx.font = '10px consolas'; ctx.fillText('EXIT>',532,319);
+
+    gradient = ctx.createLinearGradient(575,330,600,330); gradient.addColorStop(0,'lightgray')
+    gradient.addColorStop(1,'white'); ctx.fillStyle = gradient; ctx.fillRect(575,295,25,70)
 }
 
 function pause() {
@@ -743,6 +776,16 @@ class Obstacle {
                 ctx.font = '10px consolas';
                 ctx.fillStyle = 'black';
                 ctx.fillText('K'+this.id,this.x+2,this.y+this.height-2);
+            }
+            else if (this.type == 'shootToOpen') {
+                ctx.fillStyle = 'gray'
+                ctx.fillRect(this.lx,this.ly,12,12)
+                ctx.fillStyle = 'yellow'
+                ctx.beginPath()
+                ctx.moveTo(this.lx + 2,this.ly + 10)
+                ctx.lineTo(this.lx + 6, this.ly + 2)
+                ctx.lineTo(this.lx + 10,this.ly + 10)
+                ctx.fill()
             }
         }
     }
@@ -1599,7 +1642,7 @@ function levelLoop() {
     if (keys && (keys['d'] || keys['ArrowRight'])) {xInput = 1}; if (keys && (keys['w'] || keys['ArrowUp'])) {yInput = 1}
     
 
-    floors.forEach(floor => {
+    floors.forEach((floor,flindex) => {
         floor.update()
         if (player.floor(floor)) {
             player.y = floor.y - player.height;
@@ -1612,7 +1655,7 @@ function levelLoop() {
         
         if (player.crashWith(floor) && floor.type == 'spikes') {health = 0}
 
-        projectiles.forEach((bullet,index) => {
+        projectiles.forEach((bullet,bindex) => {
             if (bullet.type == 'grenade') {
                 if (bullet.floor(floor)) {
                     bullet.y = floor.y - bullet.height;
@@ -1627,8 +1670,15 @@ function levelLoop() {
             }
             else {
                 if (bullet.crashWith(floor)) {
-                    projectiles.splice(index,1)
+                    projectiles.splice(bindex,1)
                     //console.log('bullet spliced by floor:'+floor)
+                }
+            }
+
+            if (floor.type == 'shootToOpen' && bullet.type == 'frend') {
+                if (bullet.x > floor.lx && bullet.x < floor.lx + 12 && bullet.y > floor.ly && bullet.y < floor.ly + 12) {
+                    projectiles.splice(bindex,1)
+                    floors.splice(flindex,1)
                 }
             }
         })
@@ -1677,8 +1727,11 @@ function levelLoop() {
                         projectiles.splice(bundex,1)
                     }
                     else if (bullet.type == 'fragment') {
-                        walls.splice(windex,1)
-                        projectiles.splice(bundex,1)
+                        if (walls.includes(wall,windex-1))
+                        {
+                            walls.splice(windex,1)
+                            projectiles.splice(bundex,1)
+                        }
                     }
                     else {
                         projectiles.splice(bundex,1)
@@ -1743,7 +1796,7 @@ function levelLoop() {
     //brikbrek
     arcadeTest.update();
     ctx.fillStyle = 'green'; ctx.fillRect(arcadeTest.x+2,arcadeTest.y+2,6,6)    
-    if (player.x + player.width > arcadeTest.x - 20 && player.x < arcadeTest.x + arcadeTest.width + 20 && player.y + player.height > arcadeTest.y - 20 && player.y < arcadeTest.y + arcadeTest.height + 20) {
+    if (player.x + player.width > arcadeTest.x - 20 && player.x < arcadeTest.x + arcadeTest.width + 20 && player.y + player.height > arcadeTest.y - 10 && player.y < arcadeTest.y + arcadeTest.height + 5) {
         ctx.fillStyle = 'black'; ctx.font = '12px consolas'; 
         ctx.fillText('[E]Play Brik-Brek',arcadeTest.x-50,arcadeTest.y-8);
 
@@ -1753,7 +1806,7 @@ function levelLoop() {
     //pewpew
     arcade2.update();
     ctx.fillStyle = 'green'; ctx.fillRect(arcade2.x+2,arcade2.y+2,6,6)
-    if (player.x + player.width > arcade2.x - 20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 20 && player.y < arcade2.y + arcade2.height + 20) {
+    if (player.x + player.width > arcade2.x - 20 && player.x < arcade2.x + arcade2.width + 20 && player.y + player.height > arcade2.y - 10 && player.y < arcade2.y + arcade2.height + 5) {
         ctx.fillStyle = 'black'; ctx.font = '12px consolas';
         ctx.fillText('[E]Play Pew-Pew',arcade2.x-47,arcade2.y-8);
 
@@ -1763,7 +1816,7 @@ function levelLoop() {
     //slotman
     arcade3.update()
     ctx.fillStyle = 'green'; ctx.fillRect(arcade3.x+2,arcade3.y+2,6,6)
-    if (player.x + player.width > arcade3.x - 20 && player.x < arcade3.x + arcade3.width + 20 && player.y + player.height > arcade3.y - 20 && player.y < arcade3.y + arcade3.height + 20) {
+    if (player.x + player.width > arcade3.x - 20 && player.x < arcade3.x + arcade3.width + 20 && player.y + player.height > arcade3.y - 10 && player.y < arcade3.y + arcade3.height + 5) {
         ctx.fillStyle = 'black'; ctx.font = '12px consolas';
         ctx.fillText('[E]Play Slot-Man',arcade3.x-47,arcade3.y-8);
 
