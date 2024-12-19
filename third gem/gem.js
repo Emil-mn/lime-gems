@@ -526,6 +526,19 @@ function runLevel1() {
 
     gradient = ctx.createLinearGradient(575,330,600,330); gradient.addColorStop(0,'lightgray')
     gradient.addColorStop(1,'white'); ctx.fillStyle = gradient; ctx.fillRect(575,295,25,70)
+    
+    ctx.save(); 
+    angel = Math.atan2((player.y+player.height/2)-310,(player.x+player.width/2)-75); 
+    ctx.translate(75,310); ctx.rotate(angel); ctx.translate(-75,-310); console.log(Math.floor(angel*57.2957795))
+    
+    ctx.fillStyle = 'darkslategray'; ctx.fillRect(65,305,18,10); ctx.beginPath(); ctx.lineWidth = 2; 
+    ctx.strokeStyle = 'darkslategray'; ctx.moveTo(83,306); ctx.lineTo(125,306); 
+    ctx.moveTo(83,314); ctx.lineTo(125,314); ctx.moveTo(83,310); ctx.lineTo(125,310); 
+    ctx.moveTo(87,305); ctx.lineTo(87,315); ctx.moveTo(98,305); ctx.lineTo(98,315);
+    ctx.moveTo(110,305); ctx.lineTo(110,315); ctx.moveTo(121,305); ctx.lineTo(121,315); ctx.stroke()
+    ctx.restore()
+    
+    ctx.fillStyle = 'lightslategray'; ctx.fillRect(73,295,4,17)
 }
 
 function pause() {
