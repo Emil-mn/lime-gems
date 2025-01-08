@@ -529,7 +529,9 @@ function runLevel1() {
     
     ctx.save(); 
     angel = Math.atan2((player.y+player.height/2)-310,(player.x+player.width/2)-75); 
-    ctx.translate(75,310); ctx.rotate(angel); ctx.translate(-75,-310); console.log(Math.floor(angel*57.2957795))
+    ctx.translate(75,310); 
+    if (player.x > 110 && player.y > 300) {ctx.rotate(angel)} else {ctx.rotate(0)}
+    ctx.translate(-75,-310); console.log(Math.floor(angel*57.2957795))
     
     ctx.fillStyle = 'darkslategray'; ctx.fillRect(65,305,18,10); ctx.beginPath(); ctx.lineWidth = 2; 
     ctx.strokeStyle = 'darkslategray'; ctx.moveTo(83,306); ctx.lineTo(125,306); 
@@ -652,7 +654,7 @@ function checkButt(mButt){
         }
         else if (buttClicked(310,270,30,30)){
             console.log('clicked hlt upgrade');
-            if (points >= hltPrice[hltLvl] && hltLvl < 5) {maxHealth = hlt[hltLvl]; points -= hltPrice[hltLvl]; hltLvl++; loadMenu()}
+            if (points >= hltPrice[hltLvl] && hltLvl < 5) {points -= hltPrice[hltLvl]; hltLvl++; maxHealth = hlt[hltLvl]; loadMenu()}
             else {console.log('not allowed, price is: '+hltPrice[hltLvl]+' and level is: '+hltLvl)}
         }
         else if (buttClicked(355,270,30,30)){
@@ -1836,7 +1838,8 @@ function levelLoop() {
         if (keys && keys['e']) {console.log('starting slot-man'); clearInterval(levelInterval); gameState = states.slot; startSlotMan()}
     }
 
-    runLevel1()
+    if (level == 1) {runLevel1()}
+    
     //render player
     player.update(xInput, yInput); pGun.x = player.x + 20; pGun.y = player.y + 22; pGun.update();
     //console.log('playerX: '+player.x+' playerY: '+player.y+' gunX: '+pGun.x+' gunY: '+pGun.y);
@@ -2012,7 +2015,8 @@ function levelLoop() {
 
 
 function brikBrek() {
-    ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'blue'; ctx.fillRect(135,50,335,350);
+    if (demo == true) {ctx.fillStyle = 'skyblue'} else {ctx.fillStyle = 'lightgray'}; 
+    ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'blue'; ctx.fillRect(135,50,335,350);
     ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Brik-Brek',150,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200); //console.log('paddle.x: '+paddle.x)
        
@@ -2262,7 +2266,8 @@ function brikBrek() {
 
 
 function pewPew() {
-    ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'black'; ctx.fillRect(135,50,335,350);
+    if (demo == true) {ctx.fillStyle = 'skyblue'} else {ctx.fillStyle = 'lightgray'};
+    ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'black'; ctx.fillRect(135,50,335,350);
     ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Pew-Pew',185,100);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
     if (fireCool > 0) {fireCool -= 0.02}
@@ -2629,7 +2634,8 @@ function pewPew() {
 }
 
 function slotMan() {
-    ctx.fillStyle = 'skyblue'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'yellow'; ctx.fillRect(135,50,335,350);
+    if (demo == true) {ctx.fillStyle = 'skyblue'} else {ctx.fillStyle = 'lightgray'};
+    ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'yellow'; ctx.fillRect(135,50,335,350);
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
 
     //roll dividers vertical
