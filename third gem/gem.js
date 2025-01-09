@@ -70,6 +70,8 @@ for (i = 0; i < hueyArray.length; i++) {
     //y movement
     else {hueyArray[i] -= 150;}
 }
+//level 1 stuff
+var gunTimer = 0, greenLight = false; gunSight = 0, trapDoor = false
 //sprites
 var player, pGun, arcadeTest, arcade2, arcade3
 //brik-brek
@@ -80,7 +82,7 @@ var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
 //slot-man
-var credits = 0, showingHud = 0, cPressed = false, mPressed = false, lit = 1, spinning = false, mode = 'auto', cost = 5
+var credits = 0, showingHud = 0, cPressed = false, mPressed = false, lit = 1, spinning = false, actuallySpinning = false, mode = 'auto', cost = 5
 var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
 var coin = new Image(), twoCoins = new Image(), threeCoins = new Image(), moneyBag = new Image(), moneyChest = new Image();
 var grenade = new Image(), twoGrenades = new Image(), oneHeart = new Image(), twoHearts = new Image(), newArmor = new Image();
@@ -330,8 +332,8 @@ function startSlotMan() {
 
 function startLevel1() {
     //player = new character(70,50,10,25,'gray');
-    //player = new character(420,260,10,25,'gray');
-    player = new character(530,340,10,25,'gray');
+    player = new character(420,260,10,25,'gray');
+    //player = new character(530,340,10,25,'gray');
 
     pGun = new gun(80,50,12,5,'yes')
     //floor beginning and left top spikearea
@@ -474,7 +476,7 @@ function startLevel1() {
     //bottom of first pit gunarea
     floors.push(new Obstacle(430,390,30,5,'grey'))
     //left side of first pit gunarea
-    walls.push(new Obstacle(425,370,5,25,'grey'))
+    walls.push(new Obstacle(425,355,5,40,'grey'))
     //second floor gunarea
     floors.push(new Obstacle(355,365,75,5,'gray'))
     //right side of second pit gunarea
@@ -482,7 +484,7 @@ function startLevel1() {
     //bottom of second pit gunarea
     floors.push(new Obstacle(325,390,30,5,'grey'))
     //left side of second pit gunarea
-    walls.push(new Obstacle(320,370,5,25,'grey'))
+    walls.push(new Obstacle(320,355,5,40,'grey'))
     //third floor gunarea
     floors.push(new Obstacle(250,365,75,5,'gray'))
     //right side of third pit gunarea
@@ -490,7 +492,7 @@ function startLevel1() {
     //bottom of third pit gunarea
     floors.push(new Obstacle(220,390,30,5,'grey'))
     //left side of third pit gunarea
-    walls.push(new Obstacle(215,370,5,25,'grey'))
+    walls.push(new Obstacle(215,355,5,40,'grey'))
     //fourth floor gunarea
     floors.push(new Obstacle(145,365,75,5,'gray'))
     //right side of fourth pit gunarea
@@ -498,7 +500,7 @@ function startLevel1() {
     //bottom of fourth pit gunarea
     floors.push(new Obstacle(115,390,30,5,'grey'))
     //left side of fourth pit gunarea
-    walls.push(new Obstacle(110,370,5,25,'grey'))
+    walls.push(new Obstacle(110,355,5,40,'grey'))
     //leftmost floor gunarea
     floors.push(new Obstacle(5,365,110,5,'gray'))
     //grenadewall gunarea
@@ -518,11 +520,27 @@ function runLevel1() {
     //ha, i got you now, try shooting your way out of this. no wait, dont!
     //i put this room here to congratulate you on your surprising survival, its definitely not just the guards' breakroom
     ctx.fillStyle = 'red'; ctx.font = '11px cursive'; ctx.fillText('definitely not a',165,245)
-    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('trap area 1',165,255);
+    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Trap Area 1',165,255);
+
+    ctx.font = '30px consolas'; ctx.fillText('Testing Area 1',210,330)
+
+    ctx.beginPath(); if (greenLight == true) {ctx.fillStyle = 'limegreen'} else {ctx.fillStyle = 'darkgreen'}
+    ctx.moveTo(180,315); ctx.lineTo(180,330); ctx.lineTo(165,322.5); ctx.fill();
+
+    ctx.beginPath(); if (greenLight == true)  {ctx.fillStyle = 'maroon'} else {ctx.fillStyle = 'red'}
+    ctx.moveTo(185,315); ctx.lineTo(200,315); ctx.lineTo(192.5,330); ctx.fill();
+
+    ctx.beginPath(); if (greenLight == true) {ctx.fillStyle = 'limegreen'} else {ctx.fillStyle = 'darkgreen'}
+    ctx.moveTo(470,315); ctx.lineTo(470,330); ctx.lineTo(455,322.5); ctx.fill();
+    
+    ctx.beginPath(); if (greenLight == true)  {ctx.fillStyle = 'maroon'} else {ctx.fillStyle = 'red'}
+    ctx.moveTo(475,315); ctx.lineTo(490,315); ctx.lineTo(482.5,330); ctx.fill();
 
     ctx.fillStyle = 'green'; ctx.fillRect(530,310,25,12); ctx.beginPath();
     ctx.moveTo(555,310); ctx.lineTo(563,316); ctx.lineTo(555,322); ctx.fill()
     ctx.fillStyle = 'white'; ctx.font = '10px consolas'; ctx.fillText('EXIT>',532,319);
+
+    if (trapDoor == false && player.x > 260 && player.y > 240) {trapDoor = true; walls.push(new Obstacle(250,260,5,30,'crimson'))}
 
     gradient = ctx.createLinearGradient(575,330,600,330); gradient.addColorStop(0,'lightgray')
     gradient.addColorStop(1,'white'); ctx.fillStyle = gradient; ctx.fillRect(575,295,25,70)
@@ -530,7 +548,7 @@ function runLevel1() {
     ctx.save(); 
     angel = Math.atan2((player.y+player.height/2)-310,(player.x+player.width/2)-75); 
     ctx.translate(75,310); 
-    if (player.x > 110 && player.y > 300) {ctx.rotate(angel)} else {ctx.rotate(0)}
+    if (player.x > 110 && player.x < 500 && player.y > 300) {ctx.rotate(angel)} else {ctx.rotate(0.2)}
     ctx.translate(-75,-310); console.log(Math.floor(angel*57.2957795))
     
     ctx.fillStyle = 'darkslategray'; ctx.fillRect(65,305,18,10); ctx.beginPath(); ctx.lineWidth = 2; 
@@ -541,6 +559,23 @@ function runLevel1() {
     ctx.restore()
     
     ctx.fillStyle = 'lightslategray'; ctx.fillRect(73,295,4,17)
+    
+    if (player.y > 300) {
+        gunTimer -= 0.02;
+        if (gunTimer <= 0) {
+            gunTimer = 1 + Math.random()
+            if (greenLight == false) {greenLight = true}
+            else {greenLight = false}
+        }
+    }
+
+    if (player.x > 110 && player.x < 500 && player.y > 300) {
+        projectiles.push(new Projectile(2,2,'white',75,310,player.x,player.y+5,'detector',69))
+        if (gunSight > 0 && greenLight == true) {
+            gunSight -= 0.02;
+            projectiles.push(new Projectile(3,3,'maroon',75,310,player.x,player.y+5,'enemi'))
+        }
+    }
 }
 
 function pause() {
@@ -1121,7 +1156,7 @@ class Projectile {
         this.centerX = this.x + this.width / 2
         this.centerY = this.y + this.height / 2
         if (this.type != 'detector') {
-            this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX) + (Math.random() * (2 * acc[accLvl]) - acc[accLvl]) * Math.PI / 180
+            this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX) + (Math.random() * (2 * 3) - 3) * Math.PI / 180
         }
         else {this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX)}
         this.dx = Math.cos(this.angle)
@@ -1838,7 +1873,7 @@ function levelLoop() {
         if (keys && keys['e']) {console.log('starting slot-man'); clearInterval(levelInterval); gameState = states.slot; startSlotMan()}
     }
 
-    if (level == 1) {runLevel1()}
+    if (level == 1 && demo == false) {runLevel1()}
     
     //render player
     player.update(xInput, yInput); pGun.x = player.x + 20; pGun.y = player.y + 22; pGun.update();
@@ -1966,8 +2001,11 @@ function levelLoop() {
         }
         else if (bullet.type == 'detector' && bullet.crashWith(player)) {
             projectiles.splice(index,1)
-            enemies[bullet.enemyIndex].attackTimer = 2
-            enemies[bullet.enemyIndex].attacking = true
+            if (bullet.enemyIndex == 69) {gunSight = 1}
+            else {
+                enemies[bullet.enemyIndex].attackTimer = 2
+                enemies[bullet.enemyIndex].attacking = true
+            }
         }
     })
 
@@ -2708,7 +2746,7 @@ function slotMan() {
         ctx.fillStyle = 'crimson'; 
         ctx.fillRect(240,337.5,120,40)
         if (spinning == false && credits >= cost) {
-            spinning = true; credits -= cost; console.log('spinning!!!');
+            spinning = true; actuallySpinning = true; credits -= cost; console.log('spinning!!!');
             spinDuration = 5 + Math.random() * 2 - 1; 
             offset1 = 0.5 + Math.random() / 2 - 0.25;
             offset2 = 0.5 + Math.random() / 2 - 0.25;
@@ -2721,15 +2759,15 @@ function slotMan() {
     else {
         ctx.fillStyle = 'maroon'; 
         ctx.fillRect(240,337.5,120,40)
-        if (credits < cost || lit <= 0 || spinning == true) {ctx.fillStyle = 'crimson';}
+        if (credits < cost || lit <= 0 || (spinning == true && mode == 'auto')) {ctx.fillStyle = 'crimson';}
         else if (lit > 0) {
-            lit -= 0.02; //console.log(lit)
+            if (spinning == false) {lit -= 0.02}
             var gradient = ctx.createRadialGradient(300,347.5,5,300,347.5,30)
             gradient.addColorStop(0,'yellow')
             gradient.addColorStop(0.5,'orange')
             gradient.addColorStop(1,'red')
             ctx.fillStyle = gradient
-            if (lit <= 0) {setTimeout(() => {lit = 1},1000)}
+            if (lit <= 0 && spinning == false) {setTimeout(() => {lit = 1},1000)}
         }
         ctx.fillRect(240,327.5,120,40)
     }
@@ -2744,7 +2782,7 @@ function slotMan() {
         setTimeout(()=>{points -= 5; credits += 5; cPressed = false},1000)
     }
     
-    if (spinning == true) {
+    if (actuallySpinning == true) {
         //console.log('s1:'+speeds[0]+'|s2:'+speeds[1]+'|s3:'+speeds[2]+'|s4:'+speeds[3]+'|s5:'+speeds[4]+'|s6:'+speeds[5])
         if (spinTime < 1) {speeds[0] += 0.2}
         spinTime += 0.02; console.log(Math.floor(spinTime));
@@ -2936,14 +2974,93 @@ function slotMan() {
             })
         }
         else {
-            console.log(rolls); var currRewards = [];
+            console.log(rolls); var currSymbols = [];
+            actuallySpinning = false; spinTime = 0;
             rolls.forEach(rolly => {
                 var reward = rolly[0].find(symbol => symbol.yPos > 194.9 && symbol.yPos < 195.1)
-                currRewards.push(reward.icon)
+                currSymbols.push(reward.icon)
             })
-            console.log(currRewards) //'oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor'
-            
-            //spinning = false; spinTime = 0
+            console.log(currSymbols) 
+            var rewards1 = [], rewards2 = [], rewards3 = [];
+            currSymbols.forEach((symbol,index) => {
+                if (index == 0) {rewards1.push(symbol)}
+                else {
+                    if (symbol == rewards1[0]) {rewards1.push(symbol)} //if same as adjacent symbol, add to array
+                    else { //if not same as adjacent symbol
+                        if (rewards1.length < 2) {rewards1.splice(0,1,symbol)} //if there is no previous match in array1, replace
+                        else {//if there is a previous match
+                            if (rewards2.length < 1 || symbol == rewards2[0]) { //if there is no previous match in array2, or the adjacent symbol is the same, add to array2
+                                rewards2.push(symbol)
+                            }
+                            else {//if adjacent symbol is not a match
+                                if (rewards2.length < 2) {//if there is no previous match, replace
+                                    rewards2.splice(0,1,symbol)
+                                }
+                                else {//if there is a previous match
+                                    if (rewards3.length < 1 || symbol == rewards2[0]) {rewards3.push(symbol)}//if there is no previous match in array3, or the adjacent symbol is the same, add to array3
+                                    else {rewards3.splice(0,1,symbol)}//if no match
+                                }
+                            } 
+                        }
+                    }
+                }
+                console.log(rewards1)
+                console.log(rewards2)
+                console.log(rewards3)
+                console.log('-------------------------------')
+            })//'oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor'
+            if (rewards1.length < 2) {setTimeout(() => {spinning = false},1000)}
+            else {
+                showingHud = 4; console.log('you got '+rewards1.length+' '+rewards1[0]+'!')
+                
+                var addedCoins = 0, addedGrenades = 0, addedHealth = 0, addedArmor = 0;
+                if (rewards1[0] == 'oneCoin') {addedCoins += 5 * rewards1.length - 5}
+                else if (rewards1[0] == 'twoCoins') {addedCoins += 10 * rewards1.length - 10}
+                else if (rewards1[0] == 'threeCoins') {addedCoins += 15 * rewards1.length - 15}
+                else if (rewards1[0] == 'moneyBag') {addedCoins += 20 * rewards1.length - 20}
+                else if (rewards1[0] == 'moneyChest') {addedCoins += 30 * rewards1.length - 30}
+                else if (rewards1[0] == 'grenade') {addedGrenades += 1 * rewards1.length - 1}
+                else if (rewards1[0] == 'twoGrenades') {addedGrenades += 2 * rewards1.length - 2}
+                else if (rewards1[0] == 'oneHeart') {addedHealth += 15 * rewards1.length - 15}
+                else if (rewards1[0] == 'twoHearts') {addedHealth += 30 * rewards1.length - 30}
+                else if (rewards1[0] == 'armor') {addedArmor += 10 * rewards1.length - 10}
+
+                if (rewards2.length >= 2) {
+                    console.log('you also got '+rewards2.length+' '+rewards2[0]+'!')
+                    if (rewards2[0] == 'oneCoin') {addedCoins += 5 * rewards2.length - 5}
+                    else if (rewards2[0] == 'twoCoins') {addedCoins += 10 * rewards2.length - 10}
+                    else if (rewards2[0] == 'threeCoins') {addedCoins += 15 * rewards2.length - 15}
+                    else if (rewards2[0] == 'moneyBag') {addedCoins += 20 * rewards2.length - 20}
+                    else if (rewards2[0] == 'moneyChest') {addedCoins += 30 * rewards2.length - 30}
+                    else if (rewards2[0] == 'grenade') {addedGrenades += 1 * rewards2.length - 1}
+                    else if (rewards2[0] == 'twoGrenades') {addedGrenades += 2 * rewards2.length - 2}
+                    else if (rewards2[0] == 'oneHeart') {addedHealth += 15 * rewards2.length - 15}
+                    else if (rewards2[0] == 'twoHearts') {addedHealth += 30 * rewards2.length - 30}
+                    else if (rewards2[0] == 'armor') {addedArmor += 10 * rewards2.length - 10}
+                }
+                
+                if (rewards3.length >= 2) {
+                    console.log('you also got '+rewards3.length+' '+rewards3[0]+'!')
+                    if (rewards3[0] == 'oneCoin') {addedCoins += 5 * rewards3.length - 5}
+                    else if (rewards3[0] == 'twoCoins') {addedCoins += 10 * rewards3.length - 10}
+                    else if (rewards3[0] == 'threeCoins') {addedCoins += 15 * rewards3.length - 15}
+                    else if (rewards3[0] == 'moneyBag') {addedCoins += 20 * rewards3.length - 20}
+                    else if (rewards3[0] == 'moneyChest') {addedCoins += 30 * rewards3.length - 30}
+                    else if (rewards3[0] == 'grenade') {addedGrenades += 1 * rewards3.length - 1}
+                    else if (rewards3[0] == 'twoGrenades') {addedGrenades += 2 * rewards3.length - 2}
+                    else if (rewards3[0] == 'oneHeart') {addedHealth += 15 * rewards3.length - 15}
+                    else if (rewards3[0] == 'twoHearts') {addedHealth += 30 * rewards3.length - 30}
+                    else if (rewards3[0] == 'armor') {addedArmor += 10 * rewards3.length - 10}
+                }
+                
+                
+                setTimeout(() => {
+                    points += addedCoins; grenades += addedGrenades; health += addedHealth; armor += addedArmor;
+                    console.log('added '+addedCoins+' coins'); console.log('added '+addedGrenades+' grenades');
+                    console.log('added '+addedHealth+' health'); console.log('added '+addedArmor+' armor');
+                },2000)
+                setTimeout(() => {spinning = false},4000)
+            }
         }
     }
 
@@ -2990,7 +3107,7 @@ function slotMan() {
 
     if (keys && keys['q']) {
         clearInterval(levelInterval); gameState = states.level; console.log('exiting slot-man');
-        for (var s = 0; s < 6; s++) {speeds[s] = 0; rolls[s][0] = []}; spinTime = 0; spinning = false;
+        for (var s = 0; s < 6; s++) {speeds[s] = 0; rolls[s][0] = []}; spinTime = 0; spinning = false; actuallySpinning = false;
         levelInterval = setInterval(levelLoop,20)
     }
 }
