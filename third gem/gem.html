@@ -20,24 +20,38 @@
                 border-radius: 8px;
             }
             body { background-color: cornflowerblue; user-select: none;}
-            div { background-color: aquamarine; border:4px solid cadetblue; position:absolute; 
-                top:85vh; left:59vw; padding-left:3px; padding-right: 3px; font-family:monospace;}
+            #instructions { background-color: aquamarine; border:4px solid cadetblue; position:absolute; 
+                top:85vh; left:59vw; padding-left:3px; padding-right: 3px; font-family:monospace;
+            }
+            
             .nav { border: 2px solid darkslateblue; padding:1.5px; background-color: darkcyan; text-decoration: none; color: darkslategrey; border-radius: 4px}
             .nav:hover { color: darkslateblue; background-color: darkseagreen;}
+            
+            .menu {border-bottom-right-radius: 10px; top: 0; left:0}
+            .login {border-bottom-left-radius: 10px; top:0; right:0}
+
             .clocker { position: fixed; border-width: 3px; border-style: ridge; border-color: darkslategray; 
-                border-bottom-right-radius: 10px; top: 0; left:0; padding: 6px; background-color: lightslategray; }
+                padding: 6px; background-color: lightslategray; 
+            }
+            
             button:hover {cursor:pointer}
         </style>
         
     </head>
     <body>
-        <div class="clocker"> 
+        <div class="clocker menu"> 
             <a href="../main.html" class="nav">Main menu</a>
             <a href="../minitonk/lorem.html" class="nav">Minitonk</a>
             <a href="../bes defense/bes.html" class="nav">Bes defense</a>  
         </div>
         
-        
+        <div id="account" class="login clocker">
+            <a href="../main.html" class="nav">Sign in</a>
+            <a href="../main.html" class="nav">Sign out</a>
+            <a href="../main.html" class="nav">Account</a>
+            <a href="../main.html" class="nav">Register</a>
+        </div>
+
         <h1>Welcome to gem three!</h1>
         <canvas id="canvas" width="600px" height="400px"></canvas>
         <button id="butt1" onclick="start()"></button>

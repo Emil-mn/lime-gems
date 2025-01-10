@@ -83,6 +83,8 @@ var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
 //slot-man
 var credits = 0, showingHud = 0, cPressed = false, mPressed = false, lit = 1, spinning = false, actuallySpinning = false, mode = 'auto', cost = 5
+var slowing1 = false, slowing2 = false, slowing3 = false, slowing4 = false, slowing5 = false, slowing6 = false
+var light1 = true, light2 = true, light3 = true, light4 = true, light5 = true
 var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
 var coin = new Image(), twoCoins = new Image(), threeCoins = new Image(), moneyBag = new Image(), moneyChest = new Image();
 var grenade = new Image(), twoGrenades = new Image(), oneHeart = new Image(), twoHearts = new Image(), newArmor = new Image();
@@ -623,7 +625,7 @@ function checkButt(mButt){
                 arcade2 = new Obstacle(536,totH-99,10,20,'black')
                 arcade3 = new Obstacle(380,295,10,20,'yellow')
                 //enemy test
-                enemies.push(new character(265,240,10,25,'crimson','enemy',25))
+                enemies.push(new character(265,240,10,25,'crimson','enemy',2))
                 guns.push(new gun(265,240,12,5))
                 //pickup test
                 pickups.push(new character(totW/2,totH-15,5,5,'gold','points',15))
@@ -2759,7 +2761,7 @@ function slotMan() {
     else {
         ctx.fillStyle = 'maroon'; 
         ctx.fillRect(240,337.5,120,40)
-        if (credits < cost || lit <= 0 || (spinning == true && mode == 'auto')) {ctx.fillStyle = 'crimson';}
+        if ((credits < cost && spinning == false) || lit <= 0 || (spinning == true && mode == 'auto')) {ctx.fillStyle = 'crimson';}
         else if (lit > 0) {
             if (spinning == false) {lit -= 0.02}
             var gradient = ctx.createRadialGradient(300,347.5,5,300,347.5,30)
@@ -2785,15 +2787,24 @@ function slotMan() {
     if (actuallySpinning == true) {
         //console.log('s1:'+speeds[0]+'|s2:'+speeds[1]+'|s3:'+speeds[2]+'|s4:'+speeds[3]+'|s5:'+speeds[4]+'|s6:'+speeds[5])
         if (spinTime < 1) {speeds[0] += 0.2}
-        spinTime += 0.02; console.log(Math.floor(spinTime));
+        spinTime += 0.02; //console.log(Math.floor(spinTime));
         if (spinTime > offset1 && spinTime < offset1 + 1) {speeds[1] += 0.2}
         if (spinTime > offset1 + offset2 && spinTime < offset1 + offset2 + 1) {speeds[2] += 0.2}
         if (spinTime > offset1 + offset2 + offset3 && spinTime < offset1 + offset2 + offset3 + 1) {speeds[3] += 0.2}
         if (spinTime > offset1 + offset2 + offset3 + offset4 && spinTime < offset1 + offset2 + offset3 + offset4 + 1) {speeds[4] += 0.2}
         if (spinTime > offset1 + offset2 + offset3 + offset4 + offset5 && spinTime < offset1 + offset2 + offset3 + offset4 + offset5 + 1) {speeds[5] += 0.2}
+        console.log(lit+'<lit  1>'+light1+' 2>'+light2+' 3>'+light3+' 4>'+light4+' 5>'+light5)
+        
+        if (mode == 'manual' && speeds[0] > 9.99 && keys && keys[' ']) {slowing1 = true; lit = 0}
+        else if (mode == 'manual' && speeds[1] > 9.99 && speeds[0] < 0.01 && keys && keys[' ']) {slowing2 = true; lit = 0}
+        else if (mode == 'manual' && speeds[2] > 9.99 && speeds[1] < 0.01 && keys && keys[' ']) {slowing3 = true; lit = 0}
+        else if (mode == 'manual' && speeds[3] > 9.99 && speeds[2] < 0.01 && keys && keys[' ']) {slowing4 = true; lit = 0}
+        else if (mode == 'manual' && speeds[4] > 9.99 && speeds[3] < 0.01 && keys && keys[' ']) {slowing5 = true; lit = 0}
+        else if (mode == 'manual' && speeds[5] > 9.99 && speeds[4] < 0.01 && keys && keys[' ']) {slowing6 = true; lit = 0}
 
-        if (spinTime > spinDuration && spinTime < spinDuration + 1) {speeds[0] -= 0.2}
-        else if (spinTime > spinDuration + 1) {
+        if ((spinTime > spinDuration && spinTime < spinDuration + 1 && mode == 'auto') || (mode == 'manual' && slowing1 == true && speeds[0] > 0.02)) {speeds[0] -= 0.2}
+        else if ((spinTime > spinDuration + 1 && mode == 'auto') || (mode == 'manual' && speeds[0] < 0.02 && spinTime > 3)) {
+            slowing1 = false; if (light1 == true) {lit = 1; light1 = false}
             if (rolls[0][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned1')}
             else {
                 var reward = rolls[0][0].find(element => element.yPos > 195 && element.yPos < 235);
@@ -2820,8 +2831,9 @@ function slotMan() {
                 }
             }
         }
-        if (spinTime > spinDuration + offset3 && spinTime < spinDuration + offset3 + 1) {speeds[1] -= 0.2}
-        else if (spinTime > spinDuration + offset3 + 1) {
+        if ((spinTime > spinDuration + offset3 && spinTime < spinDuration + offset3 + 1 && mode == 'auto') || (mode == 'manual' && slowing2 == true && speeds[1] > 0.02)) {speeds[1] -= 0.2}
+        else if ((spinTime > spinDuration + offset3 + 1 && mode == 'auto') || (mode == 'manual' && speeds[1] < 0.02 && spinTime > 3)) {
+            slowing2 = false; if (light2 == true) {lit = 1; light2 = false}
             if (rolls[1][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned2')}
             else {
                 var reward = rolls[1][0].find(element => element.yPos > 195 && element.yPos < 235);
@@ -2848,8 +2860,9 @@ function slotMan() {
                 }
             }
         }
-        if (spinTime > spinDuration + offset3 + offset5 && spinTime < spinDuration + offset3 + offset5 + 1) {speeds[2] -= 0.2}
-        else if (spinTime > spinDuration + offset3 + offset5 + 1) {
+        if ((spinTime > spinDuration + offset3 + offset5 && spinTime < spinDuration + offset3 + offset5 + 1 && mode == 'auto') || (mode == 'manual' && slowing3 == true && speeds[2] > 0.02)) {speeds[2] -= 0.2}
+        else if ((spinTime > spinDuration + offset3 + offset5 + 1 && mode == 'auto') || (mode == 'manual' && speeds[2] < 0.02 && spinTime > 3)) {
+            slowing3 = false; if (light3 == true) {lit = 1; light3 = false}
             if (rolls[2][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned3')}
             else {
                 var reward = rolls[2][0].find(element => element.yPos > 195 && element.yPos < 235);
@@ -2876,8 +2889,9 @@ function slotMan() {
                 }
             }
         }
-        if (spinTime > spinDuration + offset3 + offset5 + offset2 && spinTime < spinDuration + offset3 + offset5 + offset2 + 1) {speeds[3] -= 0.2}
-        else if (spinTime > spinDuration + offset3 + offset5 + offset2 + 1) {
+        if ((spinTime > spinDuration + offset3 + offset5 + offset2 && spinTime < spinDuration + offset3 + offset5 + offset2 + 1 && mode == 'auto') || (mode == 'manual' && slowing4 == true && speeds[3] > 0.02)) {speeds[3] -= 0.2}
+        else if ((spinTime > spinDuration + offset3 + offset5 + offset2 + 1 && mode == 'auto') || (mode == 'manual' && speeds[3] < 0.02 && spinTime > 3)) {
+            slowing4 = false; if (light4 == true) {lit = 1; light4 = false}
             if (rolls[3][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned4')}
             else {
                 var reward = rolls[3][0].find(element => element.yPos > 195 && element.yPos < 235);
@@ -2904,8 +2918,9 @@ function slotMan() {
                 }
             }
         }
-        if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {speeds[4] -= 0.2}
-        else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + 1) {
+        if ((spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + 1 && mode == 'auto') || (mode == 'manual' && slowing5 == true && speeds[4] > 0.02)) {speeds[4] -= 0.2}
+        else if ((spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + 1 && mode == 'auto') || (mode == 'manual' && speeds[4] < 0.02 && spinTime > 3)) {
+            slowing5 = false; if (light5 == true) {lit = 1; light5 = false}
             if (rolls[4][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned5')}
             else {
                 var reward = rolls[4][0].find(element => element.yPos > 195 && element.yPos < 235);
@@ -2932,8 +2947,9 @@ function slotMan() {
                 }
             }
         }
-        if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {speeds[5] -= 0.2}
-        else if (spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {
+        if ((spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 && spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1 && mode == 'auto') || (mode == 'manual' && slowing6 == true && speeds[5] > 0.02)) {speeds[5] -= 0.2}
+        else if ((spinTime > spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1 && mode == 'auto') || (mode == 'manual' && speeds[5] < 0.02 && spinTime > 2)) {
+            slowing6 = false
             if (rolls[5][0].some(element => element.yPos > 34.9 && element.yPos < 35.1)) {console.log('kinda aligned6')}
             else {
                 var reward = rolls[5][0].find(element => element.yPos > 195 && element.yPos < 235);
@@ -2961,8 +2977,10 @@ function slotMan() {
             }
         }
                 
-        
-        if (spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1) {
+        if (mode == 'manual' && spinTime < offset1 + offset2 + offset3 + offset4 + offset5 + 1) {lit = 0}
+        else if (mode == 'manual' && speeds[0] > 9.99) {lit = 1}
+
+        if ((spinTime < spinDuration + offset3 + offset5 + offset2 + offset1 + offset4 + 1 && mode == 'auto') || speeds[5] > 0 || slowing6 == true || spinTime < offset1 + offset2 + offset3 + offset4 + offset5 + 1) {
             rolls.forEach((roller, index) => {
                 roller[0].forEach(symbol => {
                     symbol.yPos += speeds[index]
@@ -3059,7 +3077,7 @@ function slotMan() {
                     console.log('added '+addedCoins+' coins'); console.log('added '+addedGrenades+' grenades');
                     console.log('added '+addedHealth+' health'); console.log('added '+addedArmor+' armor');
                 },2000)
-                setTimeout(() => {spinning = false},4000)
+                setTimeout(() => {spinning = false; light1 = true; light2 = true; light3 = true; light4 = true; light5 = true; lit = 1},4000)
             }
         }
     }

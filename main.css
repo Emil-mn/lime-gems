@@ -8,8 +8,11 @@ body { background-color: cornflowerblue;}
 }
 
 .clocker { position: fixed; border-width: 3px; border-style: ridge; border-color: darkslategray; 
-    border-bottom-right-radius: 10px; top: 0; left:0; padding: 6px; background-color: lightslategray; 
+    padding: 6px; background-color: lightslategray; 
 }
+
+.menu {border-bottom-right-radius: 10px; top: 0; left:0}
+.login {border-bottom-left-radius: 10px; top:0; right:0}
 
 .nav { border: 2px solid darkslateblue; padding:1.5px; background-color: darkcyan; text-decoration: none; color: darkslategrey; border-radius: 4px}
 .nav:hover { color: darkslateblue; background-color: darkseagreen; }

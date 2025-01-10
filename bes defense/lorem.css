@@ -2,7 +2,10 @@
 body { background-color: cornflowerblue; user-select: none;}
 
 .clocker { position: fixed; border-width: 3px; border-style: ridge; border-color: darkslategray; 
-border-bottom-right-radius: 10px; top: 0; left:0; padding: 6px; background-color: lightslategray; }
+padding: 6px; background-color: lightslategray; }
+
+.menu {border-bottom-right-radius: 10px; top: 0; left:0}
+.login {border-bottom-left-radius: 10px; top:0; right:0}
 
 #toptext { position: absolute;  padding: 10px; border:3px solid hotpink; display: contents; justify-self:stretch; text-align: center; color:firebrick; font-family: 'Lobster', cursive;}
 
