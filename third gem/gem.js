@@ -72,8 +72,14 @@ for (i = 0; i < hueyArray.length; i++) {
 }
 //level 1 stuff
 var gunTimer = 0, greenLight = false; gunSight = 0, trapDoor = false
+var speakers = [{x:0,y:0},{x:215,y:-20},{x:415,y:80},{x:389,y:80},{x:-90,y:35},{x:34,y:190},{x:234,y:190},{x:429,y:190}]
+var dialogX = [120,310]
+var dialogY = [350,350]
+var dialogTriggered = [false,false,false,false,false,false,false,false,false,false,false,false]
+var dialogTimer = [0,0,0,0,0,0,0,0,0,0,0,0]
 //sprites
-var player, pGun, arcadeTest, arcade2, arcade3
+var player, pGun, arcadeTest, arcade2, arcade3, arcade4
+var arcadeGrad = ctx.createLinearGradient(200,235,210,255); arcadeGrad.addColorStop(0,'green'); arcadeGrad.addColorStop(1,'blue')
 //brik-brek
 var ball, paddle, bricks, brikBalls = [], brikLives = 0 
 var brickArray = [], brickCount = 0, brikLvl = 1
@@ -333,8 +339,8 @@ function startSlotMan() {
 }
 
 function startLevel1() {
-    //player = new character(70,50,10,25,'gray');
-    player = new character(420,260,10,25,'gray');
+    player = new character(70,50,10,25,'gray');
+    //player = new character(420,260,10,25,'gray');
     //player = new character(530,340,10,25,'gray');
 
     pGun = new gun(80,50,12,5,'yes')
@@ -511,20 +517,25 @@ function startLevel1() {
 
 
 function runLevel1() {
-    //dialog
-    //well well well if it isnt my favorite agent, x! I guess you came for the z device. well, you definitely wont survive that far mwahahahaha
-    //oh no a locked door, maybe you should just give up and jump into the spikes...
-    //too bad it would take explosives to get through this wall. wait, who put that there!?
-    //heres a massive spikepit for you, and some guards. you're definitely not surviving this mwaahahah
-    //no keycard? well, all  you can do is jump into the spikepit...
-    //hey you cant grab that!
-    //go inside, its definitely not a trap
-    //ha, i got you now, try shooting your way out of this. no wait, dont!
-    //i put this room here to congratulate you on your surprising survival, its definitely not just the guards' breakroom
     ctx.fillStyle = 'red'; ctx.font = '11px cursive'; ctx.fillText('definitely not a',165,245)
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Trap Area 1',165,255);
 
     ctx.font = '30px consolas'; ctx.fillText('Testing Area 1',210,330)
+    
+    ctx.fillStyle = 'lightslategray'; ctx.fillRect(100,50,11,11); ctx.fillRect(315,30,11,11);
+    ctx.fillRect(515,130,11,11); ctx.fillRect(500,130,-11,11); ctx.fillRect(10,85,11,11);
+    ctx.fillRect(145,240,-11,11); ctx.fillRect(345,240,-11,11); ctx.fillRect(540,240,-11,11);
+
+    ctx.fillStyle = 'darkslategrey'; 
+    for(s=0;s<8;s++) {
+        ctx.fillRect(103+speakers[s].x,53+speakers[s].y,1,1); ctx.fillRect(105+speakers[s].x,55+speakers[s].y,1,1); ctx.fillRect(107+speakers[s].x,57+speakers[s].y,1,1); 
+        ctx.fillRect(103+speakers[s].x,51+speakers[s].y,1,1); ctx.fillRect(105+speakers[s].x,53+speakers[s].y,1,1); ctx.fillRect(107+speakers[s].x,55+speakers[s].y,1,1); ctx.fillRect(109+speakers[s].x,57+speakers[s].y,1,1);
+        ctx.fillRect(105+speakers[s].x,51+speakers[s].y,1,1); ctx.fillRect(107+speakers[s].x,53+speakers[s].y,1,1); ctx.fillRect(109+speakers[s].x,55+speakers[s].y,1,1);
+        ctx.fillRect(107+speakers[s].x,51+speakers[s].y,1,1); ctx.fillRect(109+speakers[s].x,53+speakers[s].y,1,1);
+        ctx.fillRect(101+speakers[s].x,53+speakers[s].y,1,1); ctx.fillRect(103+speakers[s].x,55+speakers[s].y,1,1); ctx.fillRect(105+speakers[s].x,57+speakers[s].y,1,1); ctx.fillRect(107+speakers[s].x,59+speakers[s].y,1,1);
+        ctx.fillRect(101+speakers[s].x,55+speakers[s].y,1,1); ctx.fillRect(103+speakers[s].x,57+speakers[s].y,1,1); ctx.fillRect(105+speakers[s].x,59+speakers[s].y,1,1);
+        ctx.fillRect(101+speakers[s].x,57+speakers[s].y,1,1); ctx.fillRect(103+speakers[s].x,59+speakers[s].y,1,1);
+    }
 
     ctx.beginPath(); if (greenLight == true) {ctx.fillStyle = 'limegreen'} else {ctx.fillStyle = 'darkgreen'}
     ctx.moveTo(180,315); ctx.lineTo(180,330); ctx.lineTo(165,322.5); ctx.fill();
@@ -551,7 +562,7 @@ function runLevel1() {
     angel = Math.atan2((player.y+player.height/2)-310,(player.x+player.width/2)-75); 
     ctx.translate(75,310); 
     if (player.x > 110 && player.x < 500 && player.y > 300) {ctx.rotate(angel)} else {ctx.rotate(0.2)}
-    ctx.translate(-75,-310); console.log(Math.floor(angel*57.2957795))
+    ctx.translate(-75,-310); 
     
     ctx.fillStyle = 'darkslategray'; ctx.fillRect(65,305,18,10); ctx.beginPath(); ctx.lineWidth = 2; 
     ctx.strokeStyle = 'darkslategray'; ctx.moveTo(83,306); ctx.lineTo(125,306); 
@@ -562,6 +573,74 @@ function runLevel1() {
     
     ctx.fillStyle = 'lightslategray'; ctx.fillRect(73,295,4,17)
     
+    for (d = 0; d < dialogTriggered.length; d++) {
+        if (player.x > dialogX[d] && player.y < dialogY[d] && dialogTriggered[d] == false) {
+            dialogTriggered[d] = true; console.log('triggered dialogs: '+dialogTriggered)
+        }
+    }
+
+    for (d = 0; d < dialogTimer.length; d++) {
+        if (dialogTriggered[d] == true && dialogTimer[d] < 35) {
+            dialogTimer[d] += 0.02; console.log('dialog timers: '+dialogTimer)
+        }
+    }
+
+    if (dialogTimer[0] > 0 && dialogTimer[0] < 30) {
+        ctx.font = '15px consolas'
+        ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(225,255); ctx.lineTo(205,285); ctx.lineTo(215,245); ctx.closePath(); ctx.fill(); 
+        ctx.beginPath(); ctx.moveTo(495,255); ctx.lineTo(515,285); ctx.lineTo(505,245); ctx.closePath(); ctx.fill(); 
+        ctx.beginPath(); ctx.moveTo(225,205); ctx.lineTo(205,175); ctx.lineTo(215,215); ctx.closePath(); ctx.fill(); 
+        ctx.beginPath(); ctx.moveTo(495,205); ctx.lineTo(515,175); ctx.lineTo(505,215); ctx.closePath(); ctx.fill(); 
+        ctx.fillStyle = 'lightslategray'; ctx.fillRect(200,200,320,60); ctx.strokeRect(200,200,320,60);    
+        ctx.fillStyle = 'darkslategray';   
+        if (dialogTimer[0] < 3) {
+            ctx.fillText('well well well if it isnt my favorite agent, x!',205,215)
+            ctx.fillText('I guess you came for the z device',205,233)
+            ctx.fillText('well, you definitely wont survive that far mwahahahaha',205,266) 
+        }
+        else if (dialogTimer[0] < 6) {
+            ctx.fillText('oh no a locked door, maybe you should just give up and jump into the spikes...',205,215)
+        }
+        else if (dialogTimer[0] < 9) {
+            ctx.fillText('too bad it would take explosives to get through this wall',205,215)
+            ctx.fillText('wait, who put that there!?',205,233)
+        }
+        else if (dialogTimer[0] < 12) {
+            ctx.fillText('heres a massive spikepit for you, and some guards',205,215)
+            ctx.fillText('you\'re definitely not surviving this mwaahahah',205,233)
+        }
+        else if (dialogTimer[0] < 15) {
+            ctx.fillText('no keycard? well, all  you can do is jump into the spikepit...',205,215)
+        }
+        else if (dialogTimer[0] < 18) {
+            ctx.fillText('hey you cant grab that!',205,215)
+        }
+        else if (dialogTimer[0] < 21) {
+            ctx.fillText('come inside, this is definitely not a trap',205,215)
+        }
+        else if (dialogTimer[0] < 24) {
+            ctx.fillText('ha, i got you now, try shooting your way out of this one!',205,215)
+            ctx.fillText('no wait, dont!',205,233)
+        }
+        else if (dialogTimer[0] < 27) {
+            ctx.fillText('i put this room here to congratulate you on your surprising survival,',205,215)
+            ctx.fillText('its definitely not just the guards\' breakroom',205,233)
+        }
+        
+    }
+
+    //dialog
+    //well well well if it isnt my favorite agent, x! I guess you came for the z device. well, you definitely wont survive that far mwahahahaha
+    //oh no a locked door, maybe you should just give up and jump into the spikes...
+    //too bad it would take explosives to get through this wall. wait, who put that there!?
+    //heres a massive spikepit for you, and some guards. you're definitely not surviving this mwaahahah
+    //no keycard? well, all  you can do is jump into the spikepit...
+    //hey you cant grab that!
+    //come inside, this is definitely not a trap
+    //ha, i got you now, try shooting your way out of this one! no wait, dont!
+    //i put this room here to congratulate you on your surprising survival, its definitely not just the guards' breakroom
+
     if (player.y > 300) {
         gunTimer -= 0.02;
         if (gunTimer <= 0) {
@@ -572,6 +651,7 @@ function runLevel1() {
     }
 
     if (player.x > 110 && player.x < 500 && player.y > 300) {
+        console.log(Math.floor(angel*57.2957795))
         projectiles.push(new Projectile(2,2,'white',75,310,player.x,player.y+5,'detector',69))
         if (gunSight > 0 && greenLight == true) {
             gunSight -= 0.02;
@@ -624,6 +704,7 @@ function checkButt(mButt){
                 arcadeTest = new Obstacle(450,totH-75,10,20,'blue')
                 arcade2 = new Obstacle(536,totH-99,10,20,'black')
                 arcade3 = new Obstacle(380,295,10,20,'yellow')
+                arcade4 = new Obstacle(200,235,10,20,arcadeGrad)
                 //enemy test
                 enemies.push(new character(265,240,10,25,'crimson','enemy',2))
                 guns.push(new gun(265,240,12,5))
@@ -641,6 +722,7 @@ function checkButt(mButt){
                 floors.push(new Obstacle(360,315,50,5,'gray'))
                 floors.push(new Spikes(400,totH-5,20))
                 floors.push(new Obstacle(260,280,69,5,'red'))
+                floors.push(new Obstacle(175,255,60,5,'gray'))
                 //walls
                 walls.push(new Obstacle(225,totH-105,5,45,'gray'))
                 walls.push(new Obstacle(290,totH-105,5,45,'gray'))
@@ -1873,6 +1955,16 @@ function levelLoop() {
         ctx.fillText('[E]Play Slot-Man',arcade3.x-47,arcade3.y-8);
 
         if (keys && keys['e']) {console.log('starting slot-man'); clearInterval(levelInterval); gameState = states.slot; startSlotMan()}
+    }
+
+    //brikbrek 2
+    arcade4.update()
+    ctx.fillStyle = 'blue'; ctx.fillRect(arcade4.x+2,arcade4.y+2,6,6)
+    if (player.x + player.width > arcade4.x - 20 && player.x < arcade4.x + arcade4.width + 20 && player.y + player.height > arcade4.y - 10 && player.y < arcade4.y + arcade4.height + 5) {
+        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
+        ctx.fillText('[E]Play Brik-Brek 2',arcade4.x-50,arcade4.y-8);
+
+        if (keys && keys['e']) {console.log('starting brik-brek 2'); clearInterval(levelInterval); gameState = states.brik2; startBrikBrek2()}
     }
 
     if (level == 1 && demo == false) {runLevel1()}
