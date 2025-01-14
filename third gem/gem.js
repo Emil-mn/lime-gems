@@ -6,7 +6,7 @@ var musx, musy
 var clickX, clickY
 var ctx = can.getContext("2d")
 //states stuff
-var states = {stopped:0,menu:1,intro:2,level:3,paused:4,brik:5,pew:6,slot:7}
+var states = {stopped:0,menu:1,intro:2,level:3,paused:4,brik:5,pew:6,slot:7,brik2:8}
 var gameState = states.stopped
 var prevState
 //weapon stuff
@@ -74,16 +74,19 @@ for (i = 0; i < hueyArray.length; i++) {
 var gunTimer = 0, greenLight = false; gunSight = 0, trapDoor = false
 var speakers = [{x:0,y:0},{x:215,y:-20},{x:415,y:80},{x:389,y:80},{x:-90,y:35},{x:34,y:190},{x:234,y:190},{x:429,y:190}]
 var dialogX = [120,310]
-var dialogY = [350,350]
+var dialogY = [80,80]
 var dialogTriggered = [false,false,false,false,false,false,false,false,false,false,false,false]
 var dialogTimer = [0,0,0,0,0,0,0,0,0,0,0,0]
 //sprites
 var player, pGun, arcadeTest, arcade2, arcade3, arcade4
-var arcadeGrad = ctx.createLinearGradient(200,235,210,255); arcadeGrad.addColorStop(0,'green'); arcadeGrad.addColorStop(1,'blue')
+var arcadeGrad = ctx.createLinearGradient(205,235,205,255); arcadeGrad.addColorStop(0,'green'); arcadeGrad.addColorStop(1,'blue')
+var arcadeGradBig = ctx.createLinearGradient(totW/2,50,totW/2,1050); arcadeGradBig.addColorStop(0,'green'); arcadeGradBig.addColorStop(1,'blue')
 //brik-brek
 var ball, paddle, bricks, brikBalls = [], brikLives = 0 
 var brickArray = [], brickCount = 0, brikLvl = 1
 var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
+//brik-brek 2
+var ball2, paddle2, brik2Balls = [], brik2Lives = 0, brik2Lvl = 1
 //pew-pew
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
@@ -242,17 +245,12 @@ function startBrikBrek() {
         x: totW/2 - 25,
         y: totH - 100 
     }  
-    
-    var x, rand = Math.random() * 2 -1
-    
-    if (rand > 0) {x = 1}
-    else if (rand < 0) {x = -1}
 
     ball = {
         x: totW/2 - 5,
         y: totH - 125,
         size: 5,
-        xSpeed: x,
+        xSpeed: 0,
         ySpeed: -3 
     }
     
@@ -303,6 +301,28 @@ function startBrikBrek() {
     }
     console.log(brickArray)
     levelInterval = setInterval(brikBrek,20)
+}
+
+function startBrikBrek2() {
+    paddle2 = {
+        speed: 5,
+        width: 50,
+        height: 7,
+        x: totW/2 - 25,
+        y: totH - 100 
+    }  
+
+    ball2 = {
+        x: totW/2 - 5,
+        y: totH - 125,
+        size: 5,
+        xSpeed: 0,
+        ySpeed: -3 
+    }
+
+    brik2Balls = [{x:ball2.x,y:ball2.y,xSpeed:ball2.xSpeed,ySpeed:ball2.ySpeed,extraSize:0}]
+
+    levelInterval = setInterval(brikBrek2,20)
 }
 
 function startPewPew() {
@@ -577,6 +597,7 @@ function runLevel1() {
         if (player.x > dialogX[d] && player.y < dialogY[d] && dialogTriggered[d] == false) {
             dialogTriggered[d] = true; console.log('triggered dialogs: '+dialogTriggered)
         }
+        //if (player.x < dialog[d] && )
     }
 
     for (d = 0; d < dialogTimer.length; d++) {
@@ -666,8 +687,9 @@ function pause() {
     else if (gameState == states.pew) {prevState = 3}
     else if (gameState == states.intro) {prevState = 4}
     else if (gameState == states.slot) {prevState = 5}
+    else if (gameState == states.brik2) {prevState = 6}
 
-    if (gameState == states.level || gameState == states.brik || gameState == states.pew || gameState == states.intro || gameState == states.slot) {
+    if (gameState != states.menu && gameState != states.stopped && gameState != states.paused) {
         console.log('paused'); gameState = states.paused; clearInterval(levelInterval)
         ctx.fillStyle = 'gray'; ctx.font = '45px consolas'; ctx.fillText('Paused',220,totH/2)
     }
@@ -687,6 +709,9 @@ function pause() {
         }
         else if (prevState == 5) {
             gameState = states.slot; levelInterval = setInterval(slotMan,20)
+        }
+        else if (prevState == 6) {
+            gameState = states.brik2; levelInterval = setInterval(brikbrek2,20)
         }
     }
 }
@@ -1958,14 +1983,17 @@ function levelLoop() {
     }
 
     //brikbrek 2
-    arcade4.update()
-    ctx.fillStyle = 'blue'; ctx.fillRect(arcade4.x+2,arcade4.y+2,6,6)
-    if (player.x + player.width > arcade4.x - 20 && player.x < arcade4.x + arcade4.width + 20 && player.y + player.height > arcade4.y - 10 && player.y < arcade4.y + arcade4.height + 5) {
-        ctx.fillStyle = 'black'; ctx.font = '12px consolas';
-        ctx.fillText('[E]Play Brik-Brek 2',arcade4.x-50,arcade4.y-8);
+    if (level != 1 || demo == true) {
+        arcade4.update()
+        ctx.fillStyle = 'blue'; ctx.fillRect(arcade4.x+2,arcade4.y+2,6,6)
+        if (player.x + player.width > arcade4.x - 20 && player.x < arcade4.x + arcade4.width + 20 && player.y + player.height > arcade4.y - 10 && player.y < arcade4.y + arcade4.height + 5) {
+            ctx.fillStyle = 'black'; ctx.font = '12px consolas';
+            ctx.fillText('[E]Play Brik-Brek 2',arcade4.x-50,arcade4.y-8);
 
-        if (keys && keys['e']) {console.log('starting brik-brek 2'); clearInterval(levelInterval); gameState = states.brik2; startBrikBrek2()}
+            if (keys && keys['e']) {console.log('starting brik-brek 2'); clearInterval(levelInterval); gameState = states.brik2; startBrikBrek2()}
+        }
     }
+    
 
     if (level == 1 && demo == false) {runLevel1()}
     
@@ -2136,11 +2164,11 @@ function levelLoop() {
         console.log('deeeed'); clearInterval(levelInterval); ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH)
         ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; ctx.fillText('You died...',totW/2-200,totH/2);
         ctx.fillStyle = 'gray'; ctx.fillRect(player.x,totH-10,25,10); ctx.fillStyle = 'lightslategrey';
-        ctx.fillRect(player.x+5,totH-16,5,12); setTimeout(loadMenu,3000); demo = false
+        ctx.fillRect(player.x+5,totH-16,5,12); setTimeout(loadMenu,3000); demo = false; trapDoor = false
     }
     if (keys && keys['Escape']) {
         clearInterval(levelInterval); console.log('exiting level');
-        setTimeout(loadMenu,1000); demo = false
+        setTimeout(loadMenu,1000); demo = false; trapDoor = false
     }
 }
 
@@ -2284,7 +2312,7 @@ function brikBrek() {
                         ctx.fillText('Game over',190,200); brikLvl = 1; setTimeout(startBrikBrek,2000);
                         shieldTime = 0; msgTime = 0; explodeTime = 0;
                     }
-                    else {brikLives -= 1; b.x = totW/2 - 5; b.y = totH - 125; b.xSpeed = 1; b.ySpeed = -3;}
+                    else {brikLives -= 1; b.x = totW/2 - 5; b.y = totH - 125; b.xSpeed = 0; b.ySpeed = -3;}
                 }
                 else {brikBalls.splice(index,1)}
             }
@@ -2396,6 +2424,100 @@ function brikBrek() {
 
 }
 
+function brikBrek2() {
+    if (demo == true) {ctx.fillStyle = 'skyblue'} else {ctx.fillStyle = 'lightgray'}; 
+    ctx.fillRect(0,0,totW,totH); ctx.fillStyle = arcadeGradBig; ctx.fillRect(135,50,335,350);
+    ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Brik-Brek 2',150,100,300);
+    ctx.fillStyle = 'blue'; ctx.fillRect(150,115,305,200); //console.log('paddle.x: '+paddle.x)
+
+    if (keys && (keys['a'] || keys['ArrowLeft'])) {
+        if (paddle2.x > 150) {
+            paddle2.x -= paddle2.speed;
+        }
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(250,360,30,0,360); ctx.fill()
+        ctx.fillStyle = 'white'; ctx.fillText('A',233,377)
+    }
+    else {
+        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.arc(250,360,30,0,360); ctx.fill()
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(250,350,30,0,360); ctx.fill()
+        ctx.fillStyle = 'white'; ctx.fillText('A',233,367)
+    }
+
+    if (keys && (keys['d'] || keys['ArrowRight'])) {
+        if ((paddle2.x < 405 && paddle2.width == 50)||(paddle2.x < 380 && paddle2.width == 75)||(paddle2.x < 355 && paddle2.width == 100)) {
+            paddle2.x += paddle2.speed;
+        }
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(350,360,30,0,360); ctx.fill()
+        ctx.fillStyle = 'white'; ctx.fillText('B',333,377)
+    }
+    else {
+        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.arc(350,360,30,0,360); ctx.fill()
+        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.arc(350,350,30,0,360); ctx.fill()
+        ctx.fillStyle = 'white'; ctx.fillText('B',333,367)
+    }
+
+    ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
+    
+    ctx.font = '16px consolas'; ctx.fillText('♥'+brikLives,155,270)
+
+    ctx.fillRect(paddle2.x,paddle2.y,paddle2.width,paddle2.height);
+
+    brik2Balls.forEach(bBall => {
+        bBall.x += bBall.xSpeed;
+        bBall.y += bBall.ySpeed;
+        if (explodeTime > 0) {ctx.fillStyle = 'red'}
+        else {ctx.fillStyle = 'black'}
+        ctx.fillRect(bBall.x,bBall.y,ball.size+bBall.extraSize,ball.size+bBall.extraSize);
+        console.log(bBall.extraSize)
+    })
+
+    brik2Balls.forEach((b,index) => {
+        if ( b.y < 115 ) { b.ySpeed = -b.ySpeed; }
+        if ( b.x < 150 || b.x > 455 - ball.size ) { b.xSpeed = -b.xSpeed; }
+        if ( b.y > 303 ) {
+            if (shieldTime <= 0) {
+                if (brik2Balls.length == 1) {
+                    if (brik2Lives == 0) {
+                        clearInterval(levelInterval); console.log('failed'); ctx.font = '45px consolas';
+                        ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'black';
+                        ctx.fillText('Game over',190,200); brik2Lvl = 1; setTimeout(startBrikBrek2,2000);
+                        shieldTime = 0; msgTime = 0; explodeTime = 0;
+                    }
+                    else {brik2Lives -= 1; b.x = totW/2 - 5; b.y = totH - 125; b.xSpeed = 0; b.ySpeed = -3;}
+                }
+                else {brik2Balls.splice(index,1)}
+            }
+            else {b.ySpeed = -b.ySpeed; shieldTime = 0; msgTime = 0}
+        }
+    })
+
+    brik2Balls.forEach(baller => {
+        if ( baller.x > paddle.x && baller.y > paddle2.y - ball.size && baller.y < paddle2.y + paddle2.height && baller.x < paddle2.x + paddle2.width )
+        {   
+            var hitPos = (baller.x - (paddle2.x + paddle2.width / 2)) / (paddle2.width / 2);
+
+            var refAngle = hitPos * (Math.PI / 4);
+
+            var speed = Math.sqrt(baller.xSpeed * baller.xSpeed + baller.ySpeed * baller.ySpeed);
+
+            baller.xSpeed = speed * Math.sin(refAngle);
+            baller.ySpeed = -speed * Math.cos(refAngle);
+
+            baller.y = paddle2.y - ball.size;
+        }
+    })
+
+    if (keys && keys['q']) {
+        clearInterval(levelInterval); gameState = states.level; console.log('exiting brik-brek 2');
+        levelInterval = setInterval(levelLoop,20)
+    }
+}
 
 function pewPew() {
     if (demo == true) {ctx.fillStyle = 'skyblue'} else {ctx.fillStyle = 'lightgray'};
