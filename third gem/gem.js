@@ -711,7 +711,7 @@ function pause() {
             gameState = states.slot; levelInterval = setInterval(slotMan,20)
         }
         else if (prevState == 6) {
-            gameState = states.brik2; levelInterval = setInterval(brikbrek2,20)
+            gameState = states.brik2; levelInterval = setInterval(brikBrek2,20)
         }
     }
 }
@@ -1794,7 +1794,7 @@ function levelLoop() {
     ctx.fillStyle = 'black'
     ctx.fillText(grenades,17,60); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,50,10,10)
 
-    if (keys && keys['g']) {grenades = 9; health += 0.2; armor += 0.2}
+    if (keys && keys['g']) {grenades = 9; health += 0.4; armor += 0.2; points += 20}
 
     //walk and jump
     var xInput, yInput; if(keys && (keys['a'] || keys['ArrowLeft'])) {xInput = -1}; 
@@ -2427,65 +2427,70 @@ function brikBrek() {
 function brikBrek2() {
     if (demo == true) {ctx.fillStyle = 'skyblue'} else {ctx.fillStyle = 'lightgray'}; 
     ctx.fillRect(0,0,totW,totH); ctx.fillStyle = arcadeGradBig; ctx.fillRect(135,50,335,350);
-    ctx.fillStyle = 'white'; ctx.font = '60px consolas'; ctx.fillText('Brik-Brek 2',150,100,300);
+    ctx.fillStyle = 'yellow'; ctx.font = '60px consolas'; ctx.fillText('Brik-Brek 2',150,100,300);
     ctx.fillStyle = 'blue'; ctx.fillRect(150,115,305,200); //console.log('paddle.x: '+paddle.x)
 
     if (keys && (keys['a'] || keys['ArrowLeft'])) {
         if (paddle2.x > 150) {
             paddle2.x -= paddle2.speed;
         }
-        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.fillStyle = 'yellow'; ctx.beginPath()
         ctx.arc(250,360,30,0,360); ctx.fill()
-        ctx.fillStyle = 'white'; ctx.fillText('A',233,377)
+        ctx.fillStyle = 'black'; ctx.fillText('A',233,377)
     }
     else {
-        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.fillStyle = 'gold'; ctx.beginPath()
         ctx.arc(250,360,30,0,360); ctx.fill()
-        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.fillStyle = 'yellow'; ctx.beginPath()
         ctx.arc(250,350,30,0,360); ctx.fill()
-        ctx.fillStyle = 'white'; ctx.fillText('A',233,367)
+        ctx.fillStyle = 'black'; ctx.fillText('A',233,367)
     }
 
     if (keys && (keys['d'] || keys['ArrowRight'])) {
         if ((paddle2.x < 405 && paddle2.width == 50)||(paddle2.x < 380 && paddle2.width == 75)||(paddle2.x < 355 && paddle2.width == 100)) {
             paddle2.x += paddle2.speed;
         }
-        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.fillStyle = 'yellow'; ctx.beginPath()
         ctx.arc(350,360,30,0,360); ctx.fill()
-        ctx.fillStyle = 'white'; ctx.fillText('B',333,377)
+        ctx.fillStyle = 'black'; ctx.fillText('B',333,377)
     }
     else {
-        ctx.fillStyle = 'maroon'; ctx.beginPath()
+        ctx.fillStyle = 'gold'; ctx.beginPath()
         ctx.arc(350,360,30,0,360); ctx.fill()
-        ctx.fillStyle = 'crimson'; ctx.beginPath()
+        ctx.fillStyle = 'yellow'; ctx.beginPath()
         ctx.arc(350,350,30,0,360); ctx.fill()
-        ctx.fillStyle = 'white'; ctx.fillText('B',333,367)
+        ctx.fillStyle = 'black'; ctx.fillText('B',333,367)
     }
 
     ctx.fillStyle = 'black'; ctx.font = '13px consolas'; ctx.fillText('Press [Q] to quit',10,totH-10)
     
-    ctx.font = '16px consolas'; ctx.fillText('♥'+brikLives,155,270)
+    ctx.fillStyle = 'darkslategray'; ctx.fillRect(paddle2.x,paddle2.y,paddle2.width,paddle2.height);
+    ctx.beginPath(); ctx.ellipse(paddle2.x+paddle2.width/2,paddle2.y,paddle2.width/2,5,0,0,180*Math.PI/180,true)
+    ctx.fill()
 
-    ctx.fillRect(paddle2.x,paddle2.y,paddle2.width,paddle2.height);
+    ctx.fillStyle = 'crimson'; ctx.font = '16px consolas'; ctx.fillText('♥'+brik2Lives,155,270)
+
 
     brik2Balls.forEach(bBall => {
         bBall.x += bBall.xSpeed;
         bBall.y += bBall.ySpeed;
         if (explodeTime > 0) {ctx.fillStyle = 'red'}
-        else {ctx.fillStyle = 'black'}
-        ctx.fillRect(bBall.x,bBall.y,ball.size+bBall.extraSize,ball.size+bBall.extraSize);
+        else {ctx.fillStyle = 'darkslategrey'}
+        ctx.beginPath(); 
+        ctx.arc(bBall.x+(ball2.size+bBall.extraSize)/2,bBall.y+(ball2.size+bBall.extraSize)/2,(ball2.size+bBall.extraSize)/2,0,10)
+        ctx.fill()
         console.log(bBall.extraSize)
     })
 
     brik2Balls.forEach((b,index) => {
         if ( b.y < 115 ) { b.ySpeed = -b.ySpeed; }
-        if ( b.x < 150 || b.x > 455 - ball.size ) { b.xSpeed = -b.xSpeed; }
+        if ( b.x < 150 || b.x + ball2.size + b.extraSize > 455) { b.xSpeed = -b.xSpeed; }
         if ( b.y > 303 ) {
             if (shieldTime <= 0) {
                 if (brik2Balls.length == 1) {
                     if (brik2Lives == 0) {
                         clearInterval(levelInterval); console.log('failed'); ctx.font = '45px consolas';
-                        ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'black';
+                        ctx.fillStyle = 'blue'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'red';
                         ctx.fillText('Game over',190,200); brik2Lvl = 1; setTimeout(startBrikBrek2,2000);
                         shieldTime = 0; msgTime = 0; explodeTime = 0;
                     }
@@ -2498,7 +2503,7 @@ function brikBrek2() {
     })
 
     brik2Balls.forEach(baller => {
-        if ( baller.x > paddle.x && baller.y > paddle2.y - ball.size && baller.y < paddle2.y + paddle2.height && baller.x < paddle2.x + paddle2.width )
+        if ( baller.x > paddle2.x && baller.y + (ball2.size+baller.extraSize) / 2 > paddle2.y&& baller.y < paddle2.y + paddle2.height && baller.x < paddle2.x + paddle2.width )
         {   
             var hitPos = (baller.x - (paddle2.x + paddle2.width / 2)) / (paddle2.width / 2);
 
@@ -2509,7 +2514,7 @@ function brikBrek2() {
             baller.xSpeed = speed * Math.sin(refAngle);
             baller.ySpeed = -speed * Math.cos(refAngle);
 
-            baller.y = paddle2.y - ball.size;
+            baller.y = paddle2.y - ball2.size;
         }
     })
 
@@ -3241,7 +3246,9 @@ function slotMan() {
                 console.log(rewards3)
                 console.log('-------------------------------')
             })//'oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor'
-            if (rewards1.length < 2) {setTimeout(() => {spinning = false},1000)}
+            if (rewards1.length < 2) {setTimeout(() => {
+                spinning = false; light1 = true; light2 = true; light3 = true; light4 = true; light5 = true; lit = 1;
+            },1000)}
             else {
                 showingHud = 4; console.log('you got '+rewards1.length+' '+rewards1[0]+'!')
                 
@@ -3285,7 +3292,11 @@ function slotMan() {
                     else if (rewards3[0] == 'armor') {addedArmor += 10 * rewards3.length - 10}
                 }
                 
-                
+                ctx.font = '15px consolas'; ctx.fillStyle = 'black'; 
+                ctx.fillText('+'+addedArmor+'A +'+addedHealth+'H',200,28)
+                ctx.fillText('+'+addedCoins,55,45); 
+                ctx.fillText('+'+addedGrenades,50,60);
+
                 setTimeout(() => {
                     points += addedCoins; grenades += addedGrenades; health += addedHealth; armor += addedArmor;
                     console.log('added '+addedCoins+' coins'); console.log('added '+addedGrenades+' grenades');
