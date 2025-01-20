@@ -73,8 +73,10 @@ for (i = 0; i < hueyArray.length; i++) {
 //level 1 stuff
 var gunTimer = 0, greenLight = false; gunSight = 0, trapDoor = false
 var speakers = [{x:0,y:0},{x:215,y:-20},{x:415,y:80},{x:389,y:80},{x:-90,y:35},{x:34,y:190},{x:234,y:190},{x:429,y:190}]
-var dialogX = [120,310]
-var dialogY = [80,80]
+var triggerX = [120,310]
+var triggerY = [80,80]
+var dialogX = []
+var dialogY = []
 var dialogTriggered = [false,false,false,false,false,false,false,false,false,false,false,false]
 var dialogTimer = [0,0,0,0,0,0,0,0,0,0,0,0]
 //sprites
@@ -87,6 +89,7 @@ var brickArray = [], brickCount = 0, brikLvl = 1
 var msgText, msgTime = 0, shieldTime = 0, explodeTime = 0
 //brik-brek 2
 var ball2, paddle2, brik2Balls = [], brik2Lives = 0, brik2Lvl = 1
+var brikTime = 0
 //pew-pew
 var arrow, arrowPArray = [], fireCool = 0, hurtCool = 0
 var time, score, pewEnemies = [], spawnCool, justReleased = false
@@ -94,6 +97,7 @@ var time, score, pewEnemies = [], spawnCool, justReleased = false
 var credits = 0, showingHud = 0, cPressed = false, mPressed = false, lit = 1, spinning = false, actuallySpinning = false, mode = 'auto', cost = 5
 var slowing1 = false, slowing2 = false, slowing3 = false, slowing4 = false, slowing5 = false, slowing6 = false
 var light1 = true, light2 = true, light3 = true, light4 = true, light5 = true
+var addedCoins = 0, addedGrenades = 0, addedHealth = 0, addedArmor = 0;
 var rewards = ['oneCoin','twoCoins','threeCoins','moneyBag','moneyChest','grenade','twoGrenades','oneHeart','twoHearts','armor']
 var coin = new Image(), twoCoins = new Image(), threeCoins = new Image(), moneyBag = new Image(), moneyChest = new Image();
 var grenade = new Image(), twoGrenades = new Image(), oneHeart = new Image(), twoHearts = new Image(), newArmor = new Image();
@@ -594,7 +598,7 @@ function runLevel1() {
     ctx.fillStyle = 'lightslategray'; ctx.fillRect(73,295,4,17)
     
     for (d = 0; d < dialogTriggered.length; d++) {
-        if (player.x > dialogX[d] && player.y < dialogY[d] && dialogTriggered[d] == false) {
+        if (player.x > triggerX[d] && player.y < triggerY[d] && dialogTriggered[d] == false) {
             dialogTriggered[d] = true; console.log('triggered dialogs: '+dialogTriggered)
         }
         //if (player.x < dialog[d] && )
@@ -617,8 +621,8 @@ function runLevel1() {
         ctx.fillStyle = 'darkslategray';   
         if (dialogTimer[0] < 3) {
             ctx.fillText('well well well if it isnt my favorite agent, x!',205,215)
-            ctx.fillText('I guess you came for the z device',205,233)
-            ctx.fillText('well, you definitely wont survive that far mwahahahaha',205,266) 
+            ctx.fillText('I guess you\'ve come for my z device?',205,233)
+            ctx.fillText('alright, we\'ll see if you make it that far mwahahahaha',205,266) 
         }
         else if (dialogTimer[0] < 6) {
             ctx.fillText('oh no a locked door, maybe you should just give up and jump into the spikes...',205,215)
@@ -2125,7 +2129,7 @@ function levelLoop() {
             projectiles.splice(index,1)
             if (bullet.enemyIndex == 69) {gunSight = 1}
             else {
-                enemies[bullet.enemyIndex].attackTimer = 2
+                enemies[bullet.enemyIndex].attackTimer = 2 ?? console.log('404 enemy not found')
                 enemies[bullet.enemyIndex].attacking = true
             }
         }
@@ -2468,8 +2472,9 @@ function brikBrek2() {
     ctx.beginPath(); ctx.ellipse(paddle2.x+paddle2.width/2,paddle2.y,paddle2.width/2,5,0,0,180*Math.PI/180,true)
     ctx.fill()
 
-    ctx.fillStyle = 'crimson'; ctx.font = '16px consolas'; ctx.fillText('♥'+brik2Lives,155,270)
-
+    brikTime += 0.02
+    ctx.fillStyle = 'crimson'; ctx.font = '18px consolas'; ctx.fillText('♥'+brik2Lives,155,280)
+    ctx.fillStyle = 'black'; ctx.font = '16px consolas'; ctx.fillText(Math.round(brikTime*10)/10,155,300)
 
     brik2Balls.forEach(bBall => {
         bBall.x += bBall.xSpeed;
@@ -2492,7 +2497,7 @@ function brikBrek2() {
                         clearInterval(levelInterval); console.log('failed'); ctx.font = '45px consolas';
                         ctx.fillStyle = 'blue'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'red';
                         ctx.fillText('Game over',190,200); brik2Lvl = 1; setTimeout(startBrikBrek2,2000);
-                        shieldTime = 0; msgTime = 0; explodeTime = 0;
+                        shieldTime = 0; msgTime = 0; explodeTime = 0; brikTime = 0
                     }
                     else {brik2Lives -= 1; b.x = totW/2 - 5; b.y = totH - 125; b.xSpeed = 0; b.ySpeed = -3;}
                 }
@@ -2775,25 +2780,6 @@ function pewPew() {
             if (hurtCool <= 0) {arrow.health -= 1; hurtCool = 2}
         }
     })   
-     
-    //draw time, score and health
-    ctx.fillStyle = 'white';
-    ctx.font = '18px consolas';
-    ctx.fillRect(155,120,10,15);
-    if (arrow.health >= 2) {
-        ctx.fillRect(167.5,120,10,15);
-    }
-    if (arrow.health >= 3) {
-        ctx.fillRect(180,120,10,15);
-    }
-    if (arrow.health >= 4) {
-        ctx.fillRect(192.5,120,10,15);
-    }
-    if (arrow.health == 5) {
-        ctx.fillRect(205,120,10,15);
-    }
-    ctx.fillText(Math.floor(time),155,150);
-    ctx.fillText(score,155,165);
 
     //collide with sides
     if ( arrow.frontPoint.y < 117 || arrow.backLeftPoint.y < 117 || arrow.backRightPoint.y < 117) {
@@ -2861,6 +2847,27 @@ function pewPew() {
         
     })
 
+     
+    //draw time, score and health
+    ctx.fillStyle = 'black';
+    ctx.font = '18px consolas';
+    ctx.fillRect(155,120,10,15);
+    if (arrow.health >= 2) {
+        ctx.fillRect(167.5,120,10,15);
+    }
+    if (arrow.health >= 3) {
+        ctx.fillRect(180,120,10,15);
+    }
+    if (arrow.health >= 4) {
+        ctx.fillRect(192.5,120,10,15);
+    }
+    if (arrow.health == 5) {
+        ctx.fillRect(205,120,10,15);
+    }
+    ctx.fillText(Math.floor(time),155,150);
+    ctx.fillText(score,155,165);
+
+    
     if (arrow.health == 0) {
         clearInterval(levelInterval); console.log('finished'); ctx.font = '45px consolas';
         ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200); ctx.fillStyle = 'white';
@@ -3252,7 +3259,6 @@ function slotMan() {
             else {
                 showingHud = 4; console.log('you got '+rewards1.length+' '+rewards1[0]+'!')
                 
-                var addedCoins = 0, addedGrenades = 0, addedHealth = 0, addedArmor = 0;
                 if (rewards1[0] == 'oneCoin') {addedCoins += 5 * rewards1.length - 5}
                 else if (rewards1[0] == 'twoCoins') {addedCoins += 10 * rewards1.length - 10}
                 else if (rewards1[0] == 'threeCoins') {addedCoins += 15 * rewards1.length - 15}
@@ -3291,16 +3297,12 @@ function slotMan() {
                     else if (rewards3[0] == 'twoHearts') {addedHealth += 30 * rewards3.length - 30}
                     else if (rewards3[0] == 'armor') {addedArmor += 10 * rewards3.length - 10}
                 }
-                
-                ctx.font = '15px consolas'; ctx.fillStyle = 'black'; 
-                ctx.fillText('+'+addedArmor+'A +'+addedHealth+'H',200,28)
-                ctx.fillText('+'+addedCoins,55,45); 
-                ctx.fillText('+'+addedGrenades,50,60);
 
                 setTimeout(() => {
                     points += addedCoins; grenades += addedGrenades; health += addedHealth; armor += addedArmor;
                     console.log('added '+addedCoins+' coins'); console.log('added '+addedGrenades+' grenades');
                     console.log('added '+addedHealth+' health'); console.log('added '+addedArmor+' armor');
+                    addedCoins = 0; addedGrenades = 0; addedHealth = 0; addedArmor = 0;
                 },2000)
                 setTimeout(() => {spinning = false; light1 = true; light2 = true; light3 = true; light4 = true; light5 = true; lit = 1},4000)
             }
@@ -3345,6 +3347,13 @@ function slotMan() {
         //grenade counter
         ctx.fillStyle = 'black'
         ctx.fillText(grenades,17,60); ctx.fillStyle = 'darkslategray'; ctx.fillRect(27,50,10,10)
+
+        if (spinning == true && (addedCoins > 0 || addedGrenades > 0 || addedHealth > 0 || addedArmor > 0)) {
+            ctx.fillStyle = 'black'; 
+            ctx.fillText('+'+addedArmor+'A +'+addedHealth+'H',190,28)
+            ctx.fillText('+'+addedCoins,60,45); 
+            ctx.fillText('+'+addedGrenades,40,60);
+        }
     }
 
 
