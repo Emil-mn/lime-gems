@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
+body { background-color: cornflowerblue; user-select: none;}
+
+.clocker { position: fixed; border-width: 3px; border-style: ridge; border-color: darkslategray; 
+padding: 6px; background-color: lightslategray; }
+
+.menu {border-bottom-right-radius: 10px; top: 0; left:0}
+.login {border-bottom-left-radius: 10px; top:0; right:0}
+
+h1 { 
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    text-align: center; color:rgb(13, 84, 238); text-decoration: solid underline;
+}
+
+canvas { border: 5px rgb(13, 84, 238) solid; display:flex; align-self: center; justify-self:center; background-color: black;}
+
+.nav { border: 2px solid darkslateblue; padding:1.5px; background-color: darkcyan; text-decoration: none; color: darkslategrey; border-radius: 4px}
+.nav:hover { color: darkslateblue; background-color: darkseagreen;}

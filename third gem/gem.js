@@ -73,8 +73,7 @@ for (i = 0; i < hueyArray.length; i++) {
 //level 1 stuff
 var gunTimer = 0, greenLight = false; gunSight = 0, trapDoor = false
 var speakers = [{x:0,y:0},{x:215,y:-20},{x:415,y:80},{x:389,y:80},{x:-90,y:35},{x:34,y:190},{x:234,y:190},{x:429,y:190}]
-var triggerX = [120,310]
-var triggerY = [80,80]
+var triggerX = [120,310,585,]
 var dialogX = []
 var dialogY = []
 var dialogTriggered = [false,false,false,false,false,false,false,false,false,false,false,false]
@@ -598,19 +597,27 @@ function runLevel1() {
     ctx.fillStyle = 'lightslategray'; ctx.fillRect(73,295,4,17)
     
     for (d = 0; d < dialogTriggered.length; d++) {
-        if (player.x > triggerX[d] && player.y < triggerY[d] && dialogTriggered[d] == false) {
-            dialogTriggered[d] = true; console.log('triggered dialogs: '+dialogTriggered)
+        if (player.y + player.height < 135) {
+            if (player.x > triggerX[d] && dialogTriggered[d] == false) {
+                dialogTriggered[d] = true; console.log('triggered dialogs: '+dialogTriggered)
+            }
         }
-        //if (player.x < dialog[d] && )
+        else if (player.y + player.height < 245) {
+            if (player.x < triggerX[d] && dialogTriggered[d] == false) {
+                dialogTriggered[d] = true; console.log('triggered dialogs: '+dialogTriggered)
+            }
+        }
+        
+        
     }
-
+    console.log('playerX'+player.x+'playerY'+player.y+'triggered'+dialogTriggered)
     for (d = 0; d < dialogTimer.length; d++) {
         if (dialogTriggered[d] == true && dialogTimer[d] < 35) {
-            dialogTimer[d] += 0.02; console.log('dialog timers: '+dialogTimer)
+            dialogTimer[d] += 0.02; //console.log('dialog timers: '+dialogTimer)
         }
     }
-
-    if (dialogTimer[0] > 0 && dialogTimer[0] < 30) {
+    
+    /*if (dialogTimer[0] > 0 && dialogTimer[0] < 30) {
         ctx.font = '15px consolas'
         ctx.strokeStyle = 'darkslategray'; ctx.fillStyle = 'darkslategray'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(225,255); ctx.lineTo(205,285); ctx.lineTo(215,245); ctx.closePath(); ctx.fill(); 
@@ -624,36 +631,8 @@ function runLevel1() {
             ctx.fillText('I guess you\'ve come for my z device?',205,233)
             ctx.fillText('alright, we\'ll see if you make it that far mwahahahaha',205,266) 
         }
-        else if (dialogTimer[0] < 6) {
-            ctx.fillText('oh no a locked door, maybe you should just give up and jump into the spikes...',205,215)
-        }
-        else if (dialogTimer[0] < 9) {
-            ctx.fillText('too bad it would take explosives to get through this wall',205,215)
-            ctx.fillText('wait, who put that there!?',205,233)
-        }
-        else if (dialogTimer[0] < 12) {
-            ctx.fillText('heres a massive spikepit for you, and some guards',205,215)
-            ctx.fillText('you\'re definitely not surviving this mwaahahah',205,233)
-        }
-        else if (dialogTimer[0] < 15) {
-            ctx.fillText('no keycard? well, all  you can do is jump into the spikepit...',205,215)
-        }
-        else if (dialogTimer[0] < 18) {
-            ctx.fillText('hey you cant grab that!',205,215)
-        }
-        else if (dialogTimer[0] < 21) {
-            ctx.fillText('come inside, this is definitely not a trap',205,215)
-        }
-        else if (dialogTimer[0] < 24) {
-            ctx.fillText('ha, i got you now, try shooting your way out of this one!',205,215)
-            ctx.fillText('no wait, dont!',205,233)
-        }
-        else if (dialogTimer[0] < 27) {
-            ctx.fillText('i put this room here to congratulate you on your surprising survival,',205,215)
-            ctx.fillText('its definitely not just the guards\' breakroom',205,233)
-        }
         
-    }
+    }*/
 
     //dialog
     //well well well if it isnt my favorite agent, x! I guess you came for the z device. well, you definitely wont survive that far mwahahahaha
@@ -669,7 +648,7 @@ function runLevel1() {
     if (player.y > 300) {
         gunTimer -= 0.02;
         if (gunTimer <= 0) {
-            gunTimer = 1 + Math.random()
+            gunTimer = 0.5 + Math.random()
             if (greenLight == false) {greenLight = true}
             else {greenLight = false}
         }
@@ -678,7 +657,7 @@ function runLevel1() {
     if (player.x > 110 && player.x < 500 && player.y > 300) {
         console.log(Math.floor(angel*57.2957795))
         projectiles.push(new Projectile(2,2,'white',75,310,player.x,player.y+5,'detector',69))
-        if (gunSight > 0 && greenLight == true) {
+        if (gunSight > 0 && greenLight == false) {
             gunSight -= 0.02;
             projectiles.push(new Projectile(3,3,'maroon',75,310,player.x,player.y+5,'enemi'))
         }
