@@ -4,6 +4,9 @@ var totW = can.width
 var totH = can.height
 var background = 'rgb(59, 168, 240)'
 var foreground = 'rgb(13, 84, 238)'
+var shipStroke = 'rgb(100,100,100)'
+var shipFill = 'rgb(130,130,130)'
+var shipWindows = 'rgb(45, 54, 187)'
 var mousePosX
 var mousePosY
 var mouseClickX
@@ -31,8 +34,8 @@ var spAmounts = [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,4
 var playerSprite
 var playerX = totW/2
 var playerY = totH/2
-var playerXmovement = 0
-var playerYmovement = 0
+var inputVector = [0,0]
+var movementVector = [0,0]
 var playerAngle = 0
 var playerSpeed = 0
 var playerMaxSpeed = 5
@@ -46,12 +49,65 @@ var level = 0
 var maxHealth = 100
 var maxShield = 0
 var xpRequired = xpReqs[0]
+//sprites
+var fighterBody
+var fighterWings
+var fighterEngines
+var fighterWindow
+var fighter
+
+function updateFigtherSprite() {
+    fighterBody = new Path2D
+    fighterBody.moveTo(playerX-11,playerY+40);
+    fighterBody.lineTo(playerX-11,playerY-20);
+    fighterBody.quadraticCurveTo(playerX-11,playerY-35,playerX,playerY-50);
+    fighterBody.quadraticCurveTo(playerX+11,playerY-35,playerX+11,playerY-20)
+    fighterBody.lineTo(playerX+11,playerY+40)
+    fighterBody.closePath(); 
+
+    fighterWings = new Path2D
+    fighterWings.moveTo(playerX-11,playerY+40);
+    fighterWings.lineTo(playerX-46,playerY+25)
+    fighterWings.lineTo(playerX-46,playerY+20)
+    fighterWings.lineTo(playerX-21,playerY+5)
+    fighterWings.lineTo(playerX-11,playerY-10)
+    fighterWings.closePath();
+
+    fighterWings.moveTo(playerX+11,playerY+40)
+    fighterWings.lineTo(playerX+46,playerY+25)
+    fighterWings.lineTo(playerX+46,playerY+20)
+    fighterWings.lineTo(playerX+21,playerY+5)
+    fighterWings.lineTo(playerX+11,playerY-10)
+    fighterWings.closePath();
+
+    fighterEngines = new Path2D
+    fighterEngines.moveTo(playerX-11,playerY+48)
+    fighterEngines.quadraticCurveTo(playerX-11,playerY+45,playerX-8,playerY+40)
+    fighterEngines.lineTo(playerX-5,playerY+40)
+    fighterEngines.quadraticCurveTo(playerX-2,playerY+45,playerX-2,playerY+48)
+    fighterEngines.closePath();
+
+    fighterEngines.moveTo(playerX+2,playerY+48)
+    fighterEngines.quadraticCurveTo(playerX+2,playerY+45,playerX+5,playerY+40)
+    fighterEngines.lineTo(playerX+8,playerY+40)
+    fighterEngines.quadraticCurveTo(playerX+11,playerY+45,playerX+11,playerY+48)
+    fighterEngines.closePath();
+
+    fighterWindow = new Path2D
+    fighterWindow.moveTo(playerX-5,playerY-28)
+    fighterWindow.quadraticCurveTo(playerX-5,playerY-35,playerX,playerY-40)
+    fighterWindow.quadraticCurveTo(playerX+5,playerY-35,playerX+5,playerY-28)
+    fighterWindow.closePath();
+
+    fighter = [fighterBody,fighterWings,fighterEngines,fighterWindow]
+    playerSprite = fighter
+}
 
 can.addEventListener('mousedown', function(event) {
     var rect = can.getBoundingClientRect();
     mouseClickX = event.pageX - rect.left;
     mouseClickY = event.pageY - rect.top;
-    console.log('click detected at ' + mouseClickX + ',' + mouseClickY);
+    console.log('click detected at ' + Math.floor(mouseClickX) + ',' + Math.floor(mouseClickY));
     checkClick()
 })
 
@@ -65,10 +121,10 @@ can.addEventListener('mousemove', function(event) {
 
 document.addEventListener('keydown', function(event) {
     keysPressed = (keysPressed || []);
-    keysPressed[event.key] = true; console.log(keysPressed)
+    keysPressed[event.key] = true; //console.log(keysPressed)
 })
 document.addEventListener('keyup', function(event) {
-    keysPressed[event.key] = false; console.log(keysPressed)
+    keysPressed[event.key] = false; //console.log(keysPressed)
 })
 
 function buttonClicked(x,y,width,height) {
@@ -161,7 +217,7 @@ function hoverCheck() {
 
 
 function generateWorld() {
-    console.log('generation stuff')
+    console.log('generation stuff');
     gameState = states.main; can.style.cursor = 'default'
     ctx.textAlign = 'left'; setInterval(mainLoop,20)
 }
@@ -169,6 +225,177 @@ function generateWorld() {
 
 function mainLoop() {
     ctx.fillStyle = 'rgb(66,66,66)'; ctx.fillRect(0,0,totW,totH)
+
+    //if (keysPressed && keysPressed['s']) {maxShield = 42; shield += 0.2}
+    if (keysPressed && keysPressed['h'] && health < maxHealth) {health += 0.5}
+    if (keysPressed && keysPressed['c']) {credits += 2}
+    if (keysPressed && keysPressed['x']) {xp += 0.2}
+    
+    //levelling up
+    if (xp >= xpRequired) { 
+        xp -= xpRequired; skillPoints += spAmounts[level];  
+        ctx.fillStyle = foreground; ctx.font = '30px consolas'; ctx.fillText('Level up! '+spAmounts[level]+' skillpoints received',250,100)
+        level++; xpRequired = xpReqs[level];
+    }
+
+
+    //turn left
+    if (keysPressed && (keysPressed['a'] || keysPressed['ArrowLeft'])) {
+        playerAngle -= playerTurnSpeed;
+        console.log(playerAngle)
+    }
+
+    //turn right
+    if (keysPressed && (keysPressed['d'] || keysPressed['ArrowRight'])) {
+        playerAngle += playerTurnSpeed
+        console.log(playerAngle)
+    }
+
+    //strafing
+    if (keysPressed && (keysPressed['q'])) {
+        playerSpeed = 2
+        inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
+        movementVector = inputVector
+    }
+    else if (keysPressed && (keysPressed['e'])) {
+        playerSpeed = 2
+        inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
+        movementVector = inputVector
+    }
+
+    //go forwards / backwards
+    if (keysPressed && (keysPressed['w'] || keysPressed['ArrowUp'])) {
+        if (playerSpeed < playerMaxSpeed) {
+            playerSpeed += 0.1
+        }
+        inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
+        movementVector = inputVector
+    }
+    else if (keysPressed && (keysPressed['s'] || keysPressed['ArrowDown'])) {
+        if (playerSpeed > -playerMaxSpeed/2) {
+            playerSpeed -= 0.1
+        }
+        inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
+        movementVector = inputVector
+    }
+    /*else {
+        if (playerSpeed > 0.01) {
+            playerSpeed -= 0.05
+        }
+        else if (playerSpeed < -0.01) {
+            playerSpeed += 0.05
+        }
+        else {
+            playerSpeed = 0
+        }
+        playerXmovement = playerSpeed * Math.cos((playerAngle - 90) * Math.PI / 180)
+        playerYmovement = playerSpeed * Math.sin((playerAngle - 90) * Math.PI / 180)
+    }*/
+
+    
+
+
+    //move player
+    playerX += movementVector[0];
+    playerY += movementVector[1];
+
+    //draw player
+    ctx.save();
+    ctx.translate(playerX,playerY); 
+    ctx.rotate(playerAngle * Math.PI / 180); 
+    ctx.translate(-playerX, -playerY); 
+    ctx.strokeStyle = shipStroke; 
+    ctx.fillStyle = shipFill
+    ctx.lineWidth = 2
+    if (keysPressed && (keysPressed['r'])) {
+        updateFigtherSprite()
+        playerSprite.forEach((path,index) => {
+            if (index == playerSprite.length-1) {
+                ctx.fillStyle = shipWindows;
+                ctx.fill(path)
+            }
+            else {
+                ctx.fill(path); ctx.stroke(path)
+            }
+        })
+    }
+    else {
+        ctx.beginPath()
+        ctx.moveTo(playerX-17,playerY+50)
+        ctx.lineTo(playerX-17,playerY-60)
+        ctx.lineTo(playerX-7,playerY-75)
+        ctx.lineTo(playerX+7,playerY-75)
+        ctx.lineTo(playerX+17,playerY-60)
+        ctx.lineTo(playerX+17,playerY+50)
+        ctx.closePath()
+        ctx.fill(); ctx.stroke()
+
+        ctx.beginPath()
+        ctx.moveTo(playerX-17,playerY+50)
+        ctx.lineTo(playerX-33,playerY+33)
+        ctx.lineTo(playerX-33,playerY-13)
+        ctx.lineTo(playerX-17,playerY-30)
+        ctx.closePath()
+        ctx.moveTo(playerX+17,playerY+50)
+        ctx.lineTo(playerX+33,playerY+33)
+        ctx.lineTo(playerX+33,playerY-13)
+        ctx.lineTo(playerX+17,playerY-30)
+        ctx.closePath()
+        ctx.fill(); ctx.stroke()
+
+        ctx.beginPath()
+        ctx.moveTo(playerX-33,playerY+15)
+        ctx.lineTo(playerX-60,playerY+18)
+        ctx.lineTo(playerX-60,playerY+9)
+        ctx.lineTo(playerX-33,playerY)
+        ctx.closePath()
+        ctx.moveTo(playerX+33,playerY+15)
+        ctx.lineTo(playerX+60,playerY+18)
+        ctx.lineTo(playerX+60,playerY+9)
+        ctx.lineTo(playerX+33,playerY)
+        ctx.closePath()
+        ctx.fill(); ctx.stroke()
+
+        ctx.beginPath()
+        ctx.moveTo(playerX-23,playerY+44)
+        ctx.lineTo(playerX-23,playerY+50)
+        ctx.quadraticCurveTo(playerX-20,playerY+55,playerX-20,playerY+60)
+        ctx.lineTo(playerX-33,playerY+60)
+        ctx.quadraticCurveTo(playerX-33,playerY+55,playerX-30,playerY+50)
+        ctx.lineTo(playerX-30,playerY+36)
+        ctx.closePath()
+        ctx.moveTo(playerX+23,playerY+44)
+        ctx.lineTo(playerX+23,playerY+50)
+        ctx.quadraticCurveTo(playerX+20,playerY+55,playerX+20,playerY+60)
+        ctx.lineTo(playerX+33,playerY+60)
+        ctx.quadraticCurveTo(playerX+33,playerY+55,playerX+30,playerY+50)
+        ctx.lineTo(playerX+30,playerY+36)
+        ctx.fill(); ctx.stroke()
+
+        ctx.beginPath()
+        ctx.moveTo(playerX-4,playerY+30)
+        ctx.lineTo(playerX-10,playerY+15)
+        ctx.lineTo(playerX-10,playerY-10)
+        ctx.lineTo(playerX-4,playerY-20)
+        ctx.lineTo(playerX+4,playerY-20)
+        ctx.lineTo(playerX+10,playerY-10)
+        ctx.lineTo(playerX+10,playerY+15)
+        ctx.lineTo(playerX+4,playerY+30)
+        ctx.closePath()
+        ctx.fill(); ctx.stroke()
+
+        ctx.fillStyle = shipWindows
+        ctx.beginPath()
+        ctx.moveTo(playerX-9,playerY-11)
+        ctx.lineTo(playerX-4,playerY-19)
+        ctx.lineTo(playerX+4,playerY-19)
+        ctx.lineTo(playerX+9,playerY-11)
+        ctx.closePath(); ctx.fill()
+    }
+    ctx.restore();
+
+    ctx.fillStyle = 'red'; ctx.fillRect(playerX-1,playerY-1,2,2)
+    //hud
 
     //xp bar
     var xpPercentage = xp / xpRequired
@@ -217,106 +444,10 @@ function mainLoop() {
             case 7: ctx.fillText('cr '+credits,12,73); break
         }
     }
-
-    //if (keysPressed && keysPressed['s']) {maxShield = 42; shield += 0.2}
-    if (keysPressed && keysPressed['h'] && health < maxHealth) {health += 0.5}
-    if (keysPressed && keysPressed['c']) {credits += 2}
-    if (keysPressed && keysPressed['x']) {xp += 0.2}
-    
-    //levelling up
-    if (xp >= xpRequired) { 
-        xp -= xpRequired; skillPoints += spAmounts[level];  
-        ctx.fillStyle = foreground; ctx.font = '30px consolas'; ctx.fillText('Level up! '+spAmounts[level]+' skillpoints received',250,100)
-        level++; xpRequired = xpReqs[level];
-    }
-
-
-    //turn left
-    if (keysPressed && (keysPressed['a'] || keysPressed['ArrowLeft'])) {
-        playerAngle -= playerTurnSpeed;
-        console.log(playerAngle)
-    }
-
-    //turn right
-    if (keysPressed && (keysPressed['d'] || keysPressed['ArrowRight'])) {
-        playerAngle += playerTurnSpeed
-        console.log(playerAngle)
-    }
-
-    //strafe left
-    if (keysPressed && (keysPressed['q'])) {
-        playerSpeed = 2
-        playerXmovement = playerSpeed * Math.cos((playerAngle) * Math.PI / 180)
-        playerYmovement = playerSpeed * Math.sin((playerAngle) * Math.PI / 180)
-    }
-
-    //go forwards / backwards
-    if (keysPressed && (keysPressed['w'] || keysPressed['ArrowUp'])) {
-        if (playerSpeed < playerMaxSpeed) {
-            playerSpeed += 0.1
-        }
-        playerXmovement = playerSpeed * Math.cos((playerAngle - 90) * Math.PI / 180)
-        playerYmovement = playerSpeed * Math.sin((playerAngle - 90) * Math.PI / 180)
-    }
-    else if (keysPressed && (keysPressed['s'] || keysPressed['ArrowDown'])) {
-        if (playerSpeed > -playerMaxSpeed/2) {
-            playerSpeed -= 0.1
-        }
-        playerXmovement = playerSpeed * Math.cos((playerAngle - 90) * Math.PI / 180)
-        playerYmovement = playerSpeed * Math.sin((playerAngle - 90) * Math.PI / 180)
-    }
-    else {
-        if (playerSpeed > 0.01) {
-            playerSpeed -= 0.05
-        }
-        else if (playerSpeed < -0.01) {
-            playerSpeed += 0.05
-        }
-        else {
-            playerSpeed = 0
-        }
-        playerXmovement = playerSpeed * Math.cos((playerAngle - 90) * Math.PI / 180)
-        playerYmovement = playerSpeed * Math.sin((playerAngle - 90) * Math.PI / 180)
-    }
-
-    
-
-
-    //move player
-    playerX += playerXmovement;
-    playerY += playerYmovement;
-
-    //draw player
-    ctx.save();
-    ctx.translate(playerX,playerY); 
-    ctx.rotate(playerAngle * Math.PI / 180); 
-    ctx.translate(-playerX, -playerY); 
-    ctx.strokeStyle = 'rgb(100,100,100)'; 
-    ctx.fillStyle = 'rgb(130,130,130)'
-    ctx.beginPath();
-    ctx.moveTo(playerX-11,playerY+40);
-    ctx.lineTo(playerX-11,playerY-20);
-    ctx.quadraticCurveTo(playerX-11,playerY-35,playerX,playerY-50);
-    ctx.quadraticCurveTo(playerX+11,playerY-35,playerX+11,playerY-20)
-    ctx.lineTo(playerX+11,playerY+40)
-    ctx.closePath(); ctx.fill(); ctx.stroke()
-    ctx.beginPath();
-    ctx.moveTo(playerX-11,playerY+40);
-    ctx.lineTo(playerX-46,playerY+25)
-    ctx.lineTo(playerX-46,playerY+20)
-    ctx.lineTo(playerX-21,playerY+5)
-    ctx.lineTo(playerX-11,playerY-10)
-    ctx.closePath(); 
-    ctx.moveTo(playerX+11,playerY+40)
-    ctx.lineTo(playerX+46,playerY+25)
-    ctx.lineTo(playerX+46,playerY+20)
-    ctx.lineTo(playerX+21,playerY+5)
-    ctx.lineTo(playerX+11,playerY-10)
-    ctx.closePath(); 
-    ctx.fill(); ctx.stroke()
-    ctx.restore();
-    
-    ctx.fillStyle = 'red'
-    ctx.fillRect(playerX-1,playerY-1,2,2)
-
+    //minimap
+    ctx.lineWidth = 3; ctx.fillStyle = background; ctx.fillRect(totW-160,10,150,100); 
+    ctx.strokeRect(totW-160,10,150,100); ctx.fillStyle = 'green'; ctx.beginPath(); 
+    ctx.arc(totW-160+playerX/4.66,10+playerY/4.66,2,0,7); ctx.fill()
+    ctx.fillStyle = foreground; ctx.font = '10px consolas'
+    ctx.fillText('X:'+Math.round(playerX*10)/10+' Y:'+Math.round(playerY*10)/10,545,105)
 }
