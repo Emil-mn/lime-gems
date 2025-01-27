@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Game</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <script >
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const world = {
+            width: 1600,
+            height: 1000
+        };
+
+        const player = {
+            x: 400,
+            y: 300,
+            width: 50,
+            height: 50,
+            speed: 5
+        };
+
+        const camera = {
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height
+        };
+
+        function update() {
+            // Player movement
+            if (keys['w'] && player.y > -camera.y) {player.y -= player.speed;}
+            if (keys['s'] && player.y < world.height-50) {player.y += player.speed;}
+            if (keys['a'] && player.x > -camera.x) {player.x -= player.speed;}
+            if (keys['d'] && player.x < world.width-50) {player.x += player.speed;}
+
+            // Camera follows player
+            camera.x = Math.max(0, Math.min(player.x - camera.width / 2, world.width - camera.width));
+            camera.y = Math.max(0, Math.min(player.y - camera.height / 2, world.height - camera.height));
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw world (for simplicity, a grid)
+            ctx.fillStyle = 'lightgrey';
+            ctx.fillRect(-camera.x, -camera.y, world.width, world.height);
+            ctx.fillStyle = 'darkgray'
+            ctx.beginPath(); 
+            for (var y = 1; y < 80; y++) {
+                ctx.moveTo(-camera.x,-camera.y+20*y)
+                ctx.lineTo(world.width,-camera.y+20*y); 
+            }
+            for (var x = 1; x < 80; x++) {
+                ctx.moveTo(-camera.x+20*x,-camera.y)
+                ctx.lineTo(-camera.x+20*x,world.height); 
+            }
+            ctx.stroke()
+            // Draw player
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(player.x - camera.x, player.y - camera.y, player.width, player.height);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            console.log('player:'+player.x+','+player.y+' camera:'+camera.x+','+camera.y)
+            requestAnimationFrame(gameLoop);
+        }
+
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        gameLoop();
+
+    </script>
+</body>
+</html>
