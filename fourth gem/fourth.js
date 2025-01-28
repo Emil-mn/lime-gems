@@ -17,7 +17,7 @@ var mouseClickY
 var keysPressed
 var ctx = can.getContext('2d')
 //states
-var states = {menu:0,main:1,paused:2}
+var states = {menu:0,main:1,paused:2,inventory:3}
 var gameState = states.menu
 var interval
 var canPause = true
@@ -432,10 +432,10 @@ function mainLoop() {
         ctx.lineTo(-camera.x+60*x,worldHeight); 
     }
     ctx.stroke(); ctx.strokeStyle = 'red';
-    ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth,worldHeight)
+    ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
-    //if (keysPressed && keysPressed['s']) {maxShield = 42; shield += 0.2}
-    if (keysPressed && keysPressed['h'] && health < maxHealth) {health += 0.5}
+    if (keysPressed && keysPressed['s']) {maxShield = 42; shield += 0.2}
+    if (keysPressed && keysPressed['h'] && health < maxHealth) {health -= 0.5}
     if (keysPressed && keysPressed['c']) {credits += 2}
     if (keysPressed && keysPressed['x']) {xp += 0.2}
 
@@ -452,7 +452,8 @@ function mainLoop() {
     // Camera follows player
     camera.x = Math.max(0, Math.min(playerX - camera.width / 2, worldWidth - camera.width));
     camera.y = Math.max(0, Math.min(playerY - camera.height / 2, worldHeight - camera.height));
-
+    console.log(playerX-camera.x+','+playerY-camera.y)
+    
     //turning
     if (keysPressed && (keysPressed['a'] || keysPressed['ArrowLeft'])) {
         playerAngle -= playerTurnSpeed;
@@ -554,8 +555,21 @@ function mainLoop() {
     }
 
     //move player
-    playerX += movementVector[0];
-    playerY += movementVector[1];
+    if (playerX > -camera.x + 60 && playerX < worldWidth - 60)
+    {playerX += movementVector[0]}
+    else {
+        movementVector[0] = 0
+        if (playerX < worldWidth/2) {playerX += 100}
+        else {playerX -= 100}
+    }
+
+    if (playerY > -camera.y + 60 && playerY < worldHeight - 60)
+    {playerY += movementVector[1]}
+    else {
+        movementVector[1] = 0
+        if (playerY < worldHeight/2) {playerY += 75}
+        else {playerY -= 75}
+    }
 
     //draw player
     ctx.save();
@@ -579,7 +593,8 @@ function mainLoop() {
         }
     })
     ctx.restore();
-
+    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
+    ctx.fillStyle = 'green';ctx.fillRect(camera.width/2-1,camera.height/2-1,2,2)
     projectiles.forEach(pro => {pro.update()})
 
     //xp bar
@@ -631,10 +646,10 @@ function mainLoop() {
     }
     //minimap
     ctx.lineWidth = 3; ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-160,10,150,100); 
-    ctx.strokeRect(totW-160,10,150,100); ctx.save(); ctx.translate(totW-160+playerX/4.66,10+playerY/4.66);
+    ctx.strokeRect(totW-160,10,150,100); ctx.save(); ctx.translate(totW-160+playerX/466.66,10+playerY/466.66);
     ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
     ctx.moveTo(-2.5,2.5); ctx.lineTo(2.5,2.5); ctx.lineTo(0,-5); ctx.fill();
-    ctx.translate(-(totW-160+playerX/4.66),-(10+playerY/4.66));
+    ctx.translate(-(totW-160+playerX/466.66),-(10+playerY/466.66));
     ctx.restore(); ctx.fillStyle = foreground; ctx.font = '10px consolas'
     ctx.fillText('X:'+Math.round(playerX*10)/10+' Y:'+Math.round(playerY*10)/10,545,105)
 

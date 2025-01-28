@@ -17,13 +17,13 @@
         const ctx = canvas.getContext('2d');
 
         const world = {
-            width: 1600,
-            height: 1000
+            width: 3200,
+            height: 2000
         };
 
         const player = {
-            x: 400,
-            y: 300,
+            x: 1200,
+            y: 1000,
             width: 50,
             height: 50,
             speed: 5
@@ -33,41 +33,59 @@
             x: 0,
             y: 0,
             width: canvas.width,
-            height: canvas.height
+            height: canvas.height,
+            deadzoneWidth: 500,
+            deadzoneHeight: 400
         };
 
         function update() {
             // Player movement
-            if (keys['w'] && player.y > -camera.y) {player.y -= player.speed;}
-            if (keys['s'] && player.y < world.height-50) {player.y += player.speed;}
-            if (keys['a'] && player.x > -camera.x) {player.x -= player.speed;}
-            if (keys['d'] && player.x < world.width-50) {player.x += player.speed;}
+            if (keys['w'] && player.y > -camera.y + player.height/2) {player.y -= player.speed;}
+            if (keys['s'] && player.y < world.height - player.height/2) {player.y += player.speed;}
+            if (keys['a'] && player.x > -camera.x + player.width/2) {player.x -= player.speed;}
+            if (keys['d'] && player.x < world.width - player.width/2) {player.x += player.speed;}
 
             // Camera follows player
-            camera.x = Math.max(0, Math.min(player.x - camera.width / 2, world.width - camera.width));
-            camera.y = Math.max(0, Math.min(player.y - camera.height / 2, world.height - camera.height));
+            //camera.x = Math.max(0, Math.min(player.x - camera.width / 2, world.width - camera.width));
+            //camera.x = Math.max(0, Math.min(player.x - camera.width / 2 + camera.deadzoneWidth / 2, world.width - camera.width));
+            //camera.y = Math.max(0, Math.min(player.y - camera.height / 2, world.height - camera.height));
+            //camera.y = Math.max(0, Math.min(player.y - camera.height / 2 + camera.deadzoneHeight / 2, world.height - camera.height));
+            
+            // Adjust camera position if player is outside the deadzone
+            if (player.x < camera.x + camera.deadzoneWidth / 2) {
+                camera.x = Math.max(0, player.x - camera.deadzoneWidth / 2);
+            } else if (player.x > camera.x + camera.width - camera.deadzoneWidth / 2) {
+                camera.x = Math.min(world.width - camera.width, player.x - camera.width + camera.deadzoneWidth / 2);
+            }
+
+            if (player.y < camera.y + camera.deadzoneHeight / 2) {
+                camera.y = Math.max(0, player.y - camera.deadzoneHeight / 2);
+            } else if (player.y > camera.y + camera.height - camera.deadzoneHeight / 2) {
+                camera.y = Math.min(world.height - camera.height, player.y - camera.height + camera.deadzoneHeight / 2);
+            }
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Draw world (for simplicity, a grid)
-            ctx.fillStyle = 'lightgrey';
+            ctx.fillStyle = 'lightgrey'; ctx.lineWidth = 1
             ctx.fillRect(-camera.x, -camera.y, world.width, world.height);
             ctx.fillStyle = 'darkgray'
             ctx.beginPath(); 
-            for (var y = 1; y < 80; y++) {
+            for (var y = 1; y < 160; y++) {
                 ctx.moveTo(-camera.x,-camera.y+20*y)
                 ctx.lineTo(world.width,-camera.y+20*y); 
             }
-            for (var x = 1; x < 80; x++) {
+            for (var x = 1; x < 160; x++) {
                 ctx.moveTo(-camera.x+20*x,-camera.y)
                 ctx.lineTo(-camera.x+20*x,world.height); 
             }
             ctx.stroke()
             // Draw player
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(player.x - camera.x, player.y - camera.y, player.width, player.height);
+            ctx.fillStyle = 'blue'; ctx.lineWidth = 3
+            ctx.strokeRect(canvas.width/2-camera.deadzoneWidth/2,canvas.height/2-camera.deadzoneHeight/2,camera.deadzoneWidth,camera.deadzoneHeight)
+            ctx.fillRect(player.x - camera.x - player.width / 2, player.y - camera.y - player.height / 2, player.width, player.height);
         }
 
         function gameLoop() {
