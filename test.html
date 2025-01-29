@@ -34,8 +34,8 @@
             y: 0,
             width: canvas.width,
             height: canvas.height,
-            deadzoneWidth: 500,
-            deadzoneHeight: 400
+            deadzoneWidth: 400,
+            deadzoneHeight: 250
         };
 
         function update() {
@@ -45,22 +45,21 @@
             if (keys['a'] && player.x > -camera.x + player.width/2) {player.x -= player.speed;}
             if (keys['d'] && player.x < world.width - player.width/2) {player.x += player.speed;}
 
-            // Camera follows player
-            //camera.x = Math.max(0, Math.min(player.x - camera.width / 2, world.width - camera.width));
-            //camera.x = Math.max(0, Math.min(player.x - camera.width / 2 + camera.deadzoneWidth / 2, world.width - camera.width));
-            //camera.y = Math.max(0, Math.min(player.y - camera.height / 2, world.height - camera.height));
-            //camera.y = Math.max(0, Math.min(player.y - camera.height / 2 + camera.deadzoneHeight / 2, world.height - camera.height));
+            if (keys['b']) {camera.deadzoneWidth += 0.5; camera.deadzoneHeight += 0.5; console.log('deadzone:'+camera.deadzoneWidth+','+camera.deadzoneHeight)}
+            else if (keys['v']) {camera.deadzoneWidth -= 0.5; camera.deadzoneHeight -= 0.5; console.log('deadzone:'+camera.deadzoneWidth+','+camera.deadzoneHeight)}
             
             // Adjust camera position if player is outside the deadzone
             if (player.x < camera.x + camera.deadzoneWidth / 2) {
                 camera.x = Math.max(0, player.x - camera.deadzoneWidth / 2);
-            } else if (player.x > camera.x + camera.width - camera.deadzoneWidth / 2) {
+            } 
+            else if (player.x > camera.x + camera.width - camera.deadzoneWidth / 2) {
                 camera.x = Math.min(world.width - camera.width, player.x - camera.width + camera.deadzoneWidth / 2);
             }
 
             if (player.y < camera.y + camera.deadzoneHeight / 2) {
                 camera.y = Math.max(0, player.y - camera.deadzoneHeight / 2);
-            } else if (player.y > camera.y + camera.height - camera.deadzoneHeight / 2) {
+            } 
+            else if (player.y > camera.y + camera.height - camera.deadzoneHeight / 2) {
                 camera.y = Math.min(world.height - camera.height, player.y - camera.height + camera.deadzoneHeight / 2);
             }
         }
@@ -84,7 +83,7 @@
             ctx.stroke()
             // Draw player
             ctx.fillStyle = 'blue'; ctx.lineWidth = 3
-            ctx.strokeRect(canvas.width/2-camera.deadzoneWidth/2,canvas.height/2-camera.deadzoneHeight/2,camera.deadzoneWidth,camera.deadzoneHeight)
+            ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
             ctx.fillRect(player.x - camera.x - player.width / 2, player.y - camera.y - player.height / 2, player.width, player.height);
         }
 

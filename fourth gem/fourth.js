@@ -4,7 +4,7 @@ var totW = can.width
 var totH = can.height
 var worldWidth = can.width * 100
 var worldHeight = can.height * 100
-var camera = {x:0,y:0,width:totW,height:totH}
+var camera = {x:0,y:0,width:totW,height:totH,deadzoneWidth:350,deadzoneHeight:225}
 var background = 'rgb(59, 168, 240)'
 var foreground = 'rgb(13, 84, 238)'
 var shipStroke = 'rgb(100,100,100)'
@@ -21,17 +21,19 @@ var states = {menu:0,main:1,paused:2,inventory:3}
 var gameState = states.menu
 var interval
 var canPause = true
-//skillpoint boosts on level-up???
+//inventory
+var canOpenInv = true
 var skillPoints = 0
 var dmgLvl = 0,frtLvl = 0 //???
 var accLvl = 0,crtLvl = 0 //???
 var hltLvl = 0 //???
 //arrays
 var enemies = []
+var asteroidFields = []
 var asteroids = []
 var turrets = []
 var projectiles = []
-var pickups = []//???
+var pickups = []
 var xpReqs = [25,50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500]
 var spAmounts = [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50]
 //character functionality
@@ -208,6 +210,7 @@ can.addEventListener('mousemove', function(event) {
 document.addEventListener('keydown', function(event) {
     keysPressed = (keysPressed || []);
     keysPressed[event.key] = true; //console.log(keysPressed)
+    if (event.key == 'Tab') {event.preventDefault()}
     if (event.key == 'Escape' && gameState == states.paused) {
         console.log('resumed'); gameState = states.main
         ctx.textAlign = 'left'; can.style.cursor = 'none'
@@ -243,7 +246,7 @@ function buttonHovered(x,y,width,height) {
     return hovered;
 }
 
-window.onload = function load() {
+window.onload = function() {
     ctx.fillStyle = background
     ctx.fillRect(0,0,totW,totH)
     ctx.fillStyle = foreground
@@ -261,6 +264,64 @@ window.onload = function load() {
     setTimeout(function() {ctx.fillText('Loading........',100,totH/2)},1350)
     setTimeout(function() {ctx.fillText('Loading.........',100,totH/2)},1400)
     setTimeout(mainMenu,2000)
+}
+
+function save() {
+    ctx.fillStyle = background; ctx.fillRect(0,0,totW,totH);
+    ctx.fillStyle = foreground ; ctx.font = '50px consolas'; 
+    ctx.textAlign = 'center'; ctx.fillText('Saving...',totW/2,200);
+    setTimeout(mainMenu,1000)
+}
+
+function load() {
+    ctx.fillStyle = background; ctx.fillRect(0,0,totW,totH);
+    ctx.fillStyle = foreground ; ctx.font = '50px consolas'; 
+    ctx.fillText('Loading...',totW/2,200); gameState = states.main
+    ctx.textAlign = 'left'; interval = setInterval(mainLoop,20)
+}
+
+function generateWorld() {
+    console.log('generation stuff');
+    gameState = states.main; can.style.cursor = 'none'
+    ctx.fillStyle = background; ctx.fillRect(0,0,totW,totH);
+    ctx.fillStyle = foreground ; ctx.font = '50px consolas'; 
+    ctx.fillText('Generating world...',totW/2,200);
+    ctx.textAlign = 'left'; 
+    
+    var numberOfAsteroidfields = Math.ceil(Math.random() * 3 + 3)
+    for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
+        var width = Math.random() * (2100-700) + 700;
+        var height = Math.random() * (1350-450) + 450;
+        var x = Math.random() * (worldWidth - (-camera.x + width + 50)) + -camera.x + width + 50;
+        var y = Math.random() * (worldHeight - (-camera.y + height + 50)) + -camera.y + height + 50;
+        var numberOfAsteroids = Math.floor((width - 700) / 2100 * (200 - 50) + 50);
+        asteroidFields.push({width:width,height:height,x:x,y:y})
+
+        for (var ass = 0; ass < numberOfAsteroids; ass++) {
+            var sides = Math.floor(Math.random() * 10 + 5);
+            var asteroid = [];
+            var radius = Math.random() * 15 + 10;
+            var astX = Math.random() * (x+width) + x
+            var astY = Math.random() * (y+height) + y
+            var xSpeed = Math.random() * 2 - 1;
+            var ySpeed = Math.random() * 2 - 1;
+            var rotation = Math.random() * 4 -2;
+            var health = Math.floor((radius - 10) / 15 * (8 - 3) + 3)
+
+            for (var s = 0; s < sides; s++) {
+                var angle = (Math.PI * 2 / sides) * s;
+                var pointX = astX + Math.cos(angle) * (radius + Math.random() * 10 - 5);
+                var pointY = astY + Math.sin(angle) * (radius + Math.random() * 10 - 5);
+                asteroid.push({ x: pointX, y: pointY });
+            }
+        
+            asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, score:health})
+
+            asteroids.push(asteroid)
+        }
+        console.log(asteroids)
+    }
+    interval = setInterval(mainLoop,20)
 }
 
 function mainMenu() {
@@ -300,7 +361,7 @@ function checkClick() {
         }
         else if (buttonClicked(totW/2-130,270,260,50)) {
             console.log('quitting'); gameState = states.menu;
-            canPause = true; mainMenu()
+            canPause = true; can.style.cursor = 'default'; save()
         }
         
     }
@@ -412,13 +473,6 @@ class Projectile {
     }
 }
 
-function generateWorld() {
-    console.log('generation stuff');
-    gameState = states.main; can.style.cursor = 'none'
-    ctx.textAlign = 'left'; interval = setInterval(mainLoop,20)
-}
-
-
 function mainLoop() {
     ctx.fillStyle = 'rgb(66,66,66)'; ctx.fillRect(0,0,totW,totH)
     ctx.beginPath(); ctx.strokeStyle = 'rgb(76, 76, 76)';       
@@ -434,30 +488,30 @@ function mainLoop() {
     ctx.stroke(); ctx.strokeStyle = 'red';
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
-    if (keysPressed && keysPressed['s']) {maxShield = 42; shield += 0.2}
-    if (keysPressed && keysPressed['h'] && health < maxHealth) {health -= 0.5}
-    if (keysPressed && keysPressed['c']) {credits += 2}
-    if (keysPressed && keysPressed['x']) {xp += 0.2}
-
     if (keysPressed && keysPressed['f']) {spriteSelection = 1}
     else if (keysPressed && keysPressed['c']) {spriteSelection = 2}
     
+    if (keysPressed && keysPressed['Tab'] && canOpenInv == true) {
+        canOpenInv = false; setTimeout(() => {canOpenInv = true},1000)
+        if (gameState != states.inventory) {
+            gameState = states.inventory; console.log('inventory open')
+        }
+        else {
+            gameState = states.main; console.log('inventory closed')
+        }
+    }
+
     //levelling up
     if (xp >= xpRequired) { 
-        xp -= xpRequired; skillPoints += spAmounts[level];  
-        ctx.fillStyle = foreground; ctx.font = '30px consolas'; ctx.fillText('Level up! '+spAmounts[level]+' skillpoints received',250,100)
+        xp -= xpRequired; skillPoints += spAmounts[level]; ctx.fillStyle = foreground;
+        ctx.font = '30px consolas'; ctx.fillText('Level up! '+spAmounts[level]+' skillpoints received',250,100)
         level++; xpRequired = xpReqs[level];
     }
 
-    // Camera follows player
-    camera.x = Math.max(0, Math.min(playerX - camera.width / 2, worldWidth - camera.width));
-    camera.y = Math.max(0, Math.min(playerY - camera.height / 2, worldHeight - camera.height));
-    console.log(playerX-camera.x+','+playerY-camera.y)
-    
     //turning
-    if (keysPressed && (keysPressed['a'] || keysPressed['ArrowLeft'])) {
+    if (keysPressed && (keysPressed['a'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
         playerAngle -= playerTurnSpeed;
-        console.log(playerAngle)
+        //console.log(playerAngle)
         if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x+10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x+20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -468,9 +522,9 @@ function mainLoop() {
             projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['d'] || keysPressed['ArrowRight'])) {
+    else if (keysPressed && (keysPressed['d'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
-        console.log(playerAngle)
+        //console.log(playerAngle)
         if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x-10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x-20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -483,7 +537,7 @@ function mainLoop() {
     }
 
     //strafing
-    if (keysPressed && (keysPressed['q'])) {
+    if (keysPressed && (keysPressed['q']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -498,7 +552,7 @@ function mainLoop() {
             projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['e'])) {
+    else if (keysPressed && (keysPressed['e']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -515,7 +569,7 @@ function mainLoop() {
     }
 
     //go forwards / backwards
-    if (keysPressed && (keysPressed['w'] || keysPressed['ArrowUp'])) {
+    if (keysPressed && (keysPressed['w'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
         playerSpeed = 0.05
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -530,7 +584,7 @@ function mainLoop() {
             projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleL',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['s'] || keysPressed['ArrowDown'])) {
+    else if (keysPressed && (keysPressed['s'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -546,7 +600,7 @@ function mainLoop() {
         }
     }
     
-    if (keysPressed && keysPressed['r']) {
+    if (keysPressed && keysPressed['r'] && gameState != states.inventory) {
         if (movementVector[0] > 0) {movementVector[0] -= 0.05}
         else if (movementVector[0] < 0) {movementVector[0] += 0.05}
         
@@ -554,21 +608,34 @@ function mainLoop() {
         else if (movementVector[1] < 0) {movementVector[1] += 0.05}
     }
 
+    // Camera follows player
+    if (playerX < camera.x + camera.deadzoneWidth / 2) {
+        camera.x = Math.max(0, playerX - camera.deadzoneWidth / 2);
+    } 
+    else if (playerX > camera.x + camera.width - camera.deadzoneWidth / 2) {
+        camera.x = Math.min(worldWidth - camera.width, playerX - camera.width + camera.deadzoneWidth / 2);
+    }
+    
+    if (playerY < camera.y + camera.deadzoneHeight / 2) {
+        camera.y = Math.max(0, playerY - camera.deadzoneHeight / 2);
+    } 
+    else if (playerY > camera.y + camera.height - camera.deadzoneHeight / 2) {
+        camera.y = Math.min(worldHeight - camera.height, playerY - camera.height + camera.deadzoneHeight / 2);
+    }
+    
     //move player
     if (playerX > -camera.x + 60 && playerX < worldWidth - 60)
     {playerX += movementVector[0]}
     else {
-        movementVector[0] = 0
-        if (playerX < worldWidth/2) {playerX += 100}
-        else {playerX -= 100}
+        if (playerX < worldWidth/2) {playerX = -camera.x + 100; movementVector[0] = 5}
+        else {playerX = worldWidth - 100; movementVector[0] = -5}
     }
 
     if (playerY > -camera.y + 60 && playerY < worldHeight - 60)
     {playerY += movementVector[1]}
     else {
-        movementVector[1] = 0
-        if (playerY < worldHeight/2) {playerY += 75}
-        else {playerY -= 75}
+        if (playerY < worldHeight/2) {playerY = -camera.y + 100; movementVector[1] = 5}
+        else {playerY = worldHeight - 100; movementVector[1] = -5}
     }
 
     //draw player
@@ -595,6 +662,7 @@ function mainLoop() {
     ctx.restore();
     ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
     ctx.fillStyle = 'green';ctx.fillRect(camera.width/2-1,camera.height/2-1,2,2)
+    
     projectiles.forEach(pro => {pro.update()})
 
     //xp bar
@@ -645,13 +713,25 @@ function mainLoop() {
         }
     }
     //minimap
-    ctx.lineWidth = 3; ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-160,10,150,100); 
-    ctx.strokeRect(totW-160,10,150,100); ctx.save(); ctx.translate(totW-160+playerX/466.66,10+playerY/466.66);
+    ctx.lineWidth = 2; ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-150,10,140,90); 
+    ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+playerX/500,10+playerY/500);
     ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
-    ctx.moveTo(-2.5,2.5); ctx.lineTo(2.5,2.5); ctx.lineTo(0,-5); ctx.fill();
-    ctx.translate(-(totW-160+playerX/466.66),-(10+playerY/466.66));
-    ctx.restore(); ctx.fillStyle = foreground; ctx.font = '10px consolas'
-    ctx.fillText('X:'+Math.round(playerX*10)/10+' Y:'+Math.round(playerY*10)/10,545,105)
+    ctx.moveTo(-2,2); ctx.lineTo(2,2); ctx.lineTo(0,-4); ctx.fill();
+    ctx.translate(-(totW-150+playerX/500),-(10+playerY/500)); ctx.restore(); 
+    ctx.fillStyle = 'gray'
+    asteroids.forEach(ass => {
+        ctx.fillRect(totW-150+ass[ass.length-1].xPos/500,10+ass[ass.length-1].yPos/500,2,2)
+    })
+    
+    ctx.fillStyle = foreground; ctx.font = '10px consolas';
+    ctx.fillText('X:'+Math.round(playerX*10)/10+' Y:'+Math.round(playerY*10)/10,552.5,97.5)
+
+    //ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
+
+    if (gameState == states.inventory) {
+        ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(140,60,420,330);
+        ctx.lineWidth = 4; ctx.strokeRect(140,60,420,330);
+    }
 
     //cursor
     ctx.strokeStyle = foreground; ctx.lineWidth = 2; ctx.beginPath();
