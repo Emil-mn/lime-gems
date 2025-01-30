@@ -288,12 +288,12 @@ function generateWorld() {
     ctx.fillText('Generating world...',totW/2,200);
     ctx.textAlign = 'left'; 
     
-    var numberOfAsteroidfields = Math.ceil(Math.random() * 3 + 3)
+    var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
         var width = Math.random() * (2100-700) + 700;
         var height = Math.random() * (1350-450) + 450;
-        var x = Math.random() * (worldWidth - (-camera.x + width + 50)) + -camera.x + width + 50;
-        var y = Math.random() * (worldHeight - (-camera.y + height + 50)) + -camera.y + height + 50;
+        var x = Math.random() * (-camera.x + worldWidth - width - 400) + 200;
+        var y = Math.random() * (-camera.y + worldHeight - height - 400) + 200;
         var numberOfAsteroids = Math.floor((width - 700) / 2100 * (200 - 50) + 50);
         asteroidFields.push({width:width,height:height,x:x,y:y})
 
@@ -301,8 +301,8 @@ function generateWorld() {
             var sides = Math.floor(Math.random() * 10 + 5);
             var asteroid = [];
             var radius = Math.random() * 15 + 10;
-            var astX = Math.random() * (x+width) + x
-            var astY = Math.random() * (y+height) + y
+            var astX = Math.random() * ((x + width) - x) + x 
+            var astY = Math.random() * ((y + height)- y) + y
             var xSpeed = Math.random() * 2 - 1;
             var ySpeed = Math.random() * 2 - 1;
             var rotation = Math.random() * 4 -2;
@@ -315,7 +315,7 @@ function generateWorld() {
                 asteroid.push({ x: pointX, y: pointY });
             }
         
-            asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, score:health})
+            asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, score:health, field:aField})
 
             asteroids.push(asteroid)
         }
@@ -521,6 +521,15 @@ function mainLoop() {
             projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
             projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
         }
+        else if (playerSprite == corvette) {
+            var rotated1 = rotatePoint(playerX-camera.x+17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x+27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x-17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+        }
     }
     else if (keysPressed && (keysPressed['d'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
@@ -533,6 +542,15 @@ function mainLoop() {
 
             projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
             projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+        }
+        else if (playerSprite == corvette) {
+            var rotated1 = rotatePoint(playerX-camera.x-17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x-27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x+17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x+27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
         }
     }
 
@@ -551,6 +569,15 @@ function mainLoop() {
             projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
             projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
         }
+        else if (playerSprite == corvette) {
+            var rotated1 = rotatePoint(playerX-camera.x+17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x+27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x+17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x+27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+        }
     }
     else if (keysPressed && (keysPressed['e']) && gameState != states.inventory) {
         playerSpeed = 0.025
@@ -566,6 +593,15 @@ function mainLoop() {
             projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
             projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
         }
+        else if (playerSprite == corvette) {
+            var rotated1 = rotatePoint(playerX-camera.x-17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x-27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x-17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+        }
     }
 
     //go forwards / backwards
@@ -575,13 +611,22 @@ function mainLoop() {
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
         if (playerSprite == fighter) {
-            var rotated1 = rotatePoint(playerX-camera.x-7,playerY-camera.y+45,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-7,playerY-camera.y+55,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+7,playerY-camera.y+45,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+7,playerY-camera.y+55,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated1 = rotatePoint(playerX-camera.x-7,playerY-camera.y+47,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x-7,playerY-camera.y+57,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x+7,playerY-camera.y+47,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x+7,playerY-camera.y+57,playerX-camera.x,playerY-camera.y,playerAngle)
 
             projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleL',3,5,0,0,0,0))
             projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleL',3,5,0,0,0,0))
+        }
+        else if (playerSprite == corvette) {
+            var rotated1 = rotatePoint(playerX-camera.x+27,playerY-camera.y+60,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x+27,playerY-camera.y+70,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x-27,playerY-camera.y+60,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+70,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(4,4,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleL',3,5,0,0,0,0))
+            projectiles.push(new Projectile(4,4,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleL',3,5,0,0,0,0))
         }
     }
     else if (keysPressed && (keysPressed['s'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
@@ -597,6 +642,15 @@ function mainLoop() {
 
             projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
             projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+        }
+        else if (playerSprite == corvette) {
+            var rotated1 = rotatePoint(playerX-camera.x+12,playerY-camera.y-65,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x+12,playerY-camera.y-75,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x-12,playerY-camera.y-65,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x-12,playerY-camera.y-75,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
         }
     }
     
@@ -637,6 +691,36 @@ function mainLoop() {
         if (playerY < worldHeight/2) {playerY = -camera.y + 100; movementVector[1] = 5}
         else {playerY = worldHeight - 100; movementVector[1] = -5}
     }
+
+
+    asteroidFields.forEach((field,index) => {
+        if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {
+            ctx.strokeStyle = 'rgb(255, 130, 0)'; lineWidth = 5; ctx.strokeRect(-camera.x + field.x,-camera.y + field.y,field.width,field.height)
+            asteroids.forEach(steroid => {
+                var last = steroid[steroid.length - 1];
+                if (last.field == index) {
+                    last.angle += last.rot;
+                    ctx.save();
+                    ctx.translate(-camera.x + last.xPos, -camera.y + last.yPos); 
+                    ctx.rotate(last.angle * Math.PI / 180); 
+                    ctx.translate(-last.xPos + camera.x, -last.yPos + camera.y)
+                    ctx.fillStyle = 'rgb(170, 170, 170)';
+                    ctx.beginPath();
+                    ctx.moveTo(-camera.x + steroid[0].x, -camera.y + steroid[0].y);
+                    for (var i = 1; i < steroid.length; i++) {
+                        ctx.lineTo(-camera.x + steroid[i].x, -camera.y + steroid[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                    ctx.fillStyle = 'lightslategray'
+                    ctx.textAlign = 'center'
+                    ctx.fillText(last.hp,-camera.x + last.xPos,-camera.y + last.yPos+3)
+                    ctx.textAlign = 'left'
+                }
+            })
+        }
+    })
 
     //draw player
     ctx.save();
@@ -729,8 +813,17 @@ function mainLoop() {
     //ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
 
     if (gameState == states.inventory) {
-        ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(140,60,420,330);
-        ctx.lineWidth = 4; ctx.strokeRect(140,60,420,330);
+        ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW/2-210,totH/2-135,420,270);
+        ctx.lineWidth = 4; ctx.strokeRect(totW/2-210,totH/2-135,420,270); ctx.beginPath();
+        ctx.moveTo(totW/2+20,totH/2-135); ctx.lineTo(totW/2+20,totH/2+135); ctx.moveTo(370,290);
+        ctx.lineTo(560,290); ctx.stroke(); ctx.lineWidth = 3; ctx.strokeRect(150,140,45,45);
+        ctx.strokeRect(205,140,45,45); ctx.strokeRect(260,140,45,45); ctx.strokeRect(315,140,45,45);
+        ctx.strokeRect(150,195,45,45); ctx.strokeRect(205,195,45,45); ctx.strokeRect(260,195,45,45);
+        ctx.strokeRect(315,195,45,45); ctx.strokeRect(150,250,45,45); ctx.strokeRect(205,250,45,45);
+        ctx.strokeRect(260,250,45,45); ctx.strokeRect(315,250,45,45); ctx.strokeRect(150,305,45,45);
+        ctx.strokeRect(205,305,45,45); ctx.strokeRect(260,305,45,45); ctx.strokeRect(315,305,45,45);
+        ctx.fillStyle = foreground; ctx.font = '15px consolas';
+        ctx.fillText('Level '+level+' => '+(level+1)+'  '+xp+'/'+xpRequired,150,110); ctx.fillText('Skillpoints: '+skillPoints,150,130)
     }
 
     //cursor
