@@ -23,10 +23,15 @@ var interval
 var canPause = true
 //inventory
 var canOpenInv = true
+var hovering = false
+var skillPointsTextWidth
 var skillPoints = 0
+var skillPointsAdding = false
 var dmgLvl = 0,frtLvl = 0 //???
 var accLvl = 0,crtLvl = 0 //???
 var hltLvl = 0 //???
+var slotsX = [150,205,260,315]
+var slotsY = [140,195,250,305]
 //arrays
 var enemies = []
 var asteroidFields = []
@@ -72,120 +77,120 @@ var corvetteBridge
 var corvetteWindow
 
 
-function updateFighterSprite() {
+function updateFighterSprite(x,y) {
     fighterBody = new Path2D
-    fighterBody.moveTo(playerX-camera.x-11,playerY-camera.y+40);
-    fighterBody.lineTo(playerX-camera.x-11,playerY-camera.y-20);
-    fighterBody.quadraticCurveTo(playerX-camera.x-11,playerY-camera.y-35,playerX-camera.x,playerY-camera.y-50);
-    fighterBody.quadraticCurveTo(playerX-camera.x+11,playerY-camera.y-35,playerX-camera.x+11,playerY-camera.y-20)
-    fighterBody.lineTo(playerX-camera.x+11,playerY-camera.y+40)
+    fighterBody.moveTo(x-11,y+40);
+    fighterBody.lineTo(x-11,y-20);
+    fighterBody.quadraticCurveTo(x-11,y-35,x,y-50);
+    fighterBody.quadraticCurveTo(x+11,y-35,x+11,y-20)
+    fighterBody.lineTo(x+11,y+40)
     fighterBody.closePath(); 
 
     fighterWings = new Path2D
-    fighterWings.moveTo(playerX-camera.x-11,playerY-camera.y+40);
-    fighterWings.lineTo(playerX-camera.x-46,playerY-camera.y+25)
-    fighterWings.lineTo(playerX-camera.x-46,playerY-camera.y+20)
-    fighterWings.lineTo(playerX-camera.x-21,playerY-camera.y+5)
-    fighterWings.lineTo(playerX-camera.x-11,playerY-camera.y-10)
+    fighterWings.moveTo(x-11,y+40);
+    fighterWings.lineTo(x-46,y+25)
+    fighterWings.lineTo(x-46,y+20)
+    fighterWings.lineTo(x-21,y+5)
+    fighterWings.lineTo(x-11,y-10)
     fighterWings.closePath();
 
-    fighterWings.moveTo(playerX-camera.x+11,playerY-camera.y+40)
-    fighterWings.lineTo(playerX-camera.x+46,playerY-camera.y+25)
-    fighterWings.lineTo(playerX-camera.x+46,playerY-camera.y+20)
-    fighterWings.lineTo(playerX-camera.x+21,playerY-camera.y+5)
-    fighterWings.lineTo(playerX-camera.x+11,playerY-camera.y-10)
+    fighterWings.moveTo(x+11,y+40)
+    fighterWings.lineTo(x+46,y+25)
+    fighterWings.lineTo(x+46,y+20)
+    fighterWings.lineTo(x+21,y+5)
+    fighterWings.lineTo(x+11,y-10)
     fighterWings.closePath();
 
     fighterEngines = new Path2D
-    fighterEngines.moveTo(playerX-camera.x-11,playerY-camera.y+48)
-    fighterEngines.quadraticCurveTo(playerX-camera.x-11,playerY-camera.y+45,playerX-camera.x-8,playerY-camera.y+40)
-    fighterEngines.lineTo(playerX-camera.x-5,playerY-camera.y+40)
-    fighterEngines.quadraticCurveTo(playerX-camera.x-2,playerY-camera.y+45,playerX-camera.x-2,playerY-camera.y+48)
+    fighterEngines.moveTo(x-11,y+48)
+    fighterEngines.quadraticCurveTo(x-11,y+45,x-8,y+40)
+    fighterEngines.lineTo(x-5,y+40)
+    fighterEngines.quadraticCurveTo(x-2,y+45,x-2,y+48)
     fighterEngines.closePath();
 
-    fighterEngines.moveTo(playerX-camera.x+2,playerY-camera.y+48)
-    fighterEngines.quadraticCurveTo(playerX-camera.x+2,playerY-camera.y+45,playerX-camera.x+5,playerY-camera.y+40)
-    fighterEngines.lineTo(playerX-camera.x+8,playerY-camera.y+40)
-    fighterEngines.quadraticCurveTo(playerX-camera.x+11,playerY-camera.y+45,playerX-camera.x+11,playerY-camera.y+48)
+    fighterEngines.moveTo(x+2,y+48)
+    fighterEngines.quadraticCurveTo(x+2,y+45,x+5,y+40)
+    fighterEngines.lineTo(x+8,y+40)
+    fighterEngines.quadraticCurveTo(x+11,y+45,x+11,y+48)
     fighterEngines.closePath();
 
     fighterWindow = new Path2D
-    fighterWindow.moveTo(playerX-camera.x-5,playerY-camera.y-28)
-    fighterWindow.quadraticCurveTo(playerX-camera.x-5,playerY-camera.y-35,playerX-camera.x,playerY-camera.y-40)
-    fighterWindow.quadraticCurveTo(playerX-camera.x+5,playerY-camera.y-35,playerX-camera.x+5,playerY-camera.y-28)
+    fighterWindow.moveTo(x-5,y-28)
+    fighterWindow.quadraticCurveTo(x-5,y-35,x,y-40)
+    fighterWindow.quadraticCurveTo(x+5,y-35,x+5,y-28)
     fighterWindow.closePath();
 
     fighter = [fighterBody,fighterWings,fighterEngines,fighterWindow]
 }
 
-function updateCorvetteSprite() {
+function updateCorvetteSprite(x,y) {
     corvetteBody = new Path2D
-    corvetteBody.moveTo(playerX-camera.x-17,playerY-camera.y+50)
-    corvetteBody.lineTo(playerX-camera.x-17,playerY-camera.y-60)
-    corvetteBody.lineTo(playerX-camera.x-7,playerY-camera.y-75)
-    corvetteBody.lineTo(playerX-camera.x+7,playerY-camera.y-75)
-    corvetteBody.lineTo(playerX-camera.x+17,playerY-camera.y-60)
-    corvetteBody.lineTo(playerX-camera.x+17,playerY-camera.y+50)
+    corvetteBody.moveTo(x-17,y+50)
+    corvetteBody.lineTo(x-17,y-60)
+    corvetteBody.lineTo(x-7,y-75)
+    corvetteBody.lineTo(x+7,y-75)
+    corvetteBody.lineTo(x+17,y-60)
+    corvetteBody.lineTo(x+17,y+50)
     corvetteBody.closePath()
         
     corvetteSides = new Path2D
-    corvetteSides.moveTo(playerX-camera.x-17,playerY-camera.y+50)
-    corvetteSides.lineTo(playerX-camera.x-33,playerY-camera.y+33)
-    corvetteSides.lineTo(playerX-camera.x-33,playerY-camera.y-13)
-    corvetteSides.lineTo(playerX-camera.x-17,playerY-camera.y-30)
+    corvetteSides.moveTo(x-17,y+50)
+    corvetteSides.lineTo(x-33,y+33)
+    corvetteSides.lineTo(x-33,y-13)
+    corvetteSides.lineTo(x-17,y-30)
     corvetteSides.closePath()
     
-    corvetteSides.moveTo(playerX-camera.x+17,playerY-camera.y+50)
-    corvetteSides.lineTo(playerX-camera.x+33,playerY-camera.y+33)
-    corvetteSides.lineTo(playerX-camera.x+33,playerY-camera.y-13)
-    corvetteSides.lineTo(playerX-camera.x+17,playerY-camera.y-30)
+    corvetteSides.moveTo(x+17,y+50)
+    corvetteSides.lineTo(x+33,y+33)
+    corvetteSides.lineTo(x+33,y-13)
+    corvetteSides.lineTo(x+17,y-30)
     corvetteSides.closePath()
         
     corvetteWings = new Path2D  
-    corvetteWings.moveTo(playerX-camera.x-33,playerY-camera.y+15)
-    corvetteWings.lineTo(playerX-camera.x-60,playerY-camera.y+18)
-    corvetteWings.lineTo(playerX-camera.x-60,playerY-camera.y+9)
-    corvetteWings.lineTo(playerX-camera.x-33,playerY-camera.y)
+    corvetteWings.moveTo(x-33,y+15)
+    corvetteWings.lineTo(x-60,y+18)
+    corvetteWings.lineTo(x-60,y+9)
+    corvetteWings.lineTo(x-33,y)
     corvetteWings.closePath()
     
-    corvetteWings.moveTo(playerX-camera.x+33,playerY-camera.y+15)
-    corvetteWings.lineTo(playerX-camera.x+60,playerY-camera.y+18)
-    corvetteWings.lineTo(playerX-camera.x+60,playerY-camera.y+9)
-    corvetteWings.lineTo(playerX-camera.x+33,playerY-camera.y)
+    corvetteWings.moveTo(x+33,y+15)
+    corvetteWings.lineTo(x+60,y+18)
+    corvetteWings.lineTo(x+60,y+9)
+    corvetteWings.lineTo(x+33,y)
     corvetteWings.closePath()
         
     corvetteEngines = new Path2D  
-    corvetteEngines.moveTo(playerX-camera.x-23,playerY-camera.y+44)
-    corvetteEngines.lineTo(playerX-camera.x-23,playerY-camera.y+50)
-    corvetteEngines.quadraticCurveTo(playerX-camera.x-20,playerY-camera.y+55,playerX-camera.x-20,playerY-camera.y+60)
-    corvetteEngines.lineTo(playerX-camera.x-33,playerY-camera.y+60)
-    corvetteEngines.quadraticCurveTo(playerX-camera.x-33,playerY-camera.y+55,playerX-camera.x-30,playerY-camera.y+50)
-    corvetteEngines.lineTo(playerX-camera.x-30,playerY-camera.y+36)
+    corvetteEngines.moveTo(x-23,y+44)
+    corvetteEngines.lineTo(x-23,y+50)
+    corvetteEngines.quadraticCurveTo(x-20,y+55,x-20,y+60)
+    corvetteEngines.lineTo(x-33,y+60)
+    corvetteEngines.quadraticCurveTo(x-33,y+55,x-30,y+50)
+    corvetteEngines.lineTo(x-30,y+36)
     corvetteEngines.closePath()
     
-    corvetteEngines.moveTo(playerX-camera.x+23,playerY-camera.y+44)
-    corvetteEngines.lineTo(playerX-camera.x+23,playerY-camera.y+50)
-    corvetteEngines.quadraticCurveTo(playerX-camera.x+20,playerY-camera.y+55,playerX-camera.x+20,playerY-camera.y+60)
-    corvetteEngines.lineTo(playerX-camera.x+33,playerY-camera.y+60)
-    corvetteEngines.quadraticCurveTo(playerX-camera.x+33,playerY-camera.y+55,playerX-camera.x+30,playerY-camera.y+50)
-    corvetteEngines.lineTo(playerX-camera.x+30,playerY-camera.y+36)
+    corvetteEngines.moveTo(x+23,y+44)
+    corvetteEngines.lineTo(x+23,y+50)
+    corvetteEngines.quadraticCurveTo(x+20,y+55,x+20,y+60)
+    corvetteEngines.lineTo(x+33,y+60)
+    corvetteEngines.quadraticCurveTo(x+33,y+55,x+30,y+50)
+    corvetteEngines.lineTo(x+30,y+36)
         
     corvetteBridge = new Path2D
-    corvetteBridge.moveTo(playerX-camera.x-4,playerY-camera.y+30)
-    corvetteBridge.lineTo(playerX-camera.x-10,playerY-camera.y+15)
-    corvetteBridge.lineTo(playerX-camera.x-10,playerY-camera.y-10)
-    corvetteBridge.lineTo(playerX-camera.x-4,playerY-camera.y-20)
-    corvetteBridge.lineTo(playerX-camera.x+4,playerY-camera.y-20)
-    corvetteBridge.lineTo(playerX-camera.x+10,playerY-camera.y-10)
-    corvetteBridge.lineTo(playerX-camera.x+10,playerY-camera.y+15)
-    corvetteBridge.lineTo(playerX-camera.x+4,playerY-camera.y+30)
+    corvetteBridge.moveTo(x-4,y+30)
+    corvetteBridge.lineTo(x-10,y+15)
+    corvetteBridge.lineTo(x-10,y-10)
+    corvetteBridge.lineTo(x-4,y-20)
+    corvetteBridge.lineTo(x+4,y-20)
+    corvetteBridge.lineTo(x+10,y-10)
+    corvetteBridge.lineTo(x+10,y+15)
+    corvetteBridge.lineTo(x+4,y+30)
     corvetteBridge.closePath()
         
     corvetteWindow = new Path2D
-    corvetteWindow.moveTo(playerX-camera.x-9,playerY-camera.y-11)
-    corvetteWindow.lineTo(playerX-camera.x-4,playerY-camera.y-19)
-    corvetteWindow.lineTo(playerX-camera.x+4,playerY-camera.y-19)
-    corvetteWindow.lineTo(playerX-camera.x+9,playerY-camera.y-11)
+    corvetteWindow.moveTo(x-9,y-11)
+    corvetteWindow.lineTo(x-4,y-19)
+    corvetteWindow.lineTo(x+4,y-19)
+    corvetteWindow.lineTo(x+9,y-11)
     corvetteWindow.closePath();
     
     corvette = [corvetteBody,corvetteSides,corvetteWings,corvetteEngines,corvetteBridge,corvetteWindow]
@@ -365,6 +370,11 @@ function checkClick() {
         }
         
     }
+    else if (gameState == states.inventory) {
+        if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
+            skillPointsAdding = true; console.log('doing the skillpoint thing')
+        }
+    }
 }
 
 function hoverCheck() {
@@ -387,6 +397,12 @@ function hoverCheck() {
             can.style.cursor = 'pointer'
         }
         else {can.style.cursor = 'default'}
+    }
+    else if (gameState == states.inventory) {
+        if (buttonHovered(150+skillPointsTextWidth.width+5,118,15,15)) {
+            hovering = true; console.log('pointing at skillpoint button')
+        }
+        else {hovering = false}
     }
 }
 
@@ -731,8 +747,8 @@ function mainLoop() {
     ctx.fillStyle = shipFill
     ctx.lineWidth = 2
     
-    if (spriteSelection == 1) {updateFighterSprite(); playerSprite = fighter}
-    else if (spriteSelection == 2) {updateCorvetteSprite(); playerSprite = corvette}
+    if (spriteSelection == 1) {updateFighterSprite(playerX-camera.x,playerY-camera.y); playerSprite = fighter}
+    else if (spriteSelection == 2) {updateCorvetteSprite(playerX-camera.x,playerY-camera.y); playerSprite = corvette}
 
     playerSprite.forEach((path,index) => {
         if (index == playerSprite.length-1) {
@@ -806,38 +822,73 @@ function mainLoop() {
     asteroids.forEach(ass => {
         ctx.fillRect(totW-150+ass[ass.length-1].xPos/500,10+ass[ass.length-1].yPos/500,2,2)
     })
-    
     ctx.fillStyle = foreground; ctx.font = '10px consolas';
     ctx.fillText('X:'+Math.round(playerX*10)/10+' Y:'+Math.round(playerY*10)/10,552.5,97.5)
 
     //ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
 
+    //inventory and stuff menu
     if (gameState == states.inventory) {
+        //background
         ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW/2-210,totH/2-135,420,270);
+        //dividers
         ctx.lineWidth = 4; ctx.strokeRect(totW/2-210,totH/2-135,420,270); ctx.beginPath();
-        ctx.moveTo(totW/2+20,totH/2-135); ctx.lineTo(totW/2+20,totH/2+135); ctx.moveTo(370,290);
-        ctx.lineTo(560,290); ctx.stroke(); ctx.lineWidth = 3; ctx.strokeRect(150,140,45,45);
-        ctx.strokeRect(205,140,45,45); ctx.strokeRect(260,140,45,45); ctx.strokeRect(315,140,45,45);
-        ctx.strokeRect(150,195,45,45); ctx.strokeRect(205,195,45,45); ctx.strokeRect(260,195,45,45);
-        ctx.strokeRect(315,195,45,45); ctx.strokeRect(150,250,45,45); ctx.strokeRect(205,250,45,45);
-        ctx.strokeRect(260,250,45,45); ctx.strokeRect(315,250,45,45); ctx.strokeRect(150,305,45,45);
-        ctx.strokeRect(205,305,45,45); ctx.strokeRect(260,305,45,45); ctx.strokeRect(315,305,45,45);
-        ctx.fillStyle = foreground; ctx.font = '15px consolas';
+        ctx.moveTo(totW/2+20,totH/2-135); ctx.lineTo(totW/2+20,totH/2+135); ctx.moveTo(370,300);
+        ctx.lineTo(560,300); ctx.stroke(); 
+        //inventory slots
+        ctx.lineWidth = 3; slotsX.forEach(x => {slotsY.forEach(y => {ctx.strokeRect(x,y,45,45)})})
+        //level related text
+        ctx.font = '15px consolas'; ctx.fillStyle = foreground; skillPointsTextWidth = ctx.measureText('Skillpoints: '+skillPoints)
         ctx.fillText('Level '+level+' => '+(level+1)+'  '+xp+'/'+xpRequired,150,110); ctx.fillText('Skillpoints: '+skillPoints,150,130)
+        //skillpoint adding button
+        ctx.lineWidth = 2; ctx.strokeRect(150+skillPointsTextWidth.width+5,118,15,15); ctx.beginPath(); 
+        ctx.moveTo(150+skillPointsTextWidth.width+8,125.5); ctx.lineTo(150+skillPointsTextWidth.width+17,125.5); 
+        ctx.moveTo(150+skillPointsTextWidth.width+12.5,121); ctx.lineTo(150+skillPointsTextWidth.width+12.5,130); 
+        if (skillPoints > 0) {ctx.strokeStyle = 'red'}; ctx.stroke()
+        //ship display
+        if (spriteSelection == 1) {updateFighterSprite(465,200); playerSprite = fighter}
+        else if (spriteSelection == 2) {updateCorvetteSprite(465,200); playerSprite = corvette; ctx.scale(0.80,0.80)}
+        ctx.strokeStyle = shipStroke; ctx.fillStyle = shipFill; ctx.lineWidth = 2
+        playerSprite.forEach((path,index) => {
+            if (index == playerSprite.length-1) {
+                ctx.fillStyle = shipWindows;
+                ctx.fill(path)
+            }
+            else {
+                ctx.fill(path); ctx.stroke(path)
+            }
+        })
+        //ship slots
+        ctx.strokeStyle = foreground; ctx.resetTransform()
+        if (spriteSelection == 1) {
+            ctx.beginPath(); ctx.moveTo(440,215); ctx.lineTo(430,170); ctx.lineTo(420,170);
+            ctx.moveTo(490,215); ctx.lineTo(500,170); ctx.lineTo(510,170);
+            ctx.moveTo(465,200); ctx.lineTo(440,125); ctx.lineTo(430,125); ctx.stroke()
+            ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40); ctx.strokeRect(390,105,40,40)
+        }
     }
 
     //cursor
-    ctx.strokeStyle = foreground; ctx.lineWidth = 2; ctx.beginPath();
-    ctx.moveTo(mousePosX-6,mousePosY-18); ctx.lineTo(mousePosX-18,mousePosY-18); 
-    ctx.lineTo(mousePosX-18,mousePosY-6)
-    ctx.moveTo(mousePosX-18,mousePosY+6); ctx.lineTo(mousePosX-18,mousePosY+18); 
-    ctx.lineTo(mousePosX-6,mousePosY+18)
-    ctx.moveTo(mousePosX+6,mousePosY+18); ctx.lineTo(mousePosX+18,mousePosY+18); 
-    ctx.lineTo(mousePosX+18,mousePosY+6)
-    ctx.moveTo(mousePosX+18,mousePosY-6); ctx.lineTo(mousePosX+18,mousePosY-18); 
-    ctx.lineTo(mousePosX+6,mousePosY-18)
-    ctx.moveTo(mousePosX+6,mousePosY)
-    ctx.arc(mousePosX,mousePosY,6,0,7); ctx.stroke()
+    if (gameState != states.inventory) {    
+        ctx.strokeStyle = foreground; ctx.lineWidth = 2; ctx.beginPath();
+        ctx.moveTo(mousePosX-6,mousePosY-18); ctx.lineTo(mousePosX-18,mousePosY-18); 
+        ctx.lineTo(mousePosX-18,mousePosY-6)
+        ctx.moveTo(mousePosX-18,mousePosY+6); ctx.lineTo(mousePosX-18,mousePosY+18); 
+        ctx.lineTo(mousePosX-6,mousePosY+18)
+        ctx.moveTo(mousePosX+6,mousePosY+18); ctx.lineTo(mousePosX+18,mousePosY+18); 
+        ctx.lineTo(mousePosX+18,mousePosY+6)
+        ctx.moveTo(mousePosX+18,mousePosY-6); ctx.lineTo(mousePosX+18,mousePosY-18); 
+        ctx.lineTo(mousePosX+6,mousePosY-18)
+        ctx.moveTo(mousePosX+6,mousePosY)
+        ctx.arc(mousePosX,mousePosY,6,0,7); ctx.stroke()
+    }
+    else {
+        ctx.strokeStyle = foreground; ctx.lineWidth = 2;
+        ctx.strokeRect(mousePosX - 10,mousePosY - 10,20,20)
+        if (hovering == true) {ctx.strokeStyle = 'red'}
+        else {ctx.strokeStyle = foreground}; ctx.lineWidth = 2; 
+        ctx.beginPath(); ctx.arc(mousePosX,mousePosY,3,0,7); ctx.stroke()
+    }
 
     if (keysPressed && keysPressed['Escape'] && canPause == true) {
         clearInterval(interval); console.log('paused');
