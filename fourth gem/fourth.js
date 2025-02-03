@@ -847,7 +847,7 @@ function mainLoop() {
         if (skillPoints > 0) {ctx.strokeStyle = 'red'}; ctx.stroke()
         //ship display
         if (spriteSelection == 1) {updateFighterSprite(465,200); playerSprite = fighter}
-        else if (spriteSelection == 2) {updateCorvetteSprite(465,200); playerSprite = corvette; ctx.scale(0.80,0.80)}
+        else if (spriteSelection == 2) {updateCorvetteSprite(465,200); playerSprite = corvette; ctx.scale(0.80,0.80); ctx.translate(x*0.1,y*0.1)}
         ctx.strokeStyle = shipStroke; ctx.fillStyle = shipFill; ctx.lineWidth = 2
         playerSprite.forEach((path,index) => {
             if (index == playerSprite.length-1) {
@@ -859,12 +859,13 @@ function mainLoop() {
             }
         })
         //ship slots
-        ctx.strokeStyle = foreground; ctx.resetTransform()
+        ctx.strokeStyle = foreground; ctx.fillStyle = foreground; ctx.resetTransform()
         if (spriteSelection == 1) {
             ctx.beginPath(); ctx.moveTo(440,215); ctx.lineTo(430,170); ctx.lineTo(420,170);
             ctx.moveTo(490,215); ctx.lineTo(500,170); ctx.lineTo(510,170);
             ctx.moveTo(465,200); ctx.lineTo(440,125); ctx.lineTo(430,125); ctx.stroke()
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40); ctx.strokeRect(390,105,40,40)
+            ctx.font = '20px consolas'; ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175); ctx.fillText('T1w/u',393,130,33);
         }
     }
 
