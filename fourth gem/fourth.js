@@ -320,7 +320,7 @@ function generateWorld() {
                 asteroid.push({ x: pointX, y: pointY });
             }
         
-            asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, score:health, field:aField})
+            asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, origHp:health, field:aField})
 
             asteroids.push(asteroid)
         }
@@ -369,6 +369,50 @@ function checkClick() {
             canPause = true; can.style.cursor = 'default'; save()
         }
         
+    }
+    else if (gameState == states.main) {
+        console.log('pew pew')//firing logic from bes defense
+        /*if (activeWeapon == 1)
+        {
+            fireInterval = setInterval(function() {
+                projectiles.push(new mgProjectile(8,5,'gold',mainGun.dx,mainGun.dy,musx,musy,'frend')); 			shotsFired++
+                //projectiles.push(new mgProjectile(8,5,'gold',totW-50,totH/2,100,totH/2,'enemi'))//TEST
+                //projectiles.push(new mgProjectile(8,5,'gold',totW-50,50,100,50,'enemi'))//TEST
+                //projectiles.push(new mgProjectile(8,5,'gold',totW-50,300,100,350,'enemi'))//TEST
+            }, mg.fireRate);
+        }
+        if (activeWeapon == 2 && canFire == true)
+        {
+            canFire = false; console.log(canFire); shotsFired++
+            for (f=0; f<7; f++)
+            {
+                projectiles.push(new sgProjectile(8,5,'gold',mainGun.dx,mainGun.dy,musx,musy,'frend')) 
+            }
+            setTimeout(function() {canFire = true; console.log(canFire)}, shotgun.fireRate)
+        }
+        if (activeWeapon == 3 && canFire == true)
+        {
+            canFire = false; console.log(canFire)
+            projectiles.push(new cnnProjectile(16,8,'gray',mainGun.dx,mainGun.dy,musx,musy,'frend')); shotsFired++
+            setTimeout(function() {canFire = true; console.log(canFire)}, cannon.fireRate)
+        }
+        if (activeWeapon == 4 && canFire == true)
+        {
+            canFire = false; console.log(canFire)
+            for (f=0; f<rcktLnchr.rocketCount; f++)
+            {
+                projectiles.push(new rktProjectile(50,7,'red',mainGun.dx,mainGun.dy,musx,musy,'frend')); 				shotsFired++
+            }
+            setTimeout(function() {canFire = true; console.log(canFire)}, rcktLnchr.fireRate)
+        }*/
+
+        //firing logic from third gem
+        /*if (mButt == 0) {
+            projectiles.push(new Projectile(3,3,'goldenrod',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
+            fireInterval = setInterval(() => {
+                projectiles.push(new Projectile(3,3,'goldenrod',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
+            }, frt[frtLvl])
+        }*/  
     }
     else if (gameState == states.inventory) {
         if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
@@ -450,7 +494,7 @@ class Projectile {
         var rand = Math.random() * 100
         if (rand < critRate) {this.damage *= critDmg; console.log('crit damage: ' + this.damage)}
 
-        this.update = function () {
+        this.update = function() {
             if (this.critRate != 0) {
                 if (rand < this.critRate) { ctx.fillStyle = 'red'} 
                 else { ctx.fillStyle = 'white'}
@@ -708,7 +752,7 @@ function mainLoop() {
         else {playerY = worldHeight - 100; movementVector[1] = -5}
     }
 
-
+    //draw asteroids
     asteroidFields.forEach((field,index) => {
         if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {
             ctx.strokeStyle = 'rgb(255, 130, 0)'; lineWidth = 5; ctx.strokeRect(-camera.x + field.x,-camera.y + field.y,field.width,field.height)
@@ -729,10 +773,15 @@ function mainLoop() {
                     ctx.closePath();
                     ctx.fill();
                     ctx.restore();
-                    ctx.fillStyle = 'lightslategray'
-                    ctx.textAlign = 'center'
-                    ctx.fillText(last.hp,-camera.x + last.xPos,-camera.y + last.yPos+3)
-                    ctx.textAlign = 'left'
+                    last.hp -= 0.002
+                    if (last.hp < last.origHp) {
+                        var healthPc = last.hp / last.origHp
+                        //ctx.fillStyle = 'bisque'
+                        //ctx.fillText(last.hp,-camera.x + last.xPos,-camera.y + last.yPos+3)
+                        //ctx.fillRect(-camera.x + last.xPos - 50,-camera.y + last.yPos + last.radius + 5,100,8)
+                        ctx.fillStyle = 'white'
+                        ctx.fillRect(-camera.x + last.xPos - 50 * healthPc,-camera.y + last.yPos + last.radius + 5,100 * healthPc,6)
+                    }
                 }
             })
         }
@@ -761,9 +810,81 @@ function mainLoop() {
     })
     ctx.restore();
     ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
-    ctx.fillStyle = 'green';ctx.fillRect(camera.width/2-1,camera.height/2-1,2,2)
     
-    projectiles.forEach(pro => {pro.update()})
+    projectiles.forEach((pro,index) => {
+        pro.update()
+
+    })
+    //projectile logic from pew-pew
+    /*arrowPArray.forEach((bullet,bIndex) => {
+        if (bullet.type == 'frend') {
+            ctx.fillRect(bullet.x,bullet.y,4,4)
+            pewEnemies.forEach((roid,index) => {
+                var last = roid[roid.length - 1];
+                
+                if (bullet.x > last.xPos - last.radius && bullet.x < last.xPos + last.radius 
+                && bullet.y > last.yPos - last.radius && bullet.y < last.yPos + last.radius) 
+                {
+                    arrowPArray.splice(bIndex,1); last.hp -= 1;
+                    if (last.hp == 0) {
+                        pewEnemies.splice(index,1)
+                        score += last.score; 
+                    }
+                }
+            });
+        }
+    })*/
+    //projectile logic from third gem
+    /*projectiles.forEach((bullet,index) => {        
+        if (bullet.type == 'enemi' && bullet.crashWith(player))
+        {
+            if (armor == 0)
+            {
+                projectiles.splice(index,1)
+                health -= bullet.damage
+                //console.log('received '+bullet.damage+' damage')
+            }   
+            else if (armor > bullet.damage)
+            {
+                projectiles.splice(index,1)
+                armor -= bullet.damage / 2
+                health -= bullet.damage / 2
+                //console.log('received '+bullet.damage / 2+' damage, '+bullet.damage / 2+' damage absorbed by armor')
+            }
+            else if (armor > 0)
+            {
+                projectiles.splice(index,1)
+                var reducedDamage = bullet.damage - armor
+                var protected = bullet.damage - reducedDamage
+                armor = 0
+                health -= reducedDamage
+                //console.log('received '+reducedDamage+' damage, '+protected+' damage absorbed by armor')
+            }
+        }
+        else if (bullet.type == 'frend' || bullet.type == 'fragment')
+        {
+            enemies.forEach(enemi => {
+                if (bullet.crashWith(enemi)){
+                    projectiles.splice(index,1)
+                    enemi.health -= bullet.damage
+                    console.log(enemi.health)
+                }
+            })
+        }
+        else if (bullet.type == 'grenade')
+        {
+            bullet.gUpdate()
+            console.log('angle: '+bullet.angle+'dx: '+bullet.dx+' dy: '+bullet.dy+' fallSpeed: '+bullet.fallSpeed)
+            bullet.lifeTime += 0.02;
+            if (bullet.lifeTime > 3) {
+                projectiles.splice(index,1)
+                for (var g = 0; g < 20; g++) {
+                    projectiles.push(new Projectile(2,2,'darkslategrey',bullet.x,bullet.y,bullet.x + Math.random() * (2 * 10) - 10,bullet.y + Math.random() * (2 * 10) - 10,'fragment'))
+                }
+            }
+        }
+    })*/
+
 
     //xp bar
     var xpPercentage = xp / xpRequired
