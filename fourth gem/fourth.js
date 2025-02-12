@@ -52,6 +52,8 @@ var playerAngle = 0
 var playerSpeed = 0
 var playerMaxSpeed = 5
 var playerTurnSpeed = 3
+var fireInterval //maybe replace this
+var canFire = true //same
 //character stats
 var health = 100
 var shield = 0
@@ -202,6 +204,10 @@ can.addEventListener('mousedown', function(event) {
     mouseClickY = event.pageY - rect.top;
     console.log('click detected at ' + Math.floor(mouseClickX) + ',' + Math.floor(mouseClickY));
     checkClick()
+})
+//maybe not useful later
+window.addEventListener('mouseup', function() {
+    clearInterval(fireInterval)
 })
 
 can.addEventListener('mousemove', function(event) {
@@ -371,48 +377,14 @@ function checkClick() {
         
     }
     else if (gameState == states.main) {
-        console.log('pew pew')//firing logic from bes defense
-        /*if (activeWeapon == 1)
-        {
-            fireInterval = setInterval(function() {
-                projectiles.push(new mgProjectile(8,5,'gold',mainGun.dx,mainGun.dy,musx,musy,'frend')); 			shotsFired++
-                //projectiles.push(new mgProjectile(8,5,'gold',totW-50,totH/2,100,totH/2,'enemi'))//TEST
-                //projectiles.push(new mgProjectile(8,5,'gold',totW-50,50,100,50,'enemi'))//TEST
-                //projectiles.push(new mgProjectile(8,5,'gold',totW-50,300,100,350,'enemi'))//TEST
-            }, mg.fireRate);
-        }
-        if (activeWeapon == 2 && canFire == true)
-        {
-            canFire = false; console.log(canFire); shotsFired++
-            for (f=0; f<7; f++)
-            {
-                projectiles.push(new sgProjectile(8,5,'gold',mainGun.dx,mainGun.dy,musx,musy,'frend')) 
-            }
-            setTimeout(function() {canFire = true; console.log(canFire)}, shotgun.fireRate)
-        }
-        if (activeWeapon == 3 && canFire == true)
-        {
-            canFire = false; console.log(canFire)
-            projectiles.push(new cnnProjectile(16,8,'gray',mainGun.dx,mainGun.dy,musx,musy,'frend')); shotsFired++
-            setTimeout(function() {canFire = true; console.log(canFire)}, cannon.fireRate)
-        }
-        if (activeWeapon == 4 && canFire == true)
-        {
-            canFire = false; console.log(canFire)
-            for (f=0; f<rcktLnchr.rocketCount; f++)
-            {
-                projectiles.push(new rktProjectile(50,7,'red',mainGun.dx,mainGun.dy,musx,musy,'frend')); 				shotsFired++
-            }
-            setTimeout(function() {canFire = true; console.log(canFire)}, rcktLnchr.fireRate)
-        }*/
-
-        //firing logic from third gem
-        /*if (mButt == 0) {
-            projectiles.push(new Projectile(3,3,'goldenrod',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
-            fireInterval = setInterval(() => {
-                projectiles.push(new Projectile(3,3,'goldenrod',player.x + 5,player.y + 12,musx-15,musy-15,'frend'))
-            }, frt[frtLvl])
-        }*/  
+        //firing logic test
+        fireInterval = setInterval(() => {
+            console.log('pew pew')
+            var source = rotatePoint(-camera.x+playerX,-camera.y+playerY-70,-camera.x+playerX,-camera.y+playerY,playerAngle)
+            var target = rotatePoint(-camera.x+playerX,-camera.y+playerY-100,-camera.x+playerX,-camera.y+playerY,playerAngle)
+            projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly mg',2.5,6,25,2,2,4))
+            //projectiles.push(new Projectile(8,5,'gold',totW-50,totH/2,100,totH/2,'enemi'))//TEST
+        }, 200);
     }
     else if (gameState == states.inventory) {
         if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
@@ -495,10 +467,6 @@ class Projectile {
         if (rand < critRate) {this.damage *= critDmg; console.log('crit damage: ' + this.damage)}
 
         this.update = function() {
-            if (this.critRate != 0) {
-                if (rand < this.critRate) { ctx.fillStyle = 'red'} 
-                else { ctx.fillStyle = 'white'}
-            }
             this.lifeTime += 0.02
             this.x += this.dx * speed
             this.y += this.dy * speed
@@ -512,6 +480,10 @@ class Projectile {
                 
 
                 if (this.lifeTime > 0.5 + this.lifeTimeRand) {projectiles.splice(this,1)}
+            }
+            else if (this.type == 'friendly mg' || this.type == 'enemy mg') {
+                if (rand < this.critRate) { ctx.fillStyle = 'red'} 
+                else { ctx.fillStyle = 'gold'}
             }
             ctx.fillRect(this.x, this.y, this.width, this.height)
         }
@@ -884,6 +856,59 @@ function mainLoop() {
             }
         }
     })*/
+    //projectile logic from bes defense
+    /*projectiles.forEach(bullet => {
+        bullet.update()
+        if (bullet.newPos == true)
+        {
+            projectiles.splice(bullet,1)
+        }
+        if (bullet.type == 'enemi')
+        {
+            if (bullet.x < 225 && currentShield > 0)
+            {
+                projectiles.splice(bullet,1)
+                currentShield -= bullet.damage
+                shieldJustHit = true
+                console.log('shield received '+bullet.damage+' damage')
+            }   
+            if (bullet.x < 150)
+            {
+                projectiles.splice(bullet,1)
+                currentHealth -= bullet.damage
+                console.log('base received '+bullet.damage+' damage')
+            }
+        }
+        else if (bullet.type == 'frend')
+        {
+            enemies.forEach(enemi => {
+                if (bullet.crashWith(enemi)){
+                    projectiles.splice(bullet,1)
+                    enemi.health -= bullet.damage
+                }
+            })
+        }
+    });*/
+
+    //shield logic from bes defense
+    /*if (shieldTimeout > 0) {shieldTimeout -= 0.02; console.log('time to shield recharge'+Math.round(shieldTimeout))}
+    if (shieldJustHit == true) {
+        if (currentShield < 0)
+        {
+            currentShield = 0; shieldTimeout = 4
+        }
+        else { shieldTimeout = 4}
+        shieldJustHit = false
+    }
+    if (!shieldJustHit && shieldTimeout <= 0 && shieldPercentage < 1)
+    {
+        currentShield += maxShield/200
+    }
+    shieldPercentage = currentShield / maxShield   
+    if (shieldPercentage > 0.25) {ctx.strokeStyle = 'blue'}
+    if (shieldPercentage < 0.25) {ctx.strokeStyle = 'red'}
+    if (currentShield > 0)
+    {ctx.beginPath(); ctx.arc(10,totH/2,230,-1,1); ctx.stroke()}*/
 
 
     //xp bar
