@@ -53,7 +53,9 @@ var playerSpeed = 0
 var playerMaxSpeed = 5
 var playerTurnSpeed = 3
 var fireInterval //maybe replace this
+var fireIntervals = [] //maybe this to acommodate different firerates
 var canFire = true //same
+var fireCooldowns = [] //maybe this for non-automatics
 //character stats
 var health = 100
 var shield = 0
@@ -205,9 +207,14 @@ can.addEventListener('mousedown', function(event) {
     console.log('click detected at ' + Math.floor(mouseClickX) + ',' + Math.floor(mouseClickY));
     checkClick()
 })
-//maybe not useful later
+
 window.addEventListener('mouseup', function() {
+    //maybe not useful later
     clearInterval(fireInterval)
+    /*maybe this instead
+    fireIntervals.forEach(int => {
+        clearInterval(int)
+    })*/
 })
 
 can.addEventListener('mousemove', function(event) {
@@ -225,12 +232,15 @@ document.addEventListener('keydown', function(event) {
     if (event.key == 'Escape' && gameState == states.paused) {
         console.log('resumed'); gameState = states.main
         ctx.textAlign = 'left'; can.style.cursor = 'none'
+        skillPointsAdding = false;
         setTimeout(() => {canPause = true},500)
         interval = setInterval(mainLoop,20)
     }
 })
 document.addEventListener('keyup', function(event) {
-    keysPressed[event.key] = false; //console.log(keysPressed)
+    if (event.key != 'F5') {
+        keysPressed[event.key] = false; //console.log(keysPressed)
+    }
 })
 
 function buttonClicked(x,y,width,height) {
@@ -367,11 +377,13 @@ function checkClick() {
         if (buttonClicked(totW/2-130,180,260,50)) {
             console.log('resumed'); gameState = states.main
             ctx.textAlign = 'left'; can.style.cursor = 'none'
+            skillPointsAdding = false
             setTimeout(() => {canPause = true},500)
             interval = setInterval(mainLoop,20)
         }
         else if (buttonClicked(totW/2-130,270,260,50)) {
             console.log('quitting'); gameState = states.menu;
+            skillPointsAdding = false
             canPause = true; can.style.cursor = 'default'; save()
         }
         
@@ -459,7 +471,9 @@ class Projectile {
         this.dy = Math.sin(this.angle)
         
         this.lifeTime = 0
-        this.lifeTimeRand = Math.random()
+        if (this.type == 'particleS' || this.type == 'particleL') {
+            this.lifeTimeRand = Math.random()
+        }
 
         this.damage = Math.floor(Math.random() * (2 * damageMax) - damageMin)
         
@@ -529,6 +543,7 @@ function mainLoop() {
             gameState = states.inventory; console.log('inventory open')
         }
         else {
+            skillPointsAdding = false;
             gameState = states.main; console.log('inventory closed')
         }
     }
@@ -687,11 +702,31 @@ function mainLoop() {
     }
     
     if (keysPressed && keysPressed['r'] && gameState != states.inventory) {
-        if (movementVector[0] > 0) {movementVector[0] -= 0.05}
-        else if (movementVector[0] < 0) {movementVector[0] += 0.05}
+        if (movementVector[0] > 0) {
+            if (movementVector[0] < 0.05) {
+                movementVector[0] = 0
+            }
+            else {movementVector[0] -= 0.05}
+        }
+        else if (movementVector[0] < 0) {
+            if (movementVector[0] > -0.05) {
+                movementVector[0] = 0
+            }
+            else {movementVector[0] += 0.05}
+        }
         
-        if (movementVector[1] > 0) {movementVector[1] -= 0.05}
-        else if (movementVector[1] < 0) {movementVector[1] += 0.05}
+        if (movementVector[1] > 0) {
+            if (movementVector[1] < 0.05) {
+                movementVector[1] = 0
+            }
+            else {movementVector[1] -= 0.05}
+        }
+        else if (movementVector[1] < 0) {
+            if (movementVector[1] > -0.05) {
+                movementVector[1] = 0
+            }
+            else {movementVector[1] += 0.05}
+        }
     }
 
     // Camera follows player
@@ -748,9 +783,6 @@ function mainLoop() {
                     last.hp -= 0.002
                     if (last.hp < last.origHp) {
                         var healthPc = last.hp / last.origHp
-                        //ctx.fillStyle = 'bisque'
-                        //ctx.fillText(last.hp,-camera.x + last.xPos,-camera.y + last.yPos+3)
-                        //ctx.fillRect(-camera.x + last.xPos - 50,-camera.y + last.yPos + last.radius + 5,100,8)
                         ctx.fillStyle = 'white'
                         ctx.fillRect(-camera.x + last.xPos - 50 * healthPc,-camera.y + last.yPos + last.radius + 5,100 * healthPc,6)
                     }
@@ -783,6 +815,28 @@ function mainLoop() {
     ctx.restore();
     ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
     
+    ctx.fillStyle = 'green';
+    ctx.fillRect(-camera.x+worldWidth-60,-camera.y+playerY,3,3)
+    ctx.fillRect(-camera.x + 60,-camera.y+playerY,3,3)
+    ctx.fillRect(-camera.x+playerX,-camera.y+worldHeight-60,3,3)
+    ctx.fillRect(-camera.x+playerX,-camera.y+60,3,3)
+    
+    /*playerSprite.forEach(path => {
+        if (ctx.isPointInPath(path,-camera.x + worldWidth - 60,-camera.y + playerY)) {
+            playerX = worldWidth - 100; movementVector[0] = -5
+        }
+        else if (ctx.isPointInPath(path,-camera.x + 60,-camera.y + playerY)) {
+            playerX = -camera.x + 100; movementVector[0] = 5
+        }
+
+        if (ctx.isPointInPath(path,-camera.x+playerX,-camera.y + worldHeight - 60)) {
+            playerY = worldHeight - 100; movementVector[1] = -5
+        }
+        else if (ctx.isPointInPath(path,-camera.x + playerX,-camera.y + 60)) {
+            playerY = -camera.y + 100; movementVector[1] = 5
+        }
+    })*/
+
     projectiles.forEach((pro,index) => {
         pro.update()
 
