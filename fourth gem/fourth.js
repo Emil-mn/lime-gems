@@ -813,30 +813,49 @@ function mainLoop() {
         }
     })
     ctx.restore();
-    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
     
+    //new collision detection
+    if (playerX < -camera.x + 2000 || playerX > worldWidth - 2000 || playerY < -camera.y + 2000 || playerY > worldHeight - 2000) {
+        console.log('colission detection running')
+        playerSprite.forEach(path => {
+            for (var xy = -100; xy < 100; xy += 10) {
+                var rot1 = rotatePoint(-camera.x + worldWidth - 60,-camera.y + playerY + xy, -camera.x + playerX,-camera.y + playerY,-playerAngle)
+                ctx.fillRect(-camera.x + worldWidth - 60,-camera.y + playerY + xy,2,2)
+            
+                var rot2 = rotatePoint(-camera.x + 60,-camera.y + playerY + xy,-camera.x + playerX,-camera.y + playerY,-playerAngle)
+                ctx.fillRect(-camera.x + 60,-camera.y + playerY + xy,2,2)
+            
+                if (ctx.isPointInPath(path,rot1.x,rot1.y)) {
+                    playerX = worldWidth - 120; movementVector[0] = -3
+                }
+                else if (ctx.isPointInPath(path,rot2.x,rot2.y)) {
+                    playerX = -camera.x + 120; movementVector[0] = 3
+                }
+
+                var rot3 = rotatePoint(-camera.x + playerX + xy,-camera.y + worldHeight - 60,-camera.x + playerX,-camera.y + playerY,playerAngle)
+                ctx.fillRect(-camera.x + playerX + xy,-camera.y + worldHeight - 60,2,2)
+
+                var rot4 = rotatePoint(-camera.x + playerX + xy,-camera.y + 60,-camera.x + playerX,-camera.y + playerY,playerAngle)
+                ctx.fillRect(-camera.x + playerX + xy,-camera.y + 60,2,2)
+
+                if (ctx.isPointInPath(path,rot3.x,rot3.y)) {
+                    playerY = worldHeight - 120; movementVector[1] = -3
+                }
+                else if (ctx.isPointInPath(path,rot4.x,rot4.y)) {
+                    playerY = -camera.y + 120; movementVector[1] = 3
+                }
+            }
+        })
+    }
+
+    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
     ctx.fillStyle = 'green';
     ctx.fillRect(-camera.x+worldWidth-60,-camera.y+playerY,3,3)
     ctx.fillRect(-camera.x + 60,-camera.y+playerY,3,3)
     ctx.fillRect(-camera.x+playerX,-camera.y+worldHeight-60,3,3)
     ctx.fillRect(-camera.x+playerX,-camera.y+60,3,3)
     
-    /*playerSprite.forEach(path => {
-        if (ctx.isPointInPath(path,-camera.x + worldWidth - 60,-camera.y + playerY)) {
-            playerX = worldWidth - 100; movementVector[0] = -5
-        }
-        else if (ctx.isPointInPath(path,-camera.x + 60,-camera.y + playerY)) {
-            playerX = -camera.x + 100; movementVector[0] = 5
-        }
-
-        if (ctx.isPointInPath(path,-camera.x+playerX,-camera.y + worldHeight - 60)) {
-            playerY = worldHeight - 100; movementVector[1] = -5
-        }
-        else if (ctx.isPointInPath(path,-camera.x + playerX,-camera.y + 60)) {
-            playerY = -camera.y + 100; movementVector[1] = 5
-        }
-    })*/
-
+    
     projectiles.forEach((pro,index) => {
         pro.update()
 
