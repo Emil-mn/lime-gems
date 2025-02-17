@@ -466,6 +466,7 @@ class Projectile {
         this.centerY = this.y + this.height / 2
         this.speed = speed
         this.critRate = critRate
+        this.critRand = Math.random() * 100
         this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX) + (Math.random() * (2 * accuracy) - accuracy) * Math.PI / 180
         this.dx = Math.cos(this.angle)
         this.dy = Math.sin(this.angle)
@@ -477,28 +478,13 @@ class Projectile {
 
         this.damage = Math.floor(Math.random() * (2 * damageMax) - damageMin)
         
-        var rand = Math.random() * 100
-        if (rand < critRate) {this.damage *= critDmg; console.log('crit damage: ' + this.damage)}
+        
+        if (this.critRand < this.critRate) {this.damage *= critDmg; console.log('crit damage: ' + this.damage)}
 
         this.update = function() {
             this.lifeTime += 0.02
             this.x += this.dx * speed
             this.y += this.dy * speed
-            if (this.type == 'particleS') {
-                ctx.fillStyle = 'white'
-                
-                if (this.lifeTime > 0.5 + this.lifeTimeRand) {projectiles.splice(this,1)}
-            }
-            else if (this.type == 'particleL') {
-                ctx.fillStyle = 'blue'
-                
-
-                if (this.lifeTime > 0.5 + this.lifeTimeRand) {projectiles.splice(this,1)}
-            }
-            else if (this.type == 'friendly mg' || this.type == 'enemy mg') {
-                if (rand < this.critRate) { ctx.fillStyle = 'red'} 
-                else { ctx.fillStyle = 'gold'}
-            }
             ctx.fillRect(this.x, this.y, this.width, this.height)
         }
         this.crashWith = function (otherobj) {
@@ -857,8 +843,19 @@ function mainLoop() {
     
     
     projectiles.forEach((pro,index) => {
+        if (pro.type == 'particleS') {
+            ctx.fillStyle = 'white'
+            if (pro.lifeTime > 0.5 + pro.lifeTimeRand) {projectiles.splice(index,1)}
+        }
+        else if (pro.type == 'particleL') {
+            ctx.fillStyle = 'blue'
+            if (pro.lifeTime > 0.5 + pro.lifeTimeRand) {projectiles.splice(index,1)}
+        }
+        else if (pro.type == 'friendly mg' || pro.type == 'enemy mg') {
+            if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
+            else { ctx.fillStyle = 'gold'}
+        }
         pro.update()
-
     })
     //projectile logic from pew-pew
     /*arrowPArray.forEach((bullet,bIndex) => {
