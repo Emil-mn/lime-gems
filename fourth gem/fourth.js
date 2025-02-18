@@ -394,7 +394,7 @@ function checkClick() {
             console.log('pew pew')
             var source = rotatePoint(-camera.x+playerX,-camera.y+playerY-70,-camera.x+playerX,-camera.y+playerY,playerAngle)
             var target = rotatePoint(-camera.x+playerX,-camera.y+playerY-100,-camera.x+playerX,-camera.y+playerY,playerAngle)
-            projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly mg',2.5,6,25,2,2,4))
+            projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,25,2,2,4))
             //projectiles.push(new Projectile(8,5,'gold',totW-50,totH/2,100,totH/2,'enemi'))//TEST
         }, 200);
     }
@@ -454,7 +454,8 @@ function rotatePoint(px, py, cx, cy, angle) {
 }
 
 class Projectile {
-    constructor(width, height, x, y, targetX, targetY, type, accuracy, speed, critRate, critDmg, damageMin, damageMax) {
+    constructor(width, height, x, y, targetX, targetY, fof, type, accuracy, speed, critRate, critDmg, damageMin, damageMax) {
+        this.fof = fof
         this.type = type
         this.width = width
         this.height = height
@@ -551,8 +552,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x-10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x-20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
         else if (playerSprite == corvette) {
             var rotated1 = rotatePoint(playerX-camera.x+17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -560,8 +561,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x-17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
     else if (keysPressed && (keysPressed['d'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
@@ -573,8 +574,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x+10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x+20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
         else if (playerSprite == corvette) {
             var rotated1 = rotatePoint(playerX-camera.x-17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -582,8 +583,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x+17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x+27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
 
@@ -599,8 +600,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x+10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x+20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
         else if (playerSprite == corvette) {
             var rotated1 = rotatePoint(playerX-camera.x+17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -608,8 +609,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x+17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x+27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
     else if (keysPressed && (keysPressed['e']) && gameState != states.inventory) {
@@ -623,8 +624,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x-10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x-20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
         else if (playerSprite == corvette) {
             var rotated1 = rotatePoint(playerX-camera.x-17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -632,8 +633,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x-17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
 
@@ -649,8 +650,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x+7,playerY-camera.y+47,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x+7,playerY-camera.y+57,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleL',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleL',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
         }
         else if (playerSprite == corvette) {
             var rotated1 = rotatePoint(playerX-camera.x+27,playerY-camera.y+60,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -658,8 +659,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x-27,playerY-camera.y+60,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+70,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(4,4,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleL',3,5,0,0,0,0))
-            projectiles.push(new Projectile(4,4,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleL',3,5,0,0,0,0))
+            projectiles.push(new Projectile(4,4,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
+            projectiles.push(new Projectile(4,4,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
         }
     }
     else if (keysPressed && (keysPressed['s'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
@@ -673,8 +674,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x+6,playerY-camera.y-40,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x+6,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
         else if (playerSprite == corvette) {
             var rotated1 = rotatePoint(playerX-camera.x+12,playerY-camera.y-65,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -682,8 +683,8 @@ function mainLoop() {
             var rotated3 = rotatePoint(playerX-camera.x-12,playerY-camera.y-65,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated4 = rotatePoint(playerX-camera.x-12,playerY-camera.y-75,playerX-camera.x,playerY-camera.y,playerAngle)
 
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
     
@@ -851,7 +852,7 @@ function mainLoop() {
             ctx.fillStyle = 'blue'
             if (pro.lifeTime > 0.5 + pro.lifeTimeRand) {projectiles.splice(index,1)}
         }
-        else if (pro.type == 'friendly mg' || pro.type == 'enemy mg') {
+        else if (pro.type == 'mg') {
             if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
             else { ctx.fillStyle = 'gold'}
         }
