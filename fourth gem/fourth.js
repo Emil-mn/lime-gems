@@ -767,11 +767,10 @@ function mainLoop() {
                     ctx.closePath();
                     ctx.fill();
                     ctx.restore();
-                    last.hp -= 0.002
                     if (last.hp < last.origHp) {
                         var healthPc = last.hp / last.origHp
                         ctx.fillStyle = 'white'
-                        ctx.fillRect(-camera.x + last.xPos - 50 * healthPc,-camera.y + last.yPos + last.radius + 5,100 * healthPc,6)
+                        ctx.fillRect(-camera.x + last.xPos - 50 * healthPc,-camera.y + last.yPos + last.radius + 5,100 * healthPc,5)
                     }
                 }
             })
@@ -855,28 +854,34 @@ function mainLoop() {
         else if (pro.type == 'mg') {
             if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
             else { ctx.fillStyle = 'gold'}
+            if (pro.lifeTime > 10) {projectiles.splice(index,1)}
+            if (pro.fof == 'friendly') {
+                console.log('frend')
+                asteroidFields.forEach((field,fIndex) => {
+                    if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {    
+                        asteroids.forEach((roid,roidIndex) => {
+                            var last = roid[roid.length - 1];
+                            if (last.field == fIndex) {
+                                console.log('projectile:'+pro.x+','+pro.y+' ass roid:'+last.xPos+','+last.yPos)
+                                if (-camera.x + pro.x > -camera.x + last.xPos - last.radius && -camera.x + pro.x < -camera.x + last.xPos + last.radius 
+                                && -camera.y + pro.y > -camera.y + last.xPos - last.radius && -camera.y + pro.y < -camera.y + last.xPos + last.radius)
+                                {
+                                    console.log('hit')
+                                    projectiles.splice(index,1); last.hp -= pro.damage;
+                                    if (last.hp <= 0) {
+                                        asteroids.splice(roidIndex,1)
+                                        //give ores or whatever comes out of a roid
+                                        //like  ores += last.ores   just modify scores (XD)-|--<
+                                    }
+                                }
+                            }
+                        })
+                    }
+                })     
+            }
         }
         pro.update()
     })
-    //projectile logic from pew-pew
-    /*arrowPArray.forEach((bullet,bIndex) => {
-        if (bullet.type == 'frend') {
-            ctx.fillRect(bullet.x,bullet.y,4,4)
-            pewEnemies.forEach((roid,index) => {
-                var last = roid[roid.length - 1];
-                
-                if (bullet.x > last.xPos - last.radius && bullet.x < last.xPos + last.radius 
-                && bullet.y > last.yPos - last.radius && bullet.y < last.yPos + last.radius) 
-                {
-                    arrowPArray.splice(bIndex,1); last.hp -= 1;
-                    if (last.hp == 0) {
-                        pewEnemies.splice(index,1)
-                        score += last.score; 
-                    }
-                }
-            });
-        }
-    })*/
     //projectile logic from third gem
     /*projectiles.forEach((bullet,index) => {        
         if (bullet.type == 'enemi' && bullet.crashWith(player))
