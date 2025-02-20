@@ -56,6 +56,8 @@ var fireInterval //maybe replace this
 var fireIntervals = [] //maybe this to acommodate different firerates
 var canFire = true //same
 var fireCooldowns = [] //maybe this for non-automatics
+var shieldJustHit = false
+var shieldTimeout = 0
 //character stats
 var health = 100
 var shield = 0
@@ -311,36 +313,37 @@ function generateWorld() {
     
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
-        var width = Math.random() * (2100-700) + 700;
-        var height = Math.random() * (1350-450) + 450;
+        var width = Math.random() * (3000-1000) + 1000;
+        var height = Math.random() * (2000-750) + 750;
         var x = Math.random() * (-camera.x + worldWidth - width - 400) + 200;
         var y = Math.random() * (-camera.y + worldHeight - height - 400) + 200;
-        var numberOfAsteroids = Math.floor((width - 700) / 2100 * (200 - 50) + 50);
+        var numberOfAsteroids = Math.floor((width - 700) / 2100 * (100 - 25) + 25);
         asteroidFields.push({width:width,height:height,x:x,y:y})
-
+        console.log('asteroids in field '+aField+' :'+numberOfAsteroids)
         for (var ass = 0; ass < numberOfAsteroids; ass++) {
             var sides = Math.floor(Math.random() * 10 + 5);
             var asteroid = [];
-            var radius = Math.random() * 15 + 10;
+            var radius = Math.random() * (100-25) + 25;
             var astX = Math.random() * ((x + width) - x) + x 
             var astY = Math.random() * ((y + height)- y) + y
             var xSpeed = Math.random() * 2 - 1;
             var ySpeed = Math.random() * 2 - 1;
             var rotation = Math.random() * 4 -2;
-            var health = Math.floor((radius - 10) / 15 * (8 - 3) + 3)
+            var health = Math.floor((radius - 25) / 100 * (100 - 25) + 25)
+            var experience = Math.floor((health - 25) / 100 * (20 - 5) + 5)
 
             for (var s = 0; s < sides; s++) {
                 var angle = (Math.PI * 2 / sides) * s;
-                var pointX = astX + Math.cos(angle) * (radius + Math.random() * 10 - 5);
-                var pointY = astY + Math.sin(angle) * (radius + Math.random() * 10 - 5);
+                var pointX = astX + Math.cos(angle) * (radius + Math.random() * 25 - 12);
+                var pointY = astY + Math.sin(angle) * (radius + Math.random() * 25 - 12);
                 asteroid.push({ x: pointX, y: pointY });
             }
         
-            asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, origHp:health, field:aField})
+            asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, origHp:health, field:aField, xp:experience})
 
             asteroids.push(asteroid)
         }
-        console.log(asteroids)
+        console.log(asteroids.length)
     }
     interval = setInterval(mainLoop,20)
 }
@@ -395,7 +398,7 @@ function checkClick() {
             var source = rotatePoint(-camera.x+playerX,-camera.y+playerY-70,-camera.x+playerX,-camera.y+playerY,playerAngle)
             var target = rotatePoint(-camera.x+playerX,-camera.y+playerY-100,-camera.x+playerX,-camera.y+playerY,playerAngle)
             projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,25,2,2,4))
-            //projectiles.push(new Projectile(8,5,'gold',totW-50,totH/2,100,totH/2,'enemi'))//TEST
+            projectiles.push(new Projectile(3,3,target.x,target.y,-camera.x + playerX,-camera.y + playerY,'enemy','mg',3,5,10,1.5,2,4))//TEST
         }, 200);
     }
     else if (gameState == states.inventory) {
@@ -477,7 +480,7 @@ class Projectile {
             this.lifeTimeRand = Math.random()
         }
 
-        this.damage = Math.floor(Math.random() * (2 * damageMax) - damageMin)
+        this.damage = Math.floor((Math.random() * (damageMax - damageMin + 1)) + damageMin)
         
         
         if (this.critRand < this.critRate) {this.damage *= critDmg; console.log('crit damage: ' + this.damage)}
@@ -486,6 +489,8 @@ class Projectile {
             this.lifeTime += 0.02
             this.x += this.dx * speed
             this.y += this.dy * speed
+            this.centerX = this.x + this.width / 2
+            this.centerY = this.y + this.height / 2
             ctx.fillRect(this.x, this.y, this.width, this.height)
         }
         this.crashWith = function (otherobj) {
@@ -767,6 +772,8 @@ function mainLoop() {
                     ctx.closePath();
                     ctx.fill();
                     ctx.restore();
+                    ctx.fillStyle = 'red'
+                    ctx.fillText(last.hp,-camera.x + last.xPos,-camera.y + last.yPos+3)
                     if (last.hp < last.origHp) {
                         var healthPc = last.hp / last.origHp
                         ctx.fillStyle = 'white'
@@ -812,10 +819,10 @@ function mainLoop() {
                 ctx.fillRect(-camera.x + 60,-camera.y + playerY + xy,2,2)
             
                 if (ctx.isPointInPath(path,rot1.x,rot1.y)) {
-                    playerX = worldWidth - 120; movementVector[0] = -3
+                    playerX = worldWidth - 150; movementVector[0] = -3
                 }
                 else if (ctx.isPointInPath(path,rot2.x,rot2.y)) {
-                    playerX = -camera.x + 120; movementVector[0] = 3
+                    playerX = -camera.x + 150; movementVector[0] = 3
                 }
 
                 var rot3 = rotatePoint(-camera.x + playerX + xy,-camera.y + worldHeight - 60,-camera.x + playerX,-camera.y + playerY,playerAngle)
@@ -825,10 +832,10 @@ function mainLoop() {
                 ctx.fillRect(-camera.x + playerX + xy,-camera.y + 60,2,2)
 
                 if (ctx.isPointInPath(path,rot3.x,rot3.y)) {
-                    playerY = worldHeight - 120; movementVector[1] = -3
+                    playerY = worldHeight - 150; movementVector[1] = -3
                 }
                 else if (ctx.isPointInPath(path,rot4.x,rot4.y)) {
-                    playerY = -camera.y + 120; movementVector[1] = 3
+                    playerY = -camera.y + 150; movementVector[1] = 3
                 }
             }
         })
@@ -854,24 +861,25 @@ function mainLoop() {
         else if (pro.type == 'mg') {
             if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
             else { ctx.fillStyle = 'gold'}
-            if (pro.lifeTime > 10) {projectiles.splice(index,1)}
+            if (pro.lifeTime > 5) {projectiles.splice(index,1)}
             if (pro.fof == 'friendly') {
-                console.log('frend')
+                //shooting asteroids
                 asteroidFields.forEach((field,fIndex) => {
                     if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {    
                         asteroids.forEach((roid,roidIndex) => {
                             var last = roid[roid.length - 1];
                             if (last.field == fIndex) {
-                                console.log('projectile:'+pro.x+','+pro.y+' ass roid:'+last.xPos+','+last.yPos)
-                                if (-camera.x + pro.x > -camera.x + last.xPos - last.radius && -camera.x + pro.x < -camera.x + last.xPos + last.radius 
-                                && -camera.y + pro.y > -camera.y + last.xPos - last.radius && -camera.y + pro.y < -camera.y + last.xPos + last.radius)
+                                //if (index == 0) {console.log(Math.floor(pro.x - -camera.x)); console.log(Math.floor(pro.y - -camera.y))}
+                                if (pro.x - -camera.x > last.xPos - last.radius && pro.x - -camera.x < last.xPos + last.radius 
+                                && pro.y - -camera.y > last.yPos - last.radius && pro.y - -camera.y < last.yPos + last.radius)
                                 {
-                                    console.log('hit')
+                                    console.log('hit at:'+ (pro.x - -camera.x) + ',' + (pro.y - -camera.y) + 'damage dealt:' + pro.damage)
                                     projectiles.splice(index,1); last.hp -= pro.damage;
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
-                                        //give ores or whatever comes out of a roid
-                                        //like  ores += last.ores   just modify scores (XD)-|--<
+                                        xp += last.xp
+                                        //also give ores?
+                                        //maybe poop out pickups for xp and/or ores??
                                     }
                                 }
                             }
@@ -879,113 +887,43 @@ function mainLoop() {
                     }
                 })     
             }
+            else if (pro.fof = 'enemy') {
+                //getting hit by enemies
+                playerSprite.forEach(path => {
+                    if (ctx.isPointInPath(path,pro.centerX,pro.centerY)) {
+                        projectiles.splice(index,1)
+                        if (shield > 0) {
+                            shield -= pro.damage
+                            shieldJustHit = true
+                            console.log('shield absorbed '+pro.damage+' damage')
+                        }
+                        else {
+                            health -= pro.damage
+                            shieldJustHit = true
+                            console.log('ship received '+pro.damage+' damage')
+                        }
+                    }
+                })
+            }
         }
         pro.update()
     })
-    //projectile logic from third gem
-    /*projectiles.forEach((bullet,index) => {        
-        if (bullet.type == 'enemi' && bullet.crashWith(player))
-        {
-            if (armor == 0)
-            {
-                projectiles.splice(index,1)
-                health -= bullet.damage
-                //console.log('received '+bullet.damage+' damage')
-            }   
-            else if (armor > bullet.damage)
-            {
-                projectiles.splice(index,1)
-                armor -= bullet.damage / 2
-                health -= bullet.damage / 2
-                //console.log('received '+bullet.damage / 2+' damage, '+bullet.damage / 2+' damage absorbed by armor')
-            }
-            else if (armor > 0)
-            {
-                projectiles.splice(index,1)
-                var reducedDamage = bullet.damage - armor
-                var protected = bullet.damage - reducedDamage
-                armor = 0
-                health -= reducedDamage
-                //console.log('received '+reducedDamage+' damage, '+protected+' damage absorbed by armor')
-            }
-        }
-        else if (bullet.type == 'frend' || bullet.type == 'fragment')
-        {
-            enemies.forEach(enemi => {
-                if (bullet.crashWith(enemi)){
-                    projectiles.splice(index,1)
-                    enemi.health -= bullet.damage
-                    console.log(enemi.health)
-                }
-            })
-        }
-        else if (bullet.type == 'grenade')
-        {
-            bullet.gUpdate()
-            console.log('angle: '+bullet.angle+'dx: '+bullet.dx+' dy: '+bullet.dy+' fallSpeed: '+bullet.fallSpeed)
-            bullet.lifeTime += 0.02;
-            if (bullet.lifeTime > 3) {
-                projectiles.splice(index,1)
-                for (var g = 0; g < 20; g++) {
-                    projectiles.push(new Projectile(2,2,'darkslategrey',bullet.x,bullet.y,bullet.x + Math.random() * (2 * 10) - 10,bullet.y + Math.random() * (2 * 10) - 10,'fragment'))
-                }
-            }
-        }
-    })*/
-    //projectile logic from bes defense
-    /*projectiles.forEach(bullet => {
-        bullet.update()
-        if (bullet.newPos == true)
-        {
-            projectiles.splice(bullet,1)
-        }
-        if (bullet.type == 'enemi')
-        {
-            if (bullet.x < 225 && currentShield > 0)
-            {
-                projectiles.splice(bullet,1)
-                currentShield -= bullet.damage
-                shieldJustHit = true
-                console.log('shield received '+bullet.damage+' damage')
-            }   
-            if (bullet.x < 150)
-            {
-                projectiles.splice(bullet,1)
-                currentHealth -= bullet.damage
-                console.log('base received '+bullet.damage+' damage')
-            }
-        }
-        else if (bullet.type == 'frend')
-        {
-            enemies.forEach(enemi => {
-                if (bullet.crashWith(enemi)){
-                    projectiles.splice(bullet,1)
-                    enemi.health -= bullet.damage
-                }
-            })
-        }
-    });*/
-
-    //shield logic from bes defense
-    /*if (shieldTimeout > 0) {shieldTimeout -= 0.02; console.log('time to shield recharge'+Math.round(shieldTimeout))}
+    
+    
+    //shield logic
+    if (shieldTimeout > 0) {shieldTimeout -= 0.02; console.log(Math.floor(shieldTimeout))}
     if (shieldJustHit == true) {
-        if (currentShield < 0)
+        if (shield < 0)
         {
-            currentShield = 0; shieldTimeout = 4
+            shield = 0; shieldTimeout = 4
         }
-        else { shieldTimeout = 4}
+        else {shieldTimeout = 4}
         shieldJustHit = false
     }
-    if (!shieldJustHit && shieldTimeout <= 0 && shieldPercentage < 1)
+    if (!shieldJustHit && shieldTimeout <= 0 && shield < maxShield)
     {
-        currentShield += maxShield/200
+        shield += maxShield/200
     }
-    shieldPercentage = currentShield / maxShield   
-    if (shieldPercentage > 0.25) {ctx.strokeStyle = 'blue'}
-    if (shieldPercentage < 0.25) {ctx.strokeStyle = 'red'}
-    if (currentShield > 0)
-    {ctx.beginPath(); ctx.arc(10,totH/2,230,-1,1); ctx.stroke()}*/
-
 
     //xp bar
     var xpPercentage = xp / xpRequired
@@ -1007,33 +945,24 @@ function mainLoop() {
         ctx.fillStyle = 'blue'; ctx.fillRect(40,60,140*shieldPercentage,15)
         ctx.strokeRect(10,60,170,15); ctx.fillStyle = foreground
         ctx.fillText(Math.round(shield),12,73)
-
-        ctx.fillStyle = background; ctx.fillRect(10,85,87,15)
-        ctx.strokeRect(10,85,87,15); ctx.fillStyle = foreground
-        switch (credits.toString().length) {
-            case 1: ctx.fillText('cr 000000'+credits,12,98); break 
-            case 2: ctx.fillText('cr 00000'+credits,12,98); break
-            case 3: ctx.fillText('cr 0000'+credits,12,98); break
-            case 4: ctx.fillText('cr 000'+credits,12,98); break
-            case 5: ctx.fillText('cr 00'+credits,12,98); break
-            case 6: ctx.fillText('cr 0'+credits,12,98); break
-            case 7: ctx.fillText('cr '+credits,12,98); break
-        }
+        var y1 = 85; var y2 = 98
+    }
+    else {
+        var y1 = 60; var y2 = 73
     }
     //credits counter
-    else {
-        ctx.fillStyle = background; ctx.fillRect(10,60,87,15)
-        ctx.strokeRect(10,60,87,15); ctx.fillStyle = foreground
-        switch (credits.toString().length) {
-            case 1: ctx.fillText('cr 000000'+credits,12,73); break 
-            case 2: ctx.fillText('cr 00000'+credits,12,73); break
-            case 3: ctx.fillText('cr 0000'+credits,12,73); break
-            case 4: ctx.fillText('cr 000'+credits,12,73); break
-            case 5: ctx.fillText('cr 00'+credits,12,73); break
-            case 6: ctx.fillText('cr 0'+credits,12,73); break
-            case 7: ctx.fillText('cr '+credits,12,73); break
-        }
+    ctx.fillStyle = background; ctx.fillRect(10,y1,87,15)
+    ctx.strokeRect(10,y1,87,15); ctx.fillStyle = foreground
+    switch (credits.toString().length) {
+        case 1: ctx.fillText('cr 000000'+credits,12,y2); break 
+        case 2: ctx.fillText('cr 00000'+credits,12,y2); break
+        case 3: ctx.fillText('cr 0000'+credits,12,y2); break
+        case 4: ctx.fillText('cr 000'+credits,12,y2); break
+        case 5: ctx.fillText('cr 00'+credits,12,y2); break
+        case 6: ctx.fillText('cr 0'+credits,12,y2); break
+        case 7: ctx.fillText('cr '+credits,12,y2); break
     }
+
     //minimap
     ctx.lineWidth = 2; ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-150,10,140,90); 
     ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+playerX/500,10+playerY/500);
