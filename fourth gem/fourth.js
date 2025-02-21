@@ -58,6 +58,7 @@ var canFire = true //same
 var fireCooldowns = [] //maybe this for non-automatics
 var shieldJustHit = false
 var shieldTimeout = 0
+var displayLevelUpMessage = 0
 //character stats
 var health = 100
 var shield = 0
@@ -394,7 +395,6 @@ function checkClick() {
     else if (gameState == states.main) {
         //firing logic test
         fireInterval = setInterval(() => {
-            console.log('pew pew')
             var source = rotatePoint(-camera.x+playerX,-camera.y+playerY-70,-camera.x+playerX,-camera.y+playerY,playerAngle)
             var target = rotatePoint(-camera.x+playerX,-camera.y+playerY-100,-camera.x+playerX,-camera.y+playerY,playerAngle)
             projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,25,2,2,4))
@@ -454,6 +454,25 @@ function rotatePoint(px, py, cx, cy, angle) {
     let finalY = rotatedY + cy;
 
     return { x: finalX, y: finalY };
+}
+
+class pickup {
+    constructor(x, y, width, height, color, type, amount) {
+        this.x = x
+        this.y = y
+        this.centerX = this.x + this.width / 2
+        this.centerY = this.y + this.height / 2
+        this.width = width
+        this.height = height
+        this.type = type
+        this.amount = amount
+        this.update = function() {
+            ctx.fillStyle = color
+            this.centerX = this.x + this.width / 2
+            this.centerY = this.y + this.height / 2
+            ctx.fillRect(-camera.x + this.x, -camera.y + this.y, this.width, this.height)
+        }
+    }
 }
 
 class Projectile {
@@ -543,7 +562,7 @@ function mainLoop() {
     //levelling up
     if (xp >= xpRequired) { 
         xp -= xpRequired; skillPoints += spAmounts[level]; ctx.fillStyle = foreground;
-        ctx.font = '30px consolas'; ctx.fillText('Level up! '+spAmounts[level]+' skillpoints received',250,100)
+        ctx.font = '30px consolas'; displayLevelUpMessage = 3;
         level++; xpRequired = xpReqs[level];
     }
 
@@ -847,8 +866,28 @@ function mainLoop() {
     ctx.fillRect(-camera.x + 60,-camera.y+playerY,3,3)
     ctx.fillRect(-camera.x+playerX,-camera.y+worldHeight-60,3,3)
     ctx.fillRect(-camera.x+playerX,-camera.y+60,3,3)
+  
     
-    
+    pickups.forEach((pickup,index) => {
+        pickup.update()
+        if (playerX > pickup.centerX - 150 && playerX < pickup.centerX + 150 && playerY > pickup.centerY - 150 && playerY < pickup.centerY + 150) {
+            if (playerX < pickup.x) {pickup.x -= 5}
+            else if (playerX > pickup.x) {pickup.x += 5}
+            
+            if (playerY < pickup.y) {pickup.y -= 5}
+            else if (playerY > pickup.y) {pickup.y += 5}
+        }
+        playerSprite.forEach(path => {
+            if (ctx.isPointInPath(path,-camera.x + pickup.centerX,-camera.y + pickup.centerY)) {
+                pickups.splice(index,1)
+                if (pickup.type == 'xp') {
+                    xp += pickup.amount; console.log('gained '+pickup.amount+' xp'); 
+                }
+            }
+        })
+    })
+
+
     projectiles.forEach((pro,index) => {
         if (pro.type == 'particleS') {
             ctx.fillStyle = 'white'
@@ -877,9 +916,12 @@ function mainLoop() {
                                     projectiles.splice(index,1); last.hp -= pro.damage;
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
-                                        xp += last.xp
-                                        //also give ores?
-                                        //maybe poop out pickups for xp and/or ores??
+                                        for (var n = 0; n < 10; n++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
+                                        }
+                                        //maybe also give ores?
                                     }
                                 }
                             }
@@ -899,7 +941,6 @@ function mainLoop() {
                         }
                         else {
                             health -= pro.damage
-                            shieldJustHit = true
                             console.log('ship received '+pro.damage+' damage')
                         }
                     }
@@ -963,6 +1004,11 @@ function mainLoop() {
         case 7: ctx.fillText('cr '+credits,12,y2); break
     }
 
+    if (displayLevelUpMessage > 0) {
+        displayLevelUpMessage -= 0.02;
+        ctx.font = '15px consolas'; ctx.fillText('Level up! +'+spAmounts[level-1]+'SP',200,22.5)
+    }
+
     //minimap
     ctx.lineWidth = 2; ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-150,10,140,90); 
     ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+playerX/500,10+playerY/500);
@@ -990,7 +1036,7 @@ function mainLoop() {
         ctx.lineWidth = 3; slotsX.forEach(x => {slotsY.forEach(y => {ctx.strokeRect(x,y,45,45)})})
         //level related text
         ctx.font = '15px consolas'; ctx.fillStyle = foreground; skillPointsTextWidth = ctx.measureText('Skillpoints: '+skillPoints)
-        ctx.fillText('Level '+level+' => '+(level+1)+'  '+xp+'/'+xpRequired,150,110); ctx.fillText('Skillpoints: '+skillPoints,150,130)
+        ctx.fillText('Level '+level+' => '+(level+1)+'  '+Math.floor(xp)+'/'+xpRequired,150,110); ctx.fillText('Skillpoints: '+skillPoints,150,130)
         //skillpoint adding button
         ctx.lineWidth = 2; ctx.strokeRect(150+skillPointsTextWidth.width+5,118,15,15); ctx.beginPath(); 
         ctx.moveTo(150+skillPointsTextWidth.width+8,125.5); ctx.lineTo(150+skillPointsTextWidth.width+17,125.5); 
