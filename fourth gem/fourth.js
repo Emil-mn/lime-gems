@@ -59,6 +59,7 @@ var fireCooldowns = [] //maybe this for non-automatics
 var shieldJustHit = false
 var shieldTimeout = 0
 var displayLevelUpMessage = 0
+var healedHealth = 0
 //character stats
 var health = 100
 var shield = 0
@@ -239,10 +240,12 @@ document.addEventListener('keydown', function(event) {
         setTimeout(() => {canPause = true},500)
         interval = setInterval(mainLoop,20)
     }
+    if ((event.key == 'f' || event.key == 'Shift') && gameState == states.main && !event.repeat) {clearInterval(fireInterval); fire()}
 })
 document.addEventListener('keyup', function(event) {
     if (event.key != 'F5') {
-        keysPressed[event.key] = false; //console.log(keysPressed)
+        keysPressed[event.key] = false; console.log(keysPressed)
+        if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
     }
 })
 
@@ -393,13 +396,7 @@ function checkClick() {
         
     }
     else if (gameState == states.main) {
-        //firing logic test
-        fireInterval = setInterval(() => {
-            var source = rotatePoint(-camera.x+playerX,-camera.y+playerY-70,-camera.x+playerX,-camera.y+playerY,playerAngle)
-            var target = rotatePoint(-camera.x+playerX,-camera.y+playerY-100,-camera.x+playerX,-camera.y+playerY,playerAngle)
-            projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,25,2,2,4))
-            projectiles.push(new Projectile(3,3,target.x,target.y,-camera.x + playerX,-camera.y + playerY,'enemy','mg',3,5,10,1.5,2,4))//TEST
-        }, 200);
+        fire()
     }
     else if (gameState == states.inventory) {
         if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
@@ -456,6 +453,17 @@ function rotatePoint(px, py, cx, cy, angle) {
     return { x: finalX, y: finalY };
 }
 
+function fire() {
+    //firing logic test
+    console.info('firing started')
+    fireInterval = setInterval(() => {
+        var source = rotatePoint(-camera.x+playerX,-camera.y+playerY-70,-camera.x+playerX,-camera.y+playerY,playerAngle)
+        var target = rotatePoint(-camera.x+playerX,-camera.y+playerY-100,-camera.x+playerX,-camera.y+playerY,playerAngle)
+        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,25,2,2,4))
+        projectiles.push(new Projectile(3,3,target.x,target.y,-camera.x + playerX,-camera.y + playerY,'enemy','mg',3,5,10,1.5,2,4))//TEST
+    }, 200);
+}
+
 class pickup {
     constructor(x, y, width, height, color, type, amount) {
         this.x = x
@@ -502,7 +510,7 @@ class Projectile {
         this.damage = Math.floor((Math.random() * (damageMax - damageMin + 1)) + damageMin)
         
         
-        if (this.critRand < this.critRate) {this.damage *= critDmg; console.log('crit damage: ' + this.damage)}
+        if (this.critRand < this.critRate) {this.damage *= critDmg; /*console.log('crit damage: ' + this.damage)*/}
 
         this.update = function() {
             this.lifeTime += 0.02
@@ -567,7 +575,7 @@ function mainLoop() {
     }
 
     //turning
-    if (keysPressed && (keysPressed['a'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['a'] || keysPressed['A'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
         playerAngle -= playerTurnSpeed;
         //console.log(playerAngle)
         if (playerSprite == fighter) {
@@ -589,7 +597,7 @@ function mainLoop() {
             projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['d'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
+    else if (keysPressed && (keysPressed['d'] || keysPressed['D'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
         //console.log(playerAngle)
         if (playerSprite == fighter) {
@@ -613,7 +621,7 @@ function mainLoop() {
     }
 
     //strafing
-    if (keysPressed && (keysPressed['q']) && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['q'] || keysPressed['Q']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -637,7 +645,7 @@ function mainLoop() {
             projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['e']) && gameState != states.inventory) {
+    else if (keysPressed && (keysPressed['e'] || keysPressed['E']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -663,7 +671,7 @@ function mainLoop() {
     }
 
     //go forwards / backwards
-    if (keysPressed && (keysPressed['w'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
         playerSpeed = 0.05
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -687,7 +695,7 @@ function mainLoop() {
             projectiles.push(new Projectile(4,4,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['s'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
+    else if (keysPressed && (keysPressed['s'] || keysPressed['S'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -712,7 +720,7 @@ function mainLoop() {
         }
     }
     
-    if (keysPressed && keysPressed['r'] && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['r'] || keysPressed['R']) && gameState != states.inventory) {
         if (movementVector[0] > 0) {
             if (movementVector[0] < 0.05) {
                 movementVector[0] = 0
@@ -883,6 +891,9 @@ function mainLoop() {
                 if (pickup.type == 'xp') {
                     xp += pickup.amount; console.log('gained '+pickup.amount+' xp'); 
                 }
+                else if (pickup.type == 'health' && health < maxHealth) {
+                    healedHealth += pickup.amount;
+                }
             }
         })
     })
@@ -921,6 +932,12 @@ function mainLoop() {
                                             var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
                                             pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
                                         }
+                                        //health test
+                                        for (var h = 0; h < 8; h++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            pickups.push(new pickup(x,y,3,3,'green','health',last.xp/8))
+                                        }
                                         //maybe also give ores?
                                     }
                                 }
@@ -941,7 +958,8 @@ function mainLoop() {
                         }
                         else {
                             health -= pro.damage
-                            console.log('ship received '+pro.damage+' damage')
+                            if (health < 0) {health = 10}
+                            //console.log('ship received '+pro.damage+' damage')
                         }
                     }
                 })
@@ -950,7 +968,9 @@ function mainLoop() {
         pro.update()
     })
     
-    
+    //repair logic
+    if (healedHealth > 0) {health += maxHealth/2000; healedHealth -= maxHealth/2000}
+
     //shield logic
     if (shieldTimeout > 0) {shieldTimeout -= 0.02; console.log(Math.floor(shieldTimeout))}
     if (shieldJustHit == true) {
@@ -973,12 +993,16 @@ function mainLoop() {
     ctx.lineWidth = 2; ctx.strokeStyle = foreground; 
     ctx.strokeRect(10,10,170,15); ctx.fillStyle = foreground
     ctx.font = '15px consolas'; ctx.fillText(level,12,23)
+    
     //health bar
     var healthPercentage = health / maxHealth;
+    var healPercentage = healedHealth / maxHealth;
     ctx.fillStyle = background; ctx.fillRect(10,35,170,15)
     ctx.fillStyle = 'crimson'; ctx.fillRect(40,35,140*healthPercentage,15)
+    ctx.fillStyle = 'firebrick'; ctx.fillRect(40 + 140*healthPercentage,35, 140 * healPercentage,15)
     ctx.strokeRect(10,35,170,15); ctx.fillStyle = foreground
     ctx.fillText(Math.round(health),12,48)
+    
     //shield bar
     if (maxShield > 0) {
         var shieldPercentage = shield / maxShield;
@@ -991,6 +1015,7 @@ function mainLoop() {
     else {
         var y1 = 60; var y2 = 73
     }
+    
     //credits counter
     ctx.fillStyle = background; ctx.fillRect(10,y1,87,15)
     ctx.strokeRect(10,y1,87,15); ctx.fillStyle = foreground
@@ -1006,7 +1031,8 @@ function mainLoop() {
 
     if (displayLevelUpMessage > 0) {
         displayLevelUpMessage -= 0.02;
-        ctx.font = '15px consolas'; ctx.fillText('Level up! +'+spAmounts[level-1]+'SP',200,22.5)
+        ctx.font = '15px consolas'; ctx.fillStyle = background;
+        ctx.fillText('Level up! +'+spAmounts[level-1]+'SP',200,22.5)
     }
 
     //minimap
