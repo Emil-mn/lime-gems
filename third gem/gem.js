@@ -113,8 +113,10 @@ var speeds = [speed1,speed2,speed3,speed4,speed5,speed6]
 //highscore stuff
 var key,keyPress,canEnterName = false, ready = false
 var keysEntered = 0, nameListener
+var scrollPos = 1
+var scoreYPoses = [205,235,265,295]
 var n,a,m,namer,NAMER
-const NO_OF_HIGH_SCORES = 4
+const NO_OF_HIGH_SCORES = 10
 const HIGH_SCORES = 'pewHighScores'
 
 can.addEventListener('mousedown', function (e) {
@@ -2853,7 +2855,7 @@ function pewPew() {
         ctx.textAlign = 'center'; ctx.fillText('Game over',300,200);
         setTimeout(() => {ctx.font = '20px consolas'; ctx.fillText('time: '+Math.floor(time),300,240)},2000)
         setTimeout(() => {ctx.fillText('score: '+score,300,260)},3000)
-        checkHighScore(score); window.addEventListener('keypress', nameInput) 
+        checkHighScore(score); window.addEventListener('keydown', nameInput) 
         
         if (canEnterName == true) {
             setTimeout(() => {ctx.fillText('new highscore',300,290)},4000)
@@ -3370,6 +3372,42 @@ function showHighScores() {
         console.log(pos4Name+'  '+pos4Score+'  '+pos4Time);
     }
 
+    const pos5 = highScores[4] ?? null; console.log(pos5);
+    if (pos5 != null) {
+        var pos5Name = pos5.NAMER; var pos5Score = pos5.score; var pos5Time = pos5.timer;
+        console.log(pos5Name+'  '+pos5Score+'  '+pos5Time);
+    }
+
+    const pos6 = highScores[5] ?? null; console.log(pos6);
+    if (pos6 != null) {
+        var pos6Name = pos6.NAMER; var pos6Score = pos6.score; var pos6Time = pos6.timer;
+        console.log(pos6Name+'  '+pos6Score+'  '+pos6Time);
+    }
+
+    const pos7 = highScores[6] ?? null; console.log(pos7);
+    if (pos7 != null) {
+        var pos7Name = pos7.NAMER; var pos7Score = pos7.score; var pos7Time = pos7.timer;
+        console.log(pos7Name+'  '+pos7Score+'  '+pos7Time);
+    }
+
+    const pos8 = highScores[7] ?? null; console.log(pos8);
+    if (pos8 != null) {
+        var pos8Name = pos8.NAMER; var pos8Score = pos8.score; var pos8Time = pos8.timer;
+        console.log(pos8Name+'  '+pos8Score+'  '+pos8Time);
+    }
+
+    const pos9 = highScores[8] ?? null; console.log(pos9);
+    if (pos9 != null) {
+        var pos9Name = pos9.NAMER; var pos9Score = pos9.score; var pos9Time = pos9.timer;
+        console.log(pos9Name+'  '+pos9Score+'  '+pos9Time);
+    }
+
+    const pos10 = highScores[9] ?? null; console.log(pos10);
+    if (pos10 != null) {
+        var pos10Name = pos10.NAMER; var pos10Score = pos10.score; var pos10Time = pos10.timer;
+        console.log(pos10Name+'  '+pos10Score+'  '+pos10Time);
+    }
+
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
     ctx.fillStyle = 'white'; ctx.font = '30px consolas'; ctx.fillText('scoreboard', 300,150);
     ctx.font = '15px consolas'; ctx.fillText('pos name score time',300,175)
@@ -3393,7 +3431,10 @@ function showHighScores() {
     ctx.moveTo(200, 210); ctx.lineTo(400, 210); 
     ctx.moveTo(200, 240); ctx.lineTo(400, 240); 
     ctx.moveTo(200, 270); ctx.lineTo(400, 270); 
-    ctx.moveTo(200, 300); ctx.lineTo(400, 300); 
+    ctx.moveTo(200, 300); ctx.lineTo(400, 300);
+    //scroll arrows
+    if (scrollPos > 1) {ctx.moveTo(445,280); ctx.lineTo(440,290); ctx.lineTo(450,290); ctx.lineTo(445,280)}
+    if (scrollPos < 6) {ctx.moveTo(445,310); ctx.lineTo(440,300); ctx.lineTo(450,300); ctx.lineTo(445,310)}
     ctx.stroke();
 }
 
@@ -3401,7 +3442,7 @@ function showHighScores() {
 function nameInput(e) {
     key = e.keyCode
     console.log(key)
-    if (canEnterName == true && ready == true && ((key >= 65 && key <= 90) || (key >= 97 && key <= 122))) {
+    if (canEnterName == true && ready == true && (key >= 65 && key <= 90)) {
         switch (keysEntered) {
             case 0:
                 ctx.fillStyle = 'green'; ctx.fillRect(totW/2 -57, 203, 114, 43); ctx.font = '50px Consolas'; 
@@ -3426,12 +3467,20 @@ function nameInput(e) {
     }
 
     if (key == 13 && keysEntered == 4) {showHighScores();}
-    if (key == 114 && (keysEntered == 4 || canEnterName == false)) {keysEntered = 0; startPewPew()}
+
+    if (key == 40 && keysEntered == 4 && scrollPos < 6) {scrollPos++; showHighScores(); console.log('down')}
+    else if (key == 38 && keysEntered == 4 && scrollPos > 1) {scrollPos--; showHighScores(); console.log('up')}
+
+    if (key == 114 && (keysEntered == 4 || canEnterName == false)) {
+        keysEntered = 0; removeEventListener('keydown',nameInput); 
+        var scrollPos = 1; var scoreYPoses = [205,235,265,295]; startPewPew()
+    }
 
     if (key == 32) {localStorage.clear()}
 
     if (key == 113) {
-        gameState = states.level; console.log('exiting pew-pew'); ctx.textAlign = 'left';
-        levelInterval = setInterval(levelLoop,20); keysEntered = 0; removeEventListener('keypress',nameInput)
+        gameState = states.level; console.log('exiting pew-pew'); ctx.textAlign = 'left'; scrollPos = 1; 
+        scoreYPoses = [205,235,265,295];
+        levelInterval = setInterval(levelLoop,20); keysEntered = 0; removeEventListener('keydown',nameInput)
     }
 }
