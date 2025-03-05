@@ -231,9 +231,9 @@ can.addEventListener('mousemove', function(event) {
 
 document.addEventListener('keydown', function(event) {
     keysPressed = (keysPressed || []);
-    keysPressed[event.key] = true; //console.log(keysPressed)
-    if (event.key == 'Tab') {event.preventDefault()}
-    if (event.key == 'Escape' && gameState == states.paused) {
+    keysPressed[event.code] = true; console.log(event.code)
+    if (event.code == 'Tab') {event.preventDefault()}
+    if (event.code == 'Escape' && gameState == states.paused) {
         console.log('resumed'); gameState = states.main
         ctx.textAlign = 'left'; can.style.cursor = 'none'
         skillPointsAdding = false;
@@ -244,7 +244,7 @@ document.addEventListener('keydown', function(event) {
 })
 document.addEventListener('keyup', function(event) {
     if (event.key != 'F5') {
-        keysPressed[event.key] = false; console.log(keysPressed)
+        keysPressed[event.code] = false; console.log(keysPressed)
         if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
     }
 })
@@ -553,8 +553,8 @@ function mainLoop() {
     ctx.stroke(); ctx.strokeStyle = 'red';
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
-    if (keysPressed && keysPressed['f']) {spriteSelection = 1}
-    else if (keysPressed && keysPressed['c']) {spriteSelection = 2}
+    if (keysPressed && keysPressed['KeyF']) {spriteSelection = 1}
+    else if (keysPressed && keysPressed['KeyC']) {spriteSelection = 2}
     
     if (keysPressed && keysPressed['Tab'] && canOpenInv == true) {
         canOpenInv = false; setTimeout(() => {canOpenInv = true},1000)
@@ -575,7 +575,7 @@ function mainLoop() {
     }
 
     //turning
-    if (keysPressed && (keysPressed['a'] || keysPressed['A'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['KeyA'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
         playerAngle -= playerTurnSpeed;
         //console.log(playerAngle)
         if (playerSprite == fighter) {
@@ -597,7 +597,7 @@ function mainLoop() {
             projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['d'] || keysPressed['D'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
+    else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
         //console.log(playerAngle)
         if (playerSprite == fighter) {
@@ -621,7 +621,7 @@ function mainLoop() {
     }
 
     //strafing
-    if (keysPressed && (keysPressed['q'] || keysPressed['Q']) && gameState != states.inventory) {
+    if (keysPressed && keysPressed['KeyQ'] && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -645,7 +645,7 @@ function mainLoop() {
             projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['e'] || keysPressed['E']) && gameState != states.inventory) {
+    else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -671,7 +671,7 @@ function mainLoop() {
     }
 
     //go forwards / backwards
-    if (keysPressed && (keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['KeyW'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
         playerSpeed = 0.05
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -695,7 +695,7 @@ function mainLoop() {
             projectiles.push(new Projectile(4,4,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
         }
     }
-    else if (keysPressed && (keysPressed['s'] || keysPressed['S'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
+    else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -720,7 +720,7 @@ function mainLoop() {
         }
     }
     
-    if (keysPressed && (keysPressed['r'] || keysPressed['R']) && gameState != states.inventory) {
+    if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory) {
         if (movementVector[0] > 0) {
             if (movementVector[0] < 0.05) {
                 movementVector[0] = 0
@@ -869,13 +869,6 @@ function mainLoop() {
     }
 
     ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
-    ctx.fillStyle = 'green';
-    ctx.fillRect(-camera.x+worldWidth-60,-camera.y+playerY,3,3)
-    ctx.fillRect(-camera.x + 60,-camera.y+playerY,3,3)
-    ctx.fillRect(-camera.x+playerX,-camera.y+worldHeight-60,3,3)
-    ctx.fillRect(-camera.x+playerX,-camera.y+60,3,3)
-  
-    
     pickups.forEach((pickup,index) => {
         pickup.update()
         if (playerX > pickup.centerX - 150 && playerX < pickup.centerX + 150 && playerY > pickup.centerY - 150 && playerY < pickup.centerY + 150) {
@@ -1070,7 +1063,7 @@ function mainLoop() {
         if (skillPoints > 0) {ctx.strokeStyle = 'red'}; ctx.stroke()
         //ship display
         if (spriteSelection == 1) {updateFighterSprite(465,200); playerSprite = fighter}
-        else if (spriteSelection == 2) {updateCorvetteSprite(465,200); playerSprite = corvette; ctx.scale(0.80,0.80); ctx.translate(x*0.1,y*0.1)}
+        else if (spriteSelection == 2) {updateCorvetteSprite(465,180); playerSprite = corvette; ctx.scale(0.80,0.80); ctx.translate(x*0.1,y*0.1)}
         ctx.strokeStyle = shipStroke; ctx.fillStyle = shipFill; ctx.lineWidth = 2
         playerSprite.forEach((path,index) => {
             if (index == playerSprite.length-1) {
@@ -1089,6 +1082,14 @@ function mainLoop() {
             ctx.moveTo(465,200); ctx.lineTo(440,125); ctx.lineTo(430,125); ctx.stroke()
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40); ctx.strokeRect(390,105,40,40)
             ctx.font = '20px consolas'; ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175); ctx.fillText('T1w/u',393,130,33);
+        }
+
+        //skillpoint window
+        if (skillPointsAdding == true) {
+            ctx.fillStyle = background; ctx.fillRect(totW/2-105,totH/2-67.5,210,135);
+            ctx.lineWidth = 3; ctx.strokeRect(totW/2-105,totH/2-67.5,210,135);
+            //how many upgrades?? health?, damage?, shield?, firerate?, crit?(chance?,multiP), luck/loot rarity??,
+            //how big upgrades??? one or a few %???
         }
     }
 
