@@ -113,8 +113,7 @@ var speeds = [speed1,speed2,speed3,speed4,speed5,speed6]
 //highscore stuff
 var key,keyPress,canEnterName = false, ready = false
 var keysEntered = 0, nameListener
-var scrollPos = 1
-var scoreYPoses = [205,235,265,295]
+var scrollPos = 0
 var n,a,m,namer,NAMER
 const NO_OF_HIGH_SCORES = 10
 const HIGH_SCORES = 'pewHighScores'
@@ -3347,84 +3346,33 @@ function slotMan() {
 
 function showHighScores() {
     const highScores = JSON.parse(localStorage.getItem(HIGH_SCORES)) ?? [];
+    console.log(highScores[0]); console.log(highScores[1]);
+    console.log(highScores[2]); console.log(highScores[3]);
+    console.log(highScores[4]); console.log(highScores[5]);
+    console.log(highScores[6]); console.log(highScores[7]);
+    console.log(highScores[8]); console.log(highScores[9]);
     
-    const pos1 = highScores[0] ?? null; console.log(pos1); 
-    if (pos1 != null) {
-        var pos1Name = pos1.NAMER; var pos1Score = pos1.score; var pos1Time = pos1.timer;
-        console.log(pos1Name+'  '+pos1Score+'  '+pos1Time);
-    }
-
-    const pos2 = highScores[1] ?? null; console.log(pos2);
-    if (pos2 != null) {
-        var pos2Name = pos2.NAMER; var pos2Score = pos2.score; var pos2Time = pos2.timer;
-        console.log(pos2Name+'  '+pos2Score+'  '+pos2Time);
-    }
-
-    const pos3 = highScores[2] ?? null; console.log(pos3);
-    if (pos3 != null) {
-        var pos3Name = pos3.NAMER; var pos3Score = pos3.score; var pos3Time = pos3.timer;
-        console.log(pos3Name+'  '+pos3Score+'  '+pos3Time);
-    }
-
-    const pos4 = highScores[3] ?? null; console.log(pos4);
-    if (pos4 != null) {
-        var pos4Name = pos4.NAMER; var pos4Score = pos4.score; var pos4Time = pos4.timer;
-        console.log(pos4Name+'  '+pos4Score+'  '+pos4Time);
-    }
-
-    const pos5 = highScores[4] ?? null; console.log(pos5);
-    if (pos5 != null) {
-        var pos5Name = pos5.NAMER; var pos5Score = pos5.score; var pos5Time = pos5.timer;
-        console.log(pos5Name+'  '+pos5Score+'  '+pos5Time);
-    }
-
-    const pos6 = highScores[5] ?? null; console.log(pos6);
-    if (pos6 != null) {
-        var pos6Name = pos6.NAMER; var pos6Score = pos6.score; var pos6Time = pos6.timer;
-        console.log(pos6Name+'  '+pos6Score+'  '+pos6Time);
-    }
-
-    const pos7 = highScores[6] ?? null; console.log(pos7);
-    if (pos7 != null) {
-        var pos7Name = pos7.NAMER; var pos7Score = pos7.score; var pos7Time = pos7.timer;
-        console.log(pos7Name+'  '+pos7Score+'  '+pos7Time);
-    }
-
-    const pos8 = highScores[7] ?? null; console.log(pos8);
-    if (pos8 != null) {
-        var pos8Name = pos8.NAMER; var pos8Score = pos8.score; var pos8Time = pos8.timer;
-        console.log(pos8Name+'  '+pos8Score+'  '+pos8Time);
-    }
-
-    const pos9 = highScores[8] ?? null; console.log(pos9);
-    if (pos9 != null) {
-        var pos9Name = pos9.NAMER; var pos9Score = pos9.score; var pos9Time = pos9.timer;
-        console.log(pos9Name+'  '+pos9Score+'  '+pos9Time);
-    }
-
-    const pos10 = highScores[9] ?? null; console.log(pos10);
-    if (pos10 != null) {
-        var pos10Name = pos10.NAMER; var pos10Score = pos10.score; var pos10Time = pos10.timer;
-        console.log(pos10Name+'  '+pos10Score+'  '+pos10Time);
-    }
-
     ctx.fillStyle = 'green'; ctx.fillRect(150,115,305,200);
     ctx.fillStyle = 'white'; ctx.font = '30px consolas'; ctx.fillText('scoreboard', 300,150);
     ctx.font = '15px consolas'; ctx.fillText('pos name score time',300,175)
     
     ctx.font = '20px consolas';
 
-    if (pos1 == null) {ctx.fillText('1 NAME - NaN - NaN', 300, 205)}
-    else {ctx.fillText('1 '+pos1Name+' - '+pos1Score+' - '+pos1Time, 300,205)}
+    var pos1 = highScores[scrollPos]
+    if (pos1 == null) {ctx.fillText((scrollPos+1)+' NAME - NaN - NaN', 300, 205)}
+    else {ctx.fillText((scrollPos+1)+' '+pos1.NAMER+' - '+pos1.score+' - '+pos1.timer, 300,205)}
 
-    if (pos2 == null) {ctx.fillText('2 NAME - NaN - NaN', 300, 235)}
-    else {ctx.fillText('2 '+pos2Name+' - '+pos2Score+' - '+pos2Time, 300, 235)}
+    var pos2 = highScores[scrollPos+1]
+    if (pos2 == null) {ctx.fillText((scrollPos+2)+' NAME - NaN - NaN', 300, 235)}
+    else {ctx.fillText((scrollPos+2)+' '+pos2.NAMER+' - '+pos2.score+' - '+pos2.timer, 300, 235)}
 
-    if (pos3 == null) {ctx.fillText('3 NAME - NaN - NaN', 300, 265)}
-    else {ctx.fillText('3 '+pos3Name+' - '+pos3Score+' - '+pos3Time, 300, 265)}
+    var pos3 = highScores[scrollPos+2]
+    if (pos3 == null) {ctx.fillText((scrollPos+3)+' NAME - NaN - NaN', 300, 265)}
+    else {ctx.fillText((scrollPos+3)+' '+pos3.NAMER+' - '+pos3.score+' - '+pos3.timer, 300, 265)}
 
-    if (pos4 == null) {ctx.fillText('4 NAME - NaN - NaN', 300, 295)}
-    else {ctx.fillText('4 '+pos4Name+' - '+pos4Score+' - '+pos4Time, 300, 295);}
+    var pos4 = highScores[scrollPos+3]
+    if (pos4 == null) {ctx.fillText((scrollPos+4)+' NAME - NaN - NaN', 300, 295)}
+    else {ctx.fillText((scrollPos+4)+' '+pos4.NAMER+' - '+pos4.score+' - '+pos4.timer, 300, 295);}
 
     ctx.beginPath(); ctx.strokeStyle = 'white';
     ctx.moveTo(200, 180); ctx.lineTo(400, 180);
@@ -3432,10 +3380,16 @@ function showHighScores() {
     ctx.moveTo(200, 240); ctx.lineTo(400, 240); 
     ctx.moveTo(200, 270); ctx.lineTo(400, 270); 
     ctx.moveTo(200, 300); ctx.lineTo(400, 300);
-    //scroll arrows
-    if (scrollPos > 1) {ctx.moveTo(445,280); ctx.lineTo(440,290); ctx.lineTo(450,290); ctx.lineTo(445,280)}
-    if (scrollPos < 6) {ctx.moveTo(445,310); ctx.lineTo(440,300); ctx.lineTo(450,300); ctx.lineTo(445,310)}
     ctx.stroke();
+    
+    //scroll arrows
+    ctx.beginPath(); ctx.moveTo(420,260); ctx.lineTo(412.5,275); 
+    ctx.lineTo(427.5,275); ctx.closePath(); ctx.stroke()
+    if (scrollPos > 0) {ctx.fill()}
+    
+    ctx.beginPath(); ctx.moveTo(420,300); ctx.lineTo(412.5,285);
+    ctx.lineTo(427.5,285); ctx.closePath(); ctx.stroke()
+    if (scrollPos < 6) {ctx.fill()}
 }
 
 
@@ -3466,21 +3420,24 @@ function nameInput(e) {
         }
     }
 
-    if (key == 13 && keysEntered == 4) {showHighScores();}
+    if (key == 13 && (keysEntered == 4 || canEnterName == false)) {showHighScores();}
 
-    if (key == 40 && keysEntered == 4 && scrollPos < 6) {scrollPos++; showHighScores(); console.log('down')}
-    else if (key == 38 && keysEntered == 4 && scrollPos > 1) {scrollPos--; showHighScores(); console.log('up')}
+    if (key == 40 && (keysEntered == 4 || canEnterName == false) && scrollPos < 6) {
+        scrollPos++; showHighScores(); console.log('down')
+    }
+    else if (key == 38 && (keysEntered == 4 || canEnterName == false) && scrollPos > 0) {
+        scrollPos--; showHighScores(); console.log('up')
+    }
 
-    if (key == 114 && (keysEntered == 4 || canEnterName == false)) {
+    if (key == 82 && (keysEntered == 4 || canEnterName == false)) {
         keysEntered = 0; removeEventListener('keydown',nameInput); 
-        var scrollPos = 1; var scoreYPoses = [205,235,265,295]; startPewPew()
+        scrollPos = 0; startPewPew()
     }
 
     if (key == 32) {localStorage.clear()}
 
-    if (key == 113) {
-        gameState = states.level; console.log('exiting pew-pew'); ctx.textAlign = 'left'; scrollPos = 1; 
-        scoreYPoses = [205,235,265,295];
+    if (key == 81 && (keysEntered == 4 || canEnterName == false)) {
+        gameState = states.level; console.log('exiting pew-pew'); ctx.textAlign = 'left'; scrollPos = 0;
         levelInterval = setInterval(levelLoop,20); keysEntered = 0; removeEventListener('keydown',nameInput)
     }
 }
