@@ -17,7 +17,7 @@ var mouseClickY
 var keysPressed
 var ctx = can.getContext('2d')
 //states
-var states = {menu:0,main:1,paused:2,inventory:3}
+var states = {menu:0,main:1,paused:2,inventory:3,escaping:4}
 var gameState = states.menu
 var interval
 var canPause = true
@@ -553,10 +553,10 @@ function mainLoop() {
     ctx.stroke(); ctx.strokeStyle = 'red';
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
-    if (keysPressed && keysPressed['KeyF']) {spriteSelection = 1}
-    else if (keysPressed && keysPressed['KeyC']) {spriteSelection = 2}
+    if (keysPressed && keysPressed['KeyF'] && gameState != states.escaping) {spriteSelection = 1}
+    else if (keysPressed && keysPressed['KeyC'] && gameState != states.escaping) {spriteSelection = 2}
     
-    if (keysPressed && keysPressed['Tab'] && canOpenInv == true) {
+    if (keysPressed && keysPressed['Tab'] && canOpenInv == true && gameState != states.escaping) {
         canOpenInv = false; setTimeout(() => {canOpenInv = true},1000)
         if (gameState != states.inventory) {
             gameState = states.inventory; console.log('inventory open')
@@ -568,7 +568,7 @@ function mainLoop() {
     }
 
     //levelling up
-    if (xp >= xpRequired) { 
+    if (xp >= xpRequired && gameState != states.escaping) { 
         xp -= xpRequired; skillPoints += spAmounts[level]; ctx.fillStyle = foreground;
         ctx.font = '30px consolas'; displayLevelUpMessage = 3;
         level++; xpRequired = xpReqs[level];
@@ -820,7 +820,8 @@ function mainLoop() {
     ctx.fillStyle = shipFill
     ctx.lineWidth = 2
     
-    if (spriteSelection == 1) {updateFighterSprite(playerX-camera.x,playerY-camera.y); playerSprite = fighter}
+    if (gameState == states.escaping) {updateEscapepodSprite(playerX-camera.x,playerY-camera.y); playerSprite = escapePod}
+    else if (spriteSelection == 1) {updateFighterSprite(playerX-camera.x,playerY-camera.y); playerSprite = fighter}
     else if (spriteSelection == 2) {updateCorvetteSprite(playerX-camera.x,playerY-camera.y); playerSprite = corvette}
 
     playerSprite.forEach((path,index) => {
@@ -951,7 +952,6 @@ function mainLoop() {
                         }
                         else {
                             health -= pro.damage
-                            if (health < 0) {health = 10}
                             //console.log('ship received '+pro.damage+' damage')
                         }
                     }
@@ -961,6 +961,34 @@ function mainLoop() {
         pro.update()
     })
     
+
+    //asteroid player collisions
+    asteroidFields.forEach((field,fIndex) => {
+        if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {
+            asteroids.forEach(aroid => {
+                var last = aroid[aroid.length - 1];
+                if (last.field == fIndex) {
+                    var assPointX, assPointY
+                    aroid.forEach((point,pIndex) => {
+                        if (pIndex != aroid.length-1) {
+                            assPointX = point.x;
+                            assPointY = point.y;
+                            playerSprite.forEach(path => {
+                                if (ctx.isPointInPath(path,-camera.x+assPointX,-camera.y+assPointY)) {
+                                    movementVector[0] = -movementVector[0] / 2
+                                    movementVector[1] = -movementVector[1] / 2
+                                    playerX += movementVector[0] * 10;
+                                    playerY += movementVector[1] * 10;
+                                    health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship
+                                }
+                            })
+                        }
+                    })
+                }
+            }) 
+        }  
+    })
+
     //repair logic
     if (healedHealth > 0) {health += maxHealth/2000; healedHealth -= maxHealth/2000}
 
@@ -980,12 +1008,14 @@ function mainLoop() {
     }
 
     //xp bar
-    var xpPercentage = xp / xpRequired
-    ctx.fillStyle = background; ctx.fillRect(10,10,170,15)
-    ctx.fillStyle = 'gold'; ctx.fillRect(40,10,140*xpPercentage,15)
-    ctx.lineWidth = 2; ctx.strokeStyle = foreground; 
-    ctx.strokeRect(10,10,170,15); ctx.fillStyle = foreground
-    ctx.font = '15px consolas'; ctx.fillText(level,12,23)
+    if (gameState != states.escaping) {
+        var xpPercentage = xp / xpRequired
+        ctx.fillStyle = background; ctx.fillRect(10,10,170,15)
+        ctx.fillStyle = 'gold'; ctx.fillRect(40,10,140*xpPercentage,15)
+        ctx.lineWidth = 2; ctx.strokeStyle = foreground; 
+        ctx.strokeRect(10,10,170,15); ctx.fillStyle = foreground
+        ctx.font = '15px consolas'; ctx.fillText(level,12,23)
+    }
     
     //health bar
     var healthPercentage = health / maxHealth;
@@ -997,7 +1027,7 @@ function mainLoop() {
     ctx.fillText(Math.round(health),12,48)
     
     //shield bar
-    if (maxShield > 0) {
+    if (maxShield > 0 && gameState != states.escaping) {
         var shieldPercentage = shield / maxShield;
         ctx.fillStyle = background; ctx.fillRect(10,60,170,15)
         ctx.fillStyle = 'blue'; ctx.fillRect(40,60,140*shieldPercentage,15)
@@ -1005,23 +1035,25 @@ function mainLoop() {
         ctx.fillText(Math.round(shield),12,73)
         var y1 = 85; var y2 = 98
     }
-    else {
+    else if (maxShield == 0) {
         var y1 = 60; var y2 = 73
     }
     
     //credits counter
-    ctx.fillStyle = background; ctx.fillRect(10,y1,87,15)
-    ctx.strokeRect(10,y1,87,15); ctx.fillStyle = foreground
-    switch (credits.toString().length) {
-        case 1: ctx.fillText('cr 000000'+credits,12,y2); break 
-        case 2: ctx.fillText('cr 00000'+credits,12,y2); break
-        case 3: ctx.fillText('cr 0000'+credits,12,y2); break
-        case 4: ctx.fillText('cr 000'+credits,12,y2); break
-        case 5: ctx.fillText('cr 00'+credits,12,y2); break
-        case 6: ctx.fillText('cr 0'+credits,12,y2); break
-        case 7: ctx.fillText('cr '+credits,12,y2); break
+    if (gameState != states.escaping) {
+        ctx.fillStyle = background; ctx.fillRect(10,y1,87,15)
+        ctx.strokeRect(10,y1,87,15); ctx.fillStyle = foreground
+        switch (credits.toString().length) {
+            case 1: ctx.fillText('cr 000000'+credits,12,y2); break 
+            case 2: ctx.fillText('cr 00000'+credits,12,y2); break
+            case 3: ctx.fillText('cr 0000'+credits,12,y2); break
+            case 4: ctx.fillText('cr 000'+credits,12,y2); break
+            case 5: ctx.fillText('cr 00'+credits,12,y2); break
+            case 6: ctx.fillText('cr 0'+credits,12,y2); break
+            case 7: ctx.fillText('cr '+credits,12,y2); break
+        }
     }
-
+    
     if (displayLevelUpMessage > 0) {
         displayLevelUpMessage -= 0.02;
         ctx.font = '15px consolas'; ctx.fillStyle = background;
@@ -1086,8 +1118,11 @@ function mainLoop() {
 
         //skillpoint window
         if (skillPointsAdding == true) {
-            ctx.fillStyle = background; ctx.fillRect(totW/2-105,totH/2-67.5,210,135);
-            ctx.lineWidth = 3; ctx.strokeRect(totW/2-105,totH/2-67.5,210,135);
+            ctx.fillStyle = background; ctx.fillRect(totW/2-131.25,totH/2-84.375,262.5,168.75);
+            ctx.lineWidth = 3; ctx.strokeRect(totW/2-131.25,totH/2-84.375,262.5,168.75);
+            ctx.lineWidth = 2; //buttons
+            ctx.strokeRect(228,270,30,30); ctx.strokeRect(270.5,270,30,30); ctx.strokeRect(313,270,30,30);
+            ctx.strokeRect(355.5,270,30,30); ctx.strokeRect(398,270,30,30); ctx.strokeRect(440.5,270,30,30);
             //how many upgrades?? health?, damage?, shield?, firerate?, crit?(chance?,multiP), luck/loot rarity??,
             //how big upgrades??? one or a few %???
         }
@@ -1115,7 +1150,7 @@ function mainLoop() {
         ctx.beginPath(); ctx.arc(mousePosX,mousePosY,3,0,7); ctx.stroke()
     }
 
-    if (keysPressed && keysPressed['Escape'] && canPause == true) {
+    if (keysPressed && keysPressed['Escape'] && canPause == true && gameState != states.escaping) {
         clearInterval(interval); console.log('paused');
         gameState = states.paused; canPause = false
         
@@ -1130,4 +1165,37 @@ function mainLoop() {
         ctx.fillText('Resume', totW/2,215)
         ctx.fillText('Save & quit',totW/2,305)
     }
+    
+    
+    //ship destroyed
+    if (health <= 0) 
+    {
+        console.log('ship destroyed'); ctx.fillStyle = 'red'; 
+        ctx.font = '30px consolas'; ctx.textAlign = 'center'; 
+        ctx.fillText('!!!Catastrofic hull failure imminent!!!',totW/2,totH/2-80);
+        ctx.fillText('!!Deploying escape pod!!',totW/2,totH/2-40); ctx.textAlign = 'left';
+        setTimeout(function() {
+            maxHealth = 5; health = maxHealth; maxShield = 0; gameState = states.escaping;
+        },3000)
+    } 
+    
+    if (gameState == states.escaping) {
+        ctx.font = '25px consolas'; ctx.textAlign = 'center'; ctx.fillStyle = 'red';
+        ctx.fillText('!!Go to the nearest station to get a new ship!!',totW/2,totH/2-80);
+        ctx.textAlign = 'left';
+        //escape pod destroyed
+        if (health <= 0) 
+        {
+            clearInterval(interval); console.log('dead'); 
+            ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH)
+            ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; 
+            ctx.fillText('You died...',totW/2-200,totH/2);
+            setTimeout(function() {
+                gameState = states.menu;skillPointsAdding = false;
+                canPause = true; can.style.cursor = 'default';
+            },2800)
+            setTimeout(mainMenu,3000);
+        }
+    }
+    
 }
