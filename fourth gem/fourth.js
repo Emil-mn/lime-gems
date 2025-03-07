@@ -70,6 +70,10 @@ var maxHealth = 100
 var maxShield = 0
 var xpRequired = xpReqs[0]
 //sprites
+var escapePod
+var escapePodBody
+var escapePodWindow
+
 var fighter
 var fighterBody
 var fighterWings
@@ -84,6 +88,25 @@ var corvetteEngines
 var corvetteBridge
 var corvetteWindow
 
+function updateEscapepodSprite(x,y) {
+    escapePodBody = new Path2D
+    escapePodBody.moveTo(x-2.5,y+18)
+    escapePodBody.lineTo(x-5,y+5)
+    escapePodBody.lineTo(x-5,y-15)
+    escapePodBody.quadraticCurveTo(x,y-23,x+5,y-15)
+    escapePodBody.lineTo(x+5,y+5)
+    escapePodBody.lineTo(x+2.5,y+18)
+    escapePodBody.closePath()
+
+    escapePodWindow = new Path2D
+    escapePodWindow.moveTo(x-3,y-10)
+    escapePodWindow.lineTo(x-3,y-12)
+    escapePodWindow.quadraticCurveTo(x,y-18,x+3,y-12)
+    escapePodWindow.lineTo(x+3,y-10)
+    escapePodWindow.closePath()
+
+    escapePod = [escapePodBody,escapePodWindow]
+}
 
 function updateFighterSprite(x,y) {
     fighterBody = new Path2D
@@ -578,7 +601,16 @@ function mainLoop() {
     if (keysPressed && (keysPressed['KeyA'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
         playerAngle -= playerTurnSpeed;
         //console.log(playerAngle)
-        if (playerSprite == fighter) {
+        if (playerSprite == escapePod) {
+            var rotated1 = rotatePoint(playerX-camera.x+4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x+8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x-3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x-6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+        }
+        else if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x+10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x+20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated3 = rotatePoint(playerX-camera.x-10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -600,7 +632,16 @@ function mainLoop() {
     else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
         //console.log(playerAngle)
-        if (playerSprite == fighter) {
+        if (playerSprite == escapePod) {
+            var rotated1 = rotatePoint(playerX-camera.x-4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x-8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x+3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x+6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+        }
+        else if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x-10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x-20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated3 = rotatePoint(playerX-camera.x+10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -626,7 +667,16 @@ function mainLoop() {
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
-        if (playerSprite == fighter) {
+        if (playerSprite == escapePod) {
+            var rotated1 = rotatePoint(playerX-camera.x+4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x+8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x+3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x+6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+        }
+        else if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x+10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x+20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated3 = rotatePoint(playerX-camera.x+10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -650,7 +700,16 @@ function mainLoop() {
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
-        if (playerSprite == fighter) {
+        if (playerSprite == escapePod) {
+            var rotated1 = rotatePoint(playerX-camera.x-4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x-8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated3 = rotatePoint(playerX-camera.x-3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated4 = rotatePoint(playerX-camera.x-6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+        }
+        else if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x-10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x-20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated3 = rotatePoint(playerX-camera.x-10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -676,7 +735,13 @@ function mainLoop() {
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
-        if (playerSprite == fighter) {
+        if (playerSprite == escapePod) {
+            var rotated1 = rotatePoint(playerX-camera.x,playerY-camera.y+18,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x,playerY-camera.y+28,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
+        }
+        else if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x-7,playerY-camera.y+47,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x-7,playerY-camera.y+57,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated3 = rotatePoint(playerX-camera.x+7,playerY-camera.y+47,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -700,7 +765,13 @@ function mainLoop() {
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
-        if (playerSprite == fighter) {
+        if (playerSprite == escapePod) {
+            var rotated1 = rotatePoint(playerX-camera.x,playerY-camera.y-18,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated2 = rotatePoint(playerX-camera.x,playerY-camera.y-28,playerX-camera.x,playerY-camera.y,playerAngle)
+
+            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+        }
+        else if (playerSprite == fighter) {
             var rotated1 = rotatePoint(playerX-camera.x-6,playerY-camera.y-40,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated2 = rotatePoint(playerX-camera.x-6,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
             var rotated3 = rotatePoint(playerX-camera.x+6,playerY-camera.y-40,playerX-camera.x,playerY-camera.y,playerAngle)
@@ -1008,14 +1079,12 @@ function mainLoop() {
     }
 
     //xp bar
-    if (gameState != states.escaping) {
-        var xpPercentage = xp / xpRequired
-        ctx.fillStyle = background; ctx.fillRect(10,10,170,15)
-        ctx.fillStyle = 'gold'; ctx.fillRect(40,10,140*xpPercentage,15)
-        ctx.lineWidth = 2; ctx.strokeStyle = foreground; 
-        ctx.strokeRect(10,10,170,15); ctx.fillStyle = foreground
-        ctx.font = '15px consolas'; ctx.fillText(level,12,23)
-    }
+    var xpPercentage = xp / xpRequired
+    ctx.fillStyle = background; ctx.fillRect(10,10,170,15)
+    ctx.fillStyle = 'gold'; ctx.fillRect(40,10,140*xpPercentage,15)
+    ctx.lineWidth = 2; ctx.strokeStyle = foreground; 
+    ctx.strokeRect(10,10,170,15); ctx.fillStyle = foreground
+    ctx.font = '15px consolas'; ctx.fillText(level,12,23)
     
     //health bar
     var healthPercentage = health / maxHealth;
