@@ -12,16 +12,35 @@
             <a href="../third gem/gem.html" class="nav">Third gem</a>  
         </div>
         
+        <dialog id="register" class="clocker">
+            <h2>Register account</h2>
+            <form id="registerForm" method="post">
+                <label for="uName">Username</label>
+                <input type="text" class="nav" id="uName" placeholder="user2468">
+                <label for="pWord">Password</label>
+                <input type="password" class="nav" id="pWord" placeholder="pass7869">
+                <label for="repPWord">Repeat password</label>
+                <input type="password" class="nav" id="repPWord" placeholder="same as above">
+            </form>
+        </dialog>
+
         <div id="account" class="login clocker">
             <a href="../main.html" class="nav">Sign in</a>
             <a href="../main.html" class="nav">Sign out</a>
             <a href="../main.html" class="nav">Account</a>
-            <a href="../main.html" class="nav">Register</a>
+            <a href="javascript:void(0)" class="nav" id="regButt">Register</a>
         </div>
 
         <h1>Welcome to gem four!</h1>
         <canvas id="canvas" width="700px" height="450px"></canvas>
         
         <script src="fourth.js"></script>
+        <script>
+            var regButt = document.getElementById('regButt');
+            var regPage = document.getElementById('register');
+            regButt.addEventListener("click", () => {
+                regPage.showModal();
+            });
+        </script>
     </body>
 </html>
