@@ -14,13 +14,17 @@
         
         <dialog id="register" class="clocker">
             <h2>Register account</h2>
-            <form id="registerForm" method="post">
+            <form id="registerForm" method="post" action="register.php" target="_blank">
                 <label for="uName">Username</label>
-                <input type="text" class="nav" id="uName" placeholder="user2468">
+                <input type="text" class="nav" id="uName" name="username" placeholder="user2468">
                 <label for="pWord">Password</label>
-                <input type="password" class="nav" id="pWord" placeholder="pass7869">
+                <input type="password" class="nav" id="pWord" name="password" placeholder="pass7869">
                 <label for="repPWord">Repeat password</label>
                 <input type="password" class="nav" id="repPWord" placeholder="same as above">
+                <div>
+                    <input type="button" value="Cancel" id="cancel" class="nav">
+                    <input type="submit" value="Register" class="nav">
+                </div>
             </form>
         </dialog>
 
@@ -38,8 +42,12 @@
         <script>
             var regButt = document.getElementById('regButt');
             var regPage = document.getElementById('register');
+            var canButt = document.getElementById('cancel');
             regButt.addEventListener("click", () => {
                 regPage.showModal();
+            });
+            canButt.addEventListener("click", () => {
+                regPage.close();
             });
         </script>
     </body>
