@@ -16,22 +16,36 @@
             <h2>Register account</h2>
             <form id="registerForm" method="post" action="register.php" target="_blank">
                 <label for="uName">Username</label>
-                <input type="text" class="nav" id="uName" name="username" placeholder="user2468">
+                <input type="text" class="nav" id="uName" name="username" placeholder="user2468" minlength="5" maxlength="15">
                 <label for="pWord">Password</label>
                 <input type="password" class="nav" id="pWord" name="password" placeholder="pass7869">
                 <label for="repPWord">Repeat password</label>
-                <input type="password" class="nav" id="repPWord" placeholder="same as above">
+                <input type="password" class="nav" id="repPWord" name="repeat" placeholder="same as above">
                 <div>
-                    <input type="button" value="Cancel" id="cancel" class="nav">
+                    <input type="button" value="Cancel" id="cancelReg" class="nav">
                     <input type="submit" value="Register" class="nav">
                 </div>
             </form>
         </dialog>
 
+        <dialog id="login" class="clocker">
+            <h2>Sign in</h2>
+            <form id="loginForm" method="post" action="login.php" target="_blank">
+                <label for="uName2">Username</label>
+                <input type="text" class="nav" id="uName2" name="username" placeholder="user2468">
+                <label for="pWord2">Password</label>
+                <input type="password" class="nav" id="pWord2" name="password" placeholder="pass7869">
+                <div>
+                    <input type="button" value="Cancel" id="cancelLogin" class="nav">
+                    <input type="submit" value="Sign in" class="nav">
+                </div>
+            </form>
+        </dialog>
+
         <div id="account" class="login clocker">
-            <a href="../main.html" class="nav">Sign in</a>
-            <a href="../main.html" class="nav">Sign out</a>
-            <a href="../main.html" class="nav">Account</a>
+            <a href="javascript:void(0)" class="nav" id="signInButt">Sign in</a>
+            <!--<a href="../main.html" class="nav">Sign out</a>-->
+            <!--<a href="../main.html" class="nav">Account</a>-->
             <a href="javascript:void(0)" class="nav" id="regButt">Register</a>
         </div>
 
@@ -41,14 +55,23 @@
         <script src="fourth.js"></script>
         <script>
             var regButt = document.getElementById('regButt');
+            var loginButt = document.getElementById('signInButt');
             var regPage = document.getElementById('register');
-            var canButt = document.getElementById('cancel');
+            var loginPage = document.getElementById('login');
+            var canButt1 = document.getElementById('cancelReg');
+            var canButt2 = document.getElementById('cancelLogin');
             regButt.addEventListener("click", () => {
                 regPage.showModal();
             });
-            canButt.addEventListener("click", () => {
+            loginButt.addEventListener("click", () => {
+                loginPage.showModal();
+            })
+            canButt1.addEventListener("click", () => {
                 regPage.close();
             });
+            canButt2.addEventListener("click", () => {
+                loginPage.close();
+            })
         </script>
     </body>
 </html>

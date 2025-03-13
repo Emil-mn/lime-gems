@@ -7,16 +7,16 @@ padding: 6px; background-color: lightslategray; }
 .menu {border-bottom-right-radius: 10px; top: 0; left:0}
 .login {border-bottom-left-radius: 10px; top:0; right:0}
 
-#registerform {margin-block-end: 10px;}
-#register h2 {color:darkslategray}
-#registerForm > input {display: list-item;}
-#registerForm label {color:darkslategray;}
-#registerForm label:hover {color:darkslateblue}
-#registerform div {display:flex; margin-top: 5px; justify-content: space-around;}
+#registerForm,#loginForm {margin-block-end: 10px;}
+#register h2,#login h2 {color:darkslategray}
+#registerForm input,#loginForm input {display: list-item;}
+#registerForm label,#loginForm label {color:darkslategray;}
+#registerForm label:hover,#loginForm label:hover {color:darkslateblue}
+#registerForm div,#loginForm div {display:flex; margin-top: 5px; justify-content: space-evenly;}
 
 dialog:open {
-    opacity: 1;
-    transform: scaleY(1);
+  opacity: 1;
+  transform: scaleY(1);
 }
   
 dialog {
@@ -55,8 +55,8 @@ dialog:open::backdrop {
 }
 
 h1 { 
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-    text-align: center; color:rgb(13, 84, 238); text-decoration: solid underline;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  text-align: center; color:rgb(13, 84, 238); text-decoration: solid underline;
 }
 
 canvas { border: 5px rgb(13, 84, 238) solid; display:flex; align-self: center; justify-self:center; background-color: black;}
