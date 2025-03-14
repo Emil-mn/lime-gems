@@ -16,11 +16,11 @@
             <h2>Register account</h2>
             <form id="registerForm" method="post" action="register.php" target="_blank">
                 <label for="uName">Username</label>
-                <input type="text" class="nav" id="uName" name="username" placeholder="user2468" minlength="5" maxlength="15">
+                <input type="text" class="nav" id="uName" name="username" placeholder="user2468" minlength="5" maxlength="20" required>
                 <label for="pWord">Password</label>
-                <input type="password" class="nav" id="pWord" name="password" placeholder="pass7869">
+                <input type="password" class="nav" id="pWord" name="password" placeholder="pass7869" pattern="^(?=.*\d).{8,}$" required>
                 <label for="repPWord">Repeat password</label>
-                <input type="password" class="nav" id="repPWord" name="repeat" placeholder="same as above">
+                <input type="password" class="nav" id="repPWord" name="repeat" placeholder="same as above" pattern="" required>
                 <div>
                     <input type="button" value="Cancel" id="cancelReg" class="nav">
                     <input type="submit" value="Register" class="nav">
@@ -60,6 +60,8 @@
             var loginPage = document.getElementById('login');
             var canButt1 = document.getElementById('cancelReg');
             var canButt2 = document.getElementById('cancelLogin');
+            var passwordReg = document.getElementById('pWord');
+            var passwordRepeat = document.getElementById('repPWord');
             regButt.addEventListener("click", () => {
                 regPage.showModal();
             });
@@ -71,6 +73,10 @@
             });
             canButt2.addEventListener("click", () => {
                 loginPage.close();
+            })
+
+            passwordReg.addEventListener('change',() => {
+                passwordRepeat.pattern = passwordReg.value
             })
         </script>
     </body>
