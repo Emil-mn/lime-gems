@@ -8,10 +8,15 @@
     
     $username = $_POST["username"];
     $password = $_POST["password"];
-    $repeat = $_POST["repeat"];
-
-    //validation
-    //check if username is unique   get username from database if it exists. if true show error(close the tab and return something???), otherwise continue
+    
+    $compQuery = "SELECT Username FROM logins WHERE Username IS '$username'";
+    if ($connection->query($compQuery) === TRUE) {
+        echo "no match found<br>"; 
+    }
+    else {
+        die("username already exists");//close the tab and return something to show error on register dialog???
+    }
+    
     $regQuery = "INSERT INTO logins (Username, 'Password') VALUES ('$username', '$password')";
     if ($connection->query($regQuery) === TRUE) {
         echo "New account created successfully <br>";

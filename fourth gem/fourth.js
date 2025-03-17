@@ -476,6 +476,54 @@ function rotatePoint(px, py, cx, cy, angle) {
     return { x: finalX, y: finalY };
 }
 
+function steeringParticles(mode,x1,y1,x2,y2,projectileSize) {
+    if (mode == 'turnLeft') {
+        var rotated1 = rotatePoint(playerX-camera.x+x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated2 = rotatePoint(playerX-camera.x+x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated3 = rotatePoint(playerX-camera.x-x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated4 = rotatePoint(playerX-camera.x-x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+    }
+    else if (mode == 'turnRight') {
+        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated2 = rotatePoint(playerX-camera.x-x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated4 = rotatePoint(playerX-camera.x+x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+    }
+    else if (mode == 'strafeLeft') {
+        var rotated1 = rotatePoint(playerX-camera.x+x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated2 = rotatePoint(playerX-camera.x+x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated4 = rotatePoint(playerX-camera.x+x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+    }
+    else if (mode == 'strafeRight') {
+        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated2 = rotatePoint(playerX-camera.x-x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated3 = rotatePoint(playerX-camera.x-x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated4 = rotatePoint(playerX-camera.x-x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+    }
+    else if (mode == 'goFwd') {
+        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y+y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated2 = rotatePoint(playerX-camera.x-x1,playerY-camera.y+y1+10,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated4 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2+10,playerX-camera.x,playerY-camera.y,playerAngle)
+    }
+    else if (mode == 'goBwd') {
+        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated2 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-(y1+10),playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y-y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated4 = rotatePoint(playerX-camera.x+x2,playerY-camera.y-(y2+10),playerX-camera.x,playerY-camera.y,playerAngle)
+    }
+    
+    if (mode != 'goFwd') {
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+    }
+    else {
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
+    }
+}
+
 function fire() {
     //firing logic test
     console.info('firing started')
@@ -602,62 +650,26 @@ function mainLoop() {
         playerAngle -= playerTurnSpeed;
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
-            var rotated1 = rotatePoint(playerX-camera.x+4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('turnLeft',4,13,3,13,1)
         }
         else if (playerSprite == fighter) {
-            var rotated1 = rotatePoint(playerX-camera.x+10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('turnLeft',10,20,10,25,2)
         }
         else if (playerSprite == corvette) {
-            var rotated1 = rotatePoint(playerX-camera.x+17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('turnLeft',17,50,17,30,3)
         }
     }
     else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
-            var rotated1 = rotatePoint(playerX-camera.x-4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('turnRight',4,13,3,13,1)
         }
         else if (playerSprite == fighter) {
-            var rotated1 = rotatePoint(playerX-camera.x-10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('turnRight',10,20,10,25,2)
         }
         else if (playerSprite == corvette) {
-            var rotated1 = rotatePoint(playerX-camera.x-17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('turnRight',17,50,17,30,3)
         }
     }
 
@@ -668,31 +680,13 @@ function mainLoop() {
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
         if (playerSprite == escapePod) {
-            var rotated1 = rotatePoint(playerX-camera.x+4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('strafeLeft',4,13,3,13,1)
         }
         else if (playerSprite == fighter) {
-            var rotated1 = rotatePoint(playerX-camera.x+10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('strafeLeft',10,20,10,25,2)
         }
         else if (playerSprite == corvette) {
-            var rotated1 = rotatePoint(playerX-camera.x+17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('strafeLeft',17,50,17,30,3)
         }
     }
     else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory) {
@@ -701,31 +695,13 @@ function mainLoop() {
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
         if (playerSprite == escapePod) {
-            var rotated1 = rotatePoint(playerX-camera.x-4,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-8,playerY-camera.y-13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-3,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-6,playerY-camera.y+13,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(1,1,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('strafeRight',4,13,3,13,1)
         }
         else if (playerSprite == fighter) {
-            var rotated1 = rotatePoint(playerX-camera.x-10,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-20,playerY-camera.y-20,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-10,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-20,playerY-camera.y+25,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('strafeRight',10,20,10,25,2)
         }
         else if (playerSprite == corvette) {
-            var rotated1 = rotatePoint(playerX-camera.x-17,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-27,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-17,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+30,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('strafeRight',17,50,17,30,3)
         }
     }
 
@@ -742,22 +718,10 @@ function mainLoop() {
             projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
         }
         else if (playerSprite == fighter) {
-            var rotated1 = rotatePoint(playerX-camera.x-7,playerY-camera.y+47,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-7,playerY-camera.y+57,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+7,playerY-camera.y+47,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+7,playerY-camera.y+57,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
+            steeringParticles('goFwd',7,47,7,47,3)
         }
         else if (playerSprite == corvette) {
-            var rotated1 = rotatePoint(playerX-camera.x+27,playerY-camera.y+60,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+27,playerY-camera.y+70,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-27,playerY-camera.y+60,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-27,playerY-camera.y+70,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(4,4,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
-            projectiles.push(new Projectile(4,4,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
+            steeringParticles('goFwd',27,60,27,60,4)
         }
     }
     else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
@@ -772,22 +736,10 @@ function mainLoop() {
             projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
         }
         else if (playerSprite == fighter) {
-            var rotated1 = rotatePoint(playerX-camera.x-6,playerY-camera.y-40,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x-6,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x+6,playerY-camera.y-40,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x+6,playerY-camera.y-50,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(2,2,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('goBwd',6,40,6,40,2)
         }
         else if (playerSprite == corvette) {
-            var rotated1 = rotatePoint(playerX-camera.x+12,playerY-camera.y-65,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x+12,playerY-camera.y-75,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated3 = rotatePoint(playerX-camera.x-12,playerY-camera.y-65,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated4 = rotatePoint(playerX-camera.x-12,playerY-camera.y-75,playerX-camera.x,playerY-camera.y,playerAngle)
-
-            projectiles.push(new Projectile(3,3,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-            projectiles.push(new Projectile(3,3,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+            steeringParticles('goBwd',12,65,12,65,3)
         }
     }
     
@@ -1135,14 +1087,13 @@ function mainLoop() {
     ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
     ctx.moveTo(-2,2); ctx.lineTo(2,2); ctx.lineTo(0,-4); ctx.fill();
     ctx.translate(-(totW-150+playerX/500),-(10+playerY/500)); ctx.restore(); 
-    ctx.fillStyle = 'gray'
+    ctx.fillStyle = 'gray'; ctx.strokeRect(totW-150+playerX/500-camera.width/500,10+playerY/500-camera.height/500,camera.width/500,camera.height/500);
     asteroids.forEach(ass => {
         ctx.fillRect(totW-150+ass[ass.length-1].xPos/500,10+ass[ass.length-1].yPos/500,2,2)
     })
     ctx.fillStyle = foreground; ctx.font = '10px consolas';
     ctx.fillText('X:'+Math.round(playerX*10)/10+' Y:'+Math.round(playerY*10)/10,552.5,97.5)
 
-    //ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
 
     //inventory and stuff menu
     if (gameState == states.inventory) {
