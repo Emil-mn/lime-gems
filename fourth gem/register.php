@@ -9,20 +9,27 @@
     $username = $_POST["username"];
     $password = $_POST["password"];
     
-    $compQuery = "SELECT Username FROM logins WHERE Username IS '$username'";
-    if ($connection->query($compQuery) === TRUE) {
-        echo "no match found<br>"; 
+    $compQuery = "SELECT Username FROM logins WHERE Username='$username'";
+    $result = $connection->query($compQuery);
+    
+    if ($result === false) {
+        die( "Check failed: " . $compQuery . "<br>" . $connection->error);
     }
     else {
-        die("username already exists");//close the tab and return something to show error on register dialog???
+        if ($result->num_rows > 0) {
+            return "username" . $username . "already exists";
+        } 
+        else {
+            echo "no match found<br>";
+        }
     }
     
-    $regQuery = "INSERT INTO logins (Username, 'Password') VALUES ('$username', '$password')";
+    $regQuery = "INSERT INTO logins (Username, Password) VALUES ('$username', '$password')";
     if ($connection->query($regQuery) === TRUE) {
-        echo "New account created successfully <br>";
+        return "New account created successfully";
     } 
     else {
-        echo "Error: " . $regQuery . "<br>" . $connection->error;
+        echo "Registering error: " . $regQuery . "<br>" . $connection->error;
     }
     
     $connection->close();

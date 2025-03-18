@@ -16,11 +16,11 @@
             <h2>Register account</h2>
             <form id="registerForm" method="post" action="register.php" target="_blank">
                 <label for="uName">Username</label>
-                <input type="text" class="nav" id="uName" name="username" placeholder="user2468" minlength="5" maxlength="20" required>
+                <input type="text" class="nav" id="uName" name="username" autocomplete="username" placeholder="user2468" minlength="5" maxlength="20" required>
                 <label for="pWord">Password</label>
-                <input type="password" class="nav" id="pWord" name="password" placeholder="pass7869" pattern="^(?=.*\d).{8,}$" required>
+                <input type="password" class="nav" id="pWord" name="password" autocomplete="new-password" placeholder="pass7869" pattern="^(?=.*\d).{8,}$" required>
                 <label for="repPWord">Repeat password</label>
-                <input type="password" class="nav" id="repPWord" name="repeat" placeholder="same as above" pattern="" required>
+                <input type="password" class="nav" id="repPWord" name="repeat" autocomplete="new-password" placeholder="same as above" pattern="" required>
                 <div>
                     <input type="button" value="Cancel" id="cancelReg" class="nav">
                     <input type="submit" value="Register" class="nav">
@@ -32,9 +32,9 @@
             <h2>Sign in</h2>
             <form id="loginForm" method="post" action="login.php" target="_blank">
                 <label for="uName2">Username</label>
-                <input type="text" class="nav" id="uName2" name="username" placeholder="user2468">
+                <input type="text" class="nav" id="uName2" name="username" autocomplete="username" placeholder="user2468">
                 <label for="pWord2">Password</label>
-                <input type="password" class="nav" id="pWord2" name="password" placeholder="pass7869">
+                <input type="password" class="nav" id="pWord2" name="password" autocomplete="current-password" placeholder="pass7869">
                 <div>
                     <input type="button" value="Cancel" id="cancelLogin" class="nav">
                     <input type="submit" value="Sign in" class="nav">
