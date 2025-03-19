@@ -36,7 +36,7 @@ var slotsY = [140,195,250,305]
 var enemies = []
 var asteroidFields = []
 var asteroids = []
-var turrets = []
+var weapons = []
 var projectiles = []
 var pickups = []
 var xpReqs = [25,50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500]
@@ -266,7 +266,7 @@ document.addEventListener('keydown', function(event) {
     if ((event.key == 'f' || event.key == 'Shift') && gameState == states.main && !event.repeat) {clearInterval(fireInterval); fire()}
 })
 document.addEventListener('keyup', function(event) {
-    if (event.key != 'F5') {
+    if (event.key != 'F5' && event.key != 'ControlLeft') {
         keysPressed[event.code] = false; console.log(keysPressed)
         if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
     }
@@ -554,6 +554,33 @@ class pickup {
     }
 }
 
+class weapon {
+    constructor(x,y,type,fireCooldown,isTurret,isPlayer) {
+        this.x = x
+        this.y = y
+        this.type = type
+        this.fireCooldown = fireCooldown
+        this.currCool = 0
+        this.angle = 0
+
+        this.update = function() {
+            if (isPlayer == 'yes') {
+                this.angle = Math.atan2(mousePosY - this.y, mousePosX - this.x);
+            }
+            else {
+                this.angle = Math.atan2(playerY - this.y, playerX - this.x)
+            }
+
+            /* if (isTurret == 'yes') {
+                ctx.save()
+                ctx.translate(this.x,this.y)
+                ctx.rotate(this.angle)
+            } */
+            
+        }
+    }
+}
+
 class Projectile {
     constructor(width, height, x, y, targetX, targetY, fof, type, accuracy, speed, critRate, critDmg, damageMin, damageMax) {
         this.fof = fof
@@ -613,20 +640,12 @@ function mainLoop() {
     ctx.fillStyle = 'rgb(66,66,66)'; ctx.fillRect(0,0,totW,totH)
     ctx.beginPath(); ctx.strokeStyle = 'rgb(76, 76, 76)';       
     ctx.lineWidth = 5;
-    //old
-    for (var y = 1; y < 750; y++) {
-        ctx.moveTo(-camera.x,-camera.y+60*y)
-        ctx.lineTo(worldWidth,-camera.y+60*y); 
-    }
-    for (var x = 1; x < 1167; x++) {
-        ctx.moveTo(-camera.x+60*x,-camera.y)
-        ctx.lineTo(-camera.x+60*x,worldHeight); 
-    }
-    /* //new only creates visible lines
+    
+    //grid with only visible lines
     const startX = Math.floor(camera.x / 60) * 60; // Start at the nearest 60px grid line
     const startY = Math.floor(camera.y / 60) * 60;
-    const endX = camera.x + sectionWidth; // End at the visible section's boundary
-    const endY = camera.y + sectionHeight;
+    const endX = camera.x + camera.width; // End at the visible section's boundary
+    const endY = camera.y + camera.height;
     
     // Draw horizontal grid lines
     for (let y = startY; y <= endY; y += 60) {
@@ -638,7 +657,7 @@ function mainLoop() {
     for (let x = startX; x <= endX; x += 60) {
         ctx.moveTo(x - camera.x, -camera.y);
         ctx.lineTo(x - camera.x, worldHeight);
-    } */
+    }
 
     ctx.stroke(); ctx.strokeStyle = 'red';
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
@@ -879,11 +898,12 @@ function mainLoop() {
     
     //new collision detection
     if (playerX < -camera.x + 2000 || playerX > worldWidth - 2000 || playerY < -camera.y + 2000 || playerY > worldHeight - 2000) {
-        console.log('colission detection running')
+        console.log('colission detection running'); ctx.fillStyle = 'red'
         playerSprite.forEach(path => {
             for (var xy = -100; xy < 100; xy += 10) {
                 var rot1 = rotatePoint(-camera.x + worldWidth - 60,-camera.y + playerY + xy, -camera.x + playerX,-camera.y + playerY,-playerAngle)
                 ctx.fillRect(-camera.x + worldWidth - 60,-camera.y + playerY + xy,2,2)
+                ctx.fillRect(rot1.x,rot1.y,2,2)
             
                 var rot2 = rotatePoint(-camera.x + 60,-camera.y + playerY + xy,-camera.x + playerX,-camera.y + playerY,-playerAngle)
                 ctx.fillRect(-camera.x + 60,-camera.y + playerY + xy,2,2)
@@ -1015,12 +1035,18 @@ function mainLoop() {
                         if (pIndex != aroid.length-1) {
                             assPointX = point.x;
                             assPointY = point.y;
+                            var rotateAroundAsteroidCenter = rotatePoint(assPointX,assPointY,last.xPos,last.yPos,last.angle)
+                            ctx.fillStyle = 'red'
+                            ctx.fillRect(-camera.x+rotateAroundAsteroidCenter.x,-camera.y+rotateAroundAsteroidCenter.y,3,3)
+                            var thenRotateAroundPlayerPos = rotatePoint(rotateAroundAsteroidCenter.x,rotateAroundAsteroidCenter.y,playerX,playerY,playerAngle)
+                            ctx.fillStyle = 'green'
+                            ctx.fillRect(-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y,3,3)
                             playerSprite.forEach(path => {
-                                if (ctx.isPointInPath(path,-camera.x+assPointX,-camera.y+assPointY)) {
+                                if (ctx.isPointInPath(path,-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y)) {
                                     movementVector[0] = -movementVector[0] / 2
                                     movementVector[1] = -movementVector[1] / 2
-                                    playerX += movementVector[0] * 10;
-                                    playerY += movementVector[1] * 10;
+                                    playerX += movementVector[0] * 42;
+                                    playerY += movementVector[1] * 42;
                                     health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship
                                 }
                             })
@@ -1102,52 +1128,60 @@ function mainLoop() {
 
     //minimap
     //background
-    ctx.lineWidth = 2; ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-150,10,140,90); 
-    //frame and trans to player loc
-    ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+70,10+45);
-    //rotate and draw player
-    ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
-    ctx.moveTo(-2,2); ctx.lineTo(2,2); ctx.lineTo(0,-4); ctx.fill();
-    //restore canvas
-    ctx.translate(-(totW-150+playerX/500),-(10+playerY/500)); ctx.restore(); ctx.fillStyle = 'gray';
-    //draw grid
+    ctx.fillStyle = background; ctx.fillRect(totW-150,10,140,90); 
     
-    ctx.strokeStyle = 'lightgray'; // Set grid line color
+    ctx.strokeStyle = 'rgb(76,76,76)';
+    ctx.lineWidth = 0.5;
 
-    // Define the world section displayed in the minimap
-    const sectionWidth = 7000;
-    const sectionHeight = 4500;
-
-    // Define the minimap dimensions and position
+    // Define minimap dimensions and position
     const minimapWidth = 140;
     const minimapHeight = 90;
     const minimapX = 550;
     const minimapY = 10;
 
-    // Calculate scale factors
-    const scaleX = minimapWidth / sectionWidth;
-    const scaleY = minimapHeight / sectionHeight;
+    // Define how much of the world the minimap displays
+    const visibleWorldWidth = 7000;  // Portion of the world visible on the minimap
+    const visibleWorldHeight = 4500;
+
+    // Calculate scaling factors
+    const scaleX = minimapWidth / visibleWorldWidth;
+    const scaleY = minimapHeight / visibleWorldHeight;
+
+    // Calculate the minimap's top-left corner in world coordinates
+    const minimapWorldX = playerX - visibleWorldWidth / 2;
+    const minimapWorldY = playerY - visibleWorldHeight / 2;
 
     // Draw horizontal grid lines on the minimap
-    for (let y = 0; y <= sectionHeight; y += 60) {
-        const scaledY = minimapY + (y * scaleY);
-        ctx.beginPath();
-        ctx.moveTo(minimapX, scaledY);
-        ctx.lineTo(minimapX + minimapWidth, scaledY);
-        ctx.stroke();
+    ctx.beginPath();
+    for (let y = 0; y <= 45000; y += 60) { // World grid interval is 60
+        // Calculate the grid line's position relative to the minimap's world representation
+        const relativeY = y - minimapWorldY * scaleY;
+
+        // Only draw lines within the minimap's vertical bounds
+        if (relativeY >= 0 && relativeY <= minimapHeight) {
+            ctx.moveTo(minimapX, minimapY + relativeY);
+            ctx.lineTo(minimapX + minimapWidth, minimapY + relativeY);
+        }
     }
+    ctx.stroke();
 
     // Draw vertical grid lines on the minimap
-    for (let x = 0; x <= sectionWidth; x += 60) {
-        const scaledX = minimapX + (x * scaleX);
-        ctx.beginPath();
-        ctx.moveTo(scaledX, minimapY);
-        ctx.lineTo(scaledX, minimapY + minimapHeight);
-        ctx.stroke();
+    ctx.beginPath();
+    for (let x = 0; x <= 70000; x += 60) { // World grid interval is 60
+        // Calculate the grid line's position relative to the minimap's world representation
+        const relativeX = x - minimapWorldX * scaleX;
+
+        // Only draw lines within the minimap's horizontal bounds
+        if (relativeX >= 0 && relativeX <= minimapWidth) {
+            ctx.moveTo(minimapX + relativeX, minimapY);
+            ctx.lineTo(minimapX + relativeX, minimapY + minimapHeight);
+        }
     }
-    
+    ctx.stroke();
+
+
     //draw asteroids
-    
+    ctx.fillStyle = 'gray';
     asteroids.forEach(ass => {
         const asteroid = ass[ass.length - 1];
     
@@ -1166,9 +1200,33 @@ function mainLoop() {
         }
     });
 
+    projectiles.forEach(proj => {
+        const relativeX = proj.x + camera.x - (playerX - 7000 / 2);
+        const relativeY = proj.y + camera.y - (playerY - 4500 / 2);
+
+        if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+            const scaledX = (relativeX / 7000) * 140;
+            const scaledY = (relativeY / 4500) * 90;
+
+            if (proj.type == 'particleS' || proj.type == 'particleL') {ctx.fillStyle = 'white'}
+            else if (proj.fof == 'friendly') {ctx.fillStyle = 'green'}
+            else {ctx.fillStyle = 'red'}
+            ctx.fillRect(550 + scaledX, 10 + scaledY, 1, 1);
+        }
+    })
+
+    //frame and trans to player loc
+    ctx.lineWidth = 2; ctx.strokeStyle = foreground;
+    ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+70,10+45);
+    //rotate and draw player
+    ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
+    ctx.moveTo(-2,2); ctx.lineTo(2,2); ctx.lineTo(0,-4); ctx.fill();
+    //restore canvas
+    ctx.translate(-(totW-150+playerX/500),-(10+playerY/500)); ctx.restore();
+    
     //write coordinates
     ctx.fillStyle = foreground; ctx.font = '10px consolas';
-    ctx.fillText('X:'+Math.round(playerX*10)/10+' Y:'+Math.round(playerY*10)/10,552.5,97.5)
+    ctx.fillText('X:'+Math.round(playerX)+' Y:'+Math.round(playerY),552.5,97.5)
 
 
     //inventory and stuff menu
