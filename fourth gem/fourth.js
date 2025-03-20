@@ -17,13 +17,13 @@ var mouseClickY
 var keysPressed
 var ctx = can.getContext('2d')
 //states
-var states = {menu:0,main:1,paused:2,inventory:3,escaping:4}
+var states = {menu:0,main:1,paused:2,inventory:3,map:4,escaping:5}
 var gameState = states.menu
 var interval
 var canPause = true
+var hovering = false
 //inventory
 var canOpenInv = true
-var hovering = false
 var skillPointsTextWidth
 var skillPoints = 0
 var skillPointsAdding = false
@@ -32,6 +32,8 @@ var accLvl = 0,crtLvl = 0 //???
 var hltLvl = 0 //???
 var slotsX = [150,205,260,315]
 var slotsY = [140,195,250,305]
+//map
+var canOpenMap = true
 //arrays
 var enemies = []
 var asteroidFields = []
@@ -478,49 +480,49 @@ function rotatePoint(px, py, cx, cy, angle) {
 
 function steeringParticles(mode,x1,y1,x2,y2,projectileSize) {
     if (mode == 'turnLeft') {
-        var rotated1 = rotatePoint(playerX-camera.x+x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated2 = rotatePoint(playerX-camera.x+x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated3 = rotatePoint(playerX-camera.x-x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated4 = rotatePoint(playerX-camera.x-x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated1 = rotatePoint(playerX+x1,playerY-y1,playerX,playerY,playerAngle)
+        var rotated2 = rotatePoint(playerX+x1*2,playerY-y1,playerX,playerY,playerAngle)
+        var rotated3 = rotatePoint(playerX-x2,playerY+y2,playerX,playerY,playerAngle)
+        var rotated4 = rotatePoint(playerX-x2*2,playerY+y2,playerX,playerY,playerAngle)
     }
     else if (mode == 'turnRight') {
-        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated2 = rotatePoint(playerX-camera.x-x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated4 = rotatePoint(playerX-camera.x+x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated1 = rotatePoint(playerX-x1,playerY-y1,playerX,playerY,playerAngle)
+        var rotated2 = rotatePoint(playerX-x1*2,playerY-y1,playerX,playerY,playerAngle)
+        var rotated3 = rotatePoint(playerX+x2,playerY+y2,playerX,playerY,playerAngle)
+        var rotated4 = rotatePoint(playerX+x2*2,playerY+y2,playerX,playerY,playerAngle)
     }
     else if (mode == 'strafeLeft') {
-        var rotated1 = rotatePoint(playerX-camera.x+x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated2 = rotatePoint(playerX-camera.x+x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated4 = rotatePoint(playerX-camera.x+x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated1 = rotatePoint(playerX+x1,playerY-y1,playerX,playerY,playerAngle)
+        var rotated2 = rotatePoint(playerX+x1*2,playerY-y1,playerX,playerY,playerAngle)
+        var rotated3 = rotatePoint(playerX+x2,playerY+y2,playerX,playerY,playerAngle)
+        var rotated4 = rotatePoint(playerX+x2*2,playerY+y2,playerX,playerY,playerAngle)
     }
     else if (mode == 'strafeRight') {
-        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated2 = rotatePoint(playerX-camera.x-x1*2,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated3 = rotatePoint(playerX-camera.x-x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated4 = rotatePoint(playerX-camera.x-x2*2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated1 = rotatePoint(playerX-x1,playerY-y1,playerX,playerY,playerAngle)
+        var rotated2 = rotatePoint(playerX-x1*2,playerY-y1,playerX,playerY,playerAngle)
+        var rotated3 = rotatePoint(playerX-x2,playerY+y2,playerX,playerY,playerAngle)
+        var rotated4 = rotatePoint(playerX-x2*2,playerY+y2,playerX,playerY,playerAngle)
     }
     else if (mode == 'goFwd') {
-        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y+y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated2 = rotatePoint(playerX-camera.x-x1,playerY-camera.y+y1+10,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated4 = rotatePoint(playerX-camera.x+x2,playerY-camera.y+y2+10,playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated1 = rotatePoint(playerX-x1,playerY+y1,playerX,playerY,playerAngle)
+        var rotated2 = rotatePoint(playerX-x1,playerY+y1+10,playerX,playerY,playerAngle)
+        var rotated3 = rotatePoint(playerX+x2,playerY+y2,playerX,playerY,playerAngle)
+        var rotated4 = rotatePoint(playerX+x2,playerY+y2+10,playerX,playerY,playerAngle)
     }
     else if (mode == 'goBwd') {
-        var rotated1 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-y1,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated2 = rotatePoint(playerX-camera.x-x1,playerY-camera.y-(y1+10),playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated3 = rotatePoint(playerX-camera.x+x2,playerY-camera.y-y2,playerX-camera.x,playerY-camera.y,playerAngle)
-        var rotated4 = rotatePoint(playerX-camera.x+x2,playerY-camera.y-(y2+10),playerX-camera.x,playerY-camera.y,playerAngle)
+        var rotated1 = rotatePoint(playerX-x1,playerY-y1,playerX,playerY,playerAngle)
+        var rotated2 = rotatePoint(playerX-x1,playerY-(y1+10),playerX,playerY,playerAngle)
+        var rotated3 = rotatePoint(playerX+x2,playerY-y2,playerX,playerY,playerAngle)
+        var rotated4 = rotatePoint(playerX+x2,playerY-(y2+10),playerX,playerY,playerAngle)
     }
     
     if (mode != 'goFwd') {
-        projectiles.push(new Projectile(projectileSize,projectileSize,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
-        projectiles.push(new Projectile(projectileSize,projectileSize,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,0,0,0,0))
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,movementVector,0,0,0,0))
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleS',3,5,movementVector,0,0,0,0))
     }
     else {
-        projectiles.push(new Projectile(projectileSize,projectileSize,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
-        projectiles.push(new Projectile(projectileSize,projectileSize,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,0,0,0,0))
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,movementVector,0,0,0,0))
+        projectiles.push(new Projectile(projectileSize,projectileSize,rotated3.x,rotated3.y,rotated4.x,rotated4.y,'friendly','particleL',3,5,movementVector,0,0,0,0))
     }
 }
 
@@ -528,9 +530,9 @@ function fire() {
     //firing logic test
     console.info('firing started')
     fireInterval = setInterval(() => {
-        var source = rotatePoint(-camera.x+playerX,-camera.y+playerY-70,-camera.x+playerX,-camera.y+playerY,playerAngle)
-        var target = rotatePoint(-camera.x+playerX,-camera.y+playerY-100,-camera.x+playerX,-camera.y+playerY,playerAngle)
-        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,25,2,2,4))
+        var source = rotatePoint(playerX,playerY-70,playerX,playerY,playerAngle)
+        var target = rotatePoint(playerX,playerY-100,playerX,playerY,playerAngle)
+        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,movementVector,25,2,2,4))
         //projectiles.push(new Projectile(3,3,target.x,target.y,-camera.x + playerX,-camera.y + playerY,'enemy','mg',3,5,10,1.5,2,4))//TEST
     }, 200);
 }
@@ -555,13 +557,23 @@ class pickup {
 }
 
 class weapon {
-    constructor(x,y,type,fireCooldown,isTurret,isPlayer) {
+    constructor(x,y,type,tier,level,fireCooldown,isTurret,isPlayer,accuracy, speed, critRate, critDmg, damageMin, damageMax) {
         this.x = x
         this.y = y
         this.type = type
+        this.tier = tier
+        this.level = level
         this.fireCooldown = fireCooldown
         this.currCool = 0
         this.angle = 0
+        this.isTurret = isTurret
+
+        this.projAccuracy = accuracy
+        this.projSpeed = speed
+        this.projCritRate = critRate
+        this.projCritDmg = critDmg
+        this.projDmgMin = damageMin
+        this.projDmgMax = damageMax
 
         this.update = function() {
             if (isPlayer == 'yes') {
@@ -570,19 +582,12 @@ class weapon {
             else {
                 this.angle = Math.atan2(playerY - this.y, playerX - this.x)
             }
-
-            /* if (isTurret == 'yes') {
-                ctx.save()
-                ctx.translate(this.x,this.y)
-                ctx.rotate(this.angle)
-            } */
-            
         }
     }
 }
 
 class Projectile {
-    constructor(width, height, x, y, targetX, targetY, fof, type, accuracy, speed, critRate, critDmg, damageMin, damageMax) {
+    constructor(width, height, x, y, targetX, targetY, fof, type, accuracy, speed, shipSpeed, critRate, critDmg, damageMin, damageMax) {
         this.fof = fof
         this.type = type
         this.width = width
@@ -597,9 +602,8 @@ class Projectile {
         this.critRate = critRate
         this.critRand = Math.random() * 100
         this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX) + (Math.random() * (2 * accuracy) - accuracy) * Math.PI / 180
-        this.dx = Math.cos(this.angle)
-        this.dy = Math.sin(this.angle)
-        
+        this.dx = Math.cos(this.angle) * speed + shipSpeed[0]
+        this.dy = Math.sin(this.angle) * speed + shipSpeed[1]
         this.lifeTime = 0
         if (this.type == 'particleS' || this.type == 'particleL') {
             this.lifeTimeRand = Math.random()
@@ -612,11 +616,11 @@ class Projectile {
 
         this.update = function() {
             this.lifeTime += 0.02
-            this.x += this.dx * speed
-            this.y += this.dy * speed
+            this.x += this.dx
+            this.y += this.dy
             this.centerX = this.x + this.width / 2
             this.centerY = this.y + this.height / 2
-            ctx.fillRect(this.x, this.y, this.width, this.height)
+            ctx.fillRect(-camera.x+this.x, -camera.y+this.y, this.width, this.height)
         }
         this.crashWith = function (otherobj) {
             var myleft = this.x
@@ -676,6 +680,17 @@ function mainLoop() {
         }
     }
 
+    if (keysPressed && keysPressed['KeyM'] && canOpenMap == true && gameState != states.escaping) {
+        canOpenMap = false; setTimeout(() => {canOpenMap = true},1000)
+        if (gameState != states.map) {
+            gameState = states.map; console.log('map open')
+        }
+        else {
+            skillPointsAdding = false;
+            gameState = states.main; console.log('map closed')
+        }
+    }
+
     //levelling up
     if (xp >= xpRequired && gameState != states.escaping) { 
         xp -= xpRequired; skillPoints += spAmounts[level]; ctx.fillStyle = foreground;
@@ -684,7 +699,7 @@ function mainLoop() {
     }
 
     //turning
-    if (keysPressed && (keysPressed['KeyA'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['KeyA'] || keysPressed['ArrowLeft']) && gameState != states.inventory && gameState != states.map) {
         playerAngle -= playerTurnSpeed;
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
@@ -697,7 +712,7 @@ function mainLoop() {
             steeringParticles('turnLeft',17,50,17,30,3)
         }
     }
-    else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
+    else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory && gameState != states.map) {
         playerAngle += playerTurnSpeed
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
@@ -712,7 +727,7 @@ function mainLoop() {
     }
 
     //strafing
-    if (keysPressed && keysPressed['KeyQ'] && gameState != states.inventory) {
+    if (keysPressed && keysPressed['KeyQ'] && gameState != states.inventory && gameState != states.map) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -727,7 +742,7 @@ function mainLoop() {
             steeringParticles('strafeLeft',17,50,17,30,3)
         }
     }
-    else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory) {
+    else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory && gameState != states.map) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -744,16 +759,16 @@ function mainLoop() {
     }
 
     //go forwards / backwards
-    if (keysPressed && (keysPressed['KeyW'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
+    if (keysPressed && (keysPressed['KeyW'] || keysPressed['ArrowUp']) && gameState != states.inventory && gameState != states.map) {
         playerSpeed = 0.05
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
         if (playerSprite == escapePod) {
-            var rotated1 = rotatePoint(playerX-camera.x,playerY-camera.y+18,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x,playerY-camera.y+28,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated1 = rotatePoint(playerX,playerY+18,playerX,playerY,playerAngle)
+            var rotated2 = rotatePoint(playerX,playerY+28,playerX,playerY,playerAngle)
 
-            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,0,0,0,0))
+            projectiles.push(new Projectile(2,2,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleL',3,5,movementVector,0,0,0,0))
         }
         else if (playerSprite == fighter) {
             steeringParticles('goFwd',7,47,7,47,3)
@@ -762,16 +777,16 @@ function mainLoop() {
             steeringParticles('goFwd',27,60,27,60,4)
         }
     }
-    else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
+    else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory && gameState != states.map) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
         if (playerSprite == escapePod) {
-            var rotated1 = rotatePoint(playerX-camera.x,playerY-camera.y-18,playerX-camera.x,playerY-camera.y,playerAngle)
-            var rotated2 = rotatePoint(playerX-camera.x,playerY-camera.y-28,playerX-camera.x,playerY-camera.y,playerAngle)
+            var rotated1 = rotatePoint(playerX,playerY-18,playerX,playerY,playerAngle)
+            var rotated2 = rotatePoint(playerX,playerY-28,playerX,playerY,playerAngle)
 
-            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,0,0,0,0))
+            projectiles.push(new Projectile(1,1,rotated1.x,rotated1.y,rotated2.x,rotated2.y,'friendly','particleS',3,5,movementVector,0,0,0,0))
         }
         else if (playerSprite == fighter) {
             steeringParticles('goBwd',6,40,6,40,2)
@@ -781,31 +796,31 @@ function mainLoop() {
         }
     }
     
-    if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory) {
+    if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory && gameState != states.map) {
         if (movementVector[0] > 0) {
             if (movementVector[0] < 0.05) {
                 movementVector[0] = 0
             }
-            else {movementVector[0] -= 0.05}
+            else {movementVector[0] -= 0.1}
         }
         else if (movementVector[0] < 0) {
             if (movementVector[0] > -0.05) {
                 movementVector[0] = 0
             }
-            else {movementVector[0] += 0.05}
+            else {movementVector[0] += 0.1}
         }
         
         if (movementVector[1] > 0) {
             if (movementVector[1] < 0.05) {
                 movementVector[1] = 0
             }
-            else {movementVector[1] -= 0.05}
+            else {movementVector[1] -= 0.1}
         }
         else if (movementVector[1] < 0) {
             if (movementVector[1] > -0.05) {
                 movementVector[1] = 0
             }
-            else {movementVector[1] += 0.05}
+            else {movementVector[1] += 0.1}
         }
     }
 
@@ -967,7 +982,7 @@ function mainLoop() {
         else if (pro.type == 'mg') {
             if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
             else { ctx.fillStyle = 'gold'}
-            if (pro.lifeTime > 5) {projectiles.splice(index,1)}
+            if (pro.lifeTime > 10) {projectiles.splice(index,1)}
             if (pro.fof == 'friendly') {
                 //shooting asteroids
                 asteroidFields.forEach((field,fIndex) => {
@@ -976,10 +991,10 @@ function mainLoop() {
                             var last = roid[roid.length - 1];
                             if (last.field == fIndex) {
                                 //if (index == 0) {console.log(Math.floor(pro.x - -camera.x)); console.log(Math.floor(pro.y - -camera.y))}
-                                if (pro.x - -camera.x > last.xPos - last.radius && pro.x - -camera.x < last.xPos + last.radius 
-                                && pro.y - -camera.y > last.yPos - last.radius && pro.y - -camera.y < last.yPos + last.radius)
+                                if (pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
+                                && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)
                                 {
-                                    console.log('hit at:'+ (pro.x - -camera.x) + ',' + (pro.y - -camera.y) + 'damage dealt:' + pro.damage)
+                                    console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
                                     projectiles.splice(index,1); last.hp -= pro.damage;
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
@@ -1128,7 +1143,7 @@ function mainLoop() {
 
     //minimap
     //background
-    ctx.fillStyle = background; ctx.fillRect(totW-150,10,140,90); 
+    ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-150,10,140,90); 
     
     ctx.strokeStyle = 'rgb(76,76,76)';
     ctx.lineWidth = 0.5;
@@ -1201,8 +1216,8 @@ function mainLoop() {
     });
 
     projectiles.forEach(proj => {
-        const relativeX = proj.x + camera.x - (playerX - 7000 / 2);
-        const relativeY = proj.y + camera.y - (playerY - 4500 / 2);
+        const relativeX = (-camera.x+proj.x) + camera.x - (playerX - 7000 / 2);
+        const relativeY = (-camera.y+proj.y) + camera.y - (playerY - 4500 / 2);
 
         if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
             const scaledX = (relativeX / 7000) * 140;
@@ -1228,6 +1243,7 @@ function mainLoop() {
     ctx.fillStyle = foreground; ctx.font = '10px consolas';
     ctx.fillText('X:'+Math.round(playerX)+' Y:'+Math.round(playerY),552.5,97.5)
 
+    //end minimap
 
     //inventory and stuff menu
     if (gameState == states.inventory) {
@@ -1249,7 +1265,7 @@ function mainLoop() {
         if (skillPoints > 0) {ctx.strokeStyle = 'red'}; ctx.stroke()
         //ship display
         if (spriteSelection == 1) {updateFighterSprite(465,200); playerSprite = fighter}
-        else if (spriteSelection == 2) {updateCorvetteSprite(465,180); playerSprite = corvette; ctx.scale(0.80,0.80); ctx.translate(x*0.1,y*0.1)}
+        else if (spriteSelection == 2) {updateCorvetteSprite(465,180); playerSprite = corvette; ctx.scale(0.80,0.80); ctx.translate(totW*0.165,totH*0.165)}
         ctx.strokeStyle = shipStroke; ctx.fillStyle = shipFill; ctx.lineWidth = 2
         playerSprite.forEach((path,index) => {
             if (index == playerSprite.length-1) {
@@ -1282,8 +1298,35 @@ function mainLoop() {
         }
     }
 
+    if (gameState == states.map) {
+        var scaleFactor = 166.6666666666667
+        var mapX = totW/2-210
+        var mapY = totH/2-135
+        var mapWidth = 420
+        var mapHeight = 270
+        //background & frame
+        ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW/2-210,totH/2-135,420,270);
+        ctx.lineWidth = 4; ctx.strokeStyle = foreground; ctx.strokeRect(totW/2-210,totH/2-135,420,270);
+        //asteroids
+        ctx.strokeStyle = 'gray'; ctx.lineWidth = 2
+        asteroids.forEach(ass => {
+            ctx.fillRect(mapX+ass[ass.length-1].xPos/scaleFactor,mapY+ass[ass.length-1].yPos/scaleFactor,2,2)
+        })
+        asteroidFields.forEach(field => {
+            ctx.strokeRect(mapX+field.x/scaleFactor,mapY+field.y/scaleFactor,field.width/scaleFactor,field.height/scaleFactor)
+        })
+        //player arrow
+        ctx.save(); ctx.translate(mapX+playerX/scaleFactor,mapY+playerY/scaleFactor);
+        ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
+        ctx.moveTo(-4,4); ctx.lineTo(4,4); ctx.lineTo(0,-8); ctx.fill();
+        ctx.translate(-(mapX+playerX/scaleFactor),-(mapY+playerY/scaleFactor)); ctx.restore();
+        //write coordinates
+        /* ctx.fillStyle = foreground; ctx.font = '10px consolas';
+        ctx.fillText('X:'+Math.round(playerX)+' Y:'+Math.round(playerY),552.5,97.5) */
+    }
+
     //cursor
-    if (gameState != states.inventory) {    
+    if (gameState != states.inventory && gameState != states.map) {    
         ctx.strokeStyle = foreground; ctx.lineWidth = 2; ctx.beginPath();
         ctx.moveTo(mousePosX-6,mousePosY-18); ctx.lineTo(mousePosX-18,mousePosY-18); 
         ctx.lineTo(mousePosX-18,mousePosY-6)
@@ -1330,6 +1373,8 @@ function mainLoop() {
         ctx.fillText('!!Deploying escape pod!!',totW/2,totH/2-40); ctx.textAlign = 'left';
         setTimeout(function() {
             maxHealth = 5; health = maxHealth; maxShield = 0; gameState = states.escaping;
+            //also spawn wrecked version of ship and give the escape pod some speed so it shoots out of the ship
+            //also create map marker to collect inventory contents
         },3000)
     } 
     
