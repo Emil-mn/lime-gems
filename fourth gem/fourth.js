@@ -425,7 +425,8 @@ function checkClick() {
     }
     else if (gameState == states.inventory) {
         if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
-            skillPointsAdding = true; console.log('doing the skillpoint thing')
+            console.log('doing the skillpoint thing')
+            skillPointsAdding == true ? skillPointsAdding = false : skillPointsAdding = true
         }
     }
 }
@@ -699,7 +700,7 @@ function mainLoop() {
     }
 
     //turning
-    if (keysPressed && (keysPressed['KeyA'] || keysPressed['ArrowLeft']) && gameState != states.inventory && gameState != states.map) {
+    if (keysPressed && (keysPressed['KeyA'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
         playerAngle -= playerTurnSpeed;
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
@@ -712,7 +713,7 @@ function mainLoop() {
             steeringParticles('turnLeft',17,50,17,30,3)
         }
     }
-    else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory && gameState != states.map) {
+    else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
@@ -727,7 +728,7 @@ function mainLoop() {
     }
 
     //strafing
-    if (keysPressed && keysPressed['KeyQ'] && gameState != states.inventory && gameState != states.map) {
+    if (keysPressed && keysPressed['KeyQ'] && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -742,7 +743,7 @@ function mainLoop() {
             steeringParticles('strafeLeft',17,50,17,30,3)
         }
     }
-    else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory && gameState != states.map) {
+    else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -759,7 +760,7 @@ function mainLoop() {
     }
 
     //go forwards / backwards
-    if (keysPressed && (keysPressed['KeyW'] || keysPressed['ArrowUp']) && gameState != states.inventory && gameState != states.map) {
+    if (keysPressed && (keysPressed['KeyW'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
         playerSpeed = 0.05
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -777,7 +778,7 @@ function mainLoop() {
             steeringParticles('goFwd',27,60,27,60,4)
         }
     }
-    else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory && gameState != states.map) {
+    else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
         playerSpeed = 0.025
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -796,7 +797,7 @@ function mainLoop() {
         }
     }
     
-    if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory && gameState != states.map) {
+    if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory) {
         if (movementVector[0] > 0) {
             if (movementVector[0] < 0.05) {
                 movementVector[0] = 0
@@ -945,8 +946,8 @@ function mainLoop() {
             }
         })
     }
+    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
 
-    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)
     pickups.forEach((pickup,index) => {
         pickup.update()
         if (playerX > pickup.centerX - 150 && playerX < pickup.centerX + 150 && playerY > pickup.centerY - 150 && playerY < pickup.centerY + 150) {
@@ -962,8 +963,11 @@ function mainLoop() {
                 if (pickup.type == 'xp') {
                     xp += pickup.amount; console.log('gained '+pickup.amount+' xp'); 
                 }
-                else if (pickup.type == 'health' && health < maxHealth) {
+                else if (pickup.type == 'health' && health < maxHealth && healedHealth < maxHealth - health) {
                     healedHealth += pickup.amount;
+                }
+                else if (pickup.type == 'credits') {
+                    credits += pickup.amount; console.log('gained '+pickup.amount+' credits');
                 }
             }
         })
@@ -1007,8 +1011,15 @@ function mainLoop() {
                                         for (var h = 0; h < 8; h++) {
                                             var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
                                             var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            pickups.push(new pickup(x,y,3,3,'green','health',last.xp/8))
+                                            pickups.push(new pickup(x,y,3,3,'red','health',last.xp/8))
                                         }
+                                        //credits test
+                                        for (var c = 0; c < 8; c++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
+                                        }
+                                        
                                         //maybe also give ores?
                                     }
                                 }
@@ -1124,14 +1135,14 @@ function mainLoop() {
     if (gameState != states.escaping) {
         ctx.fillStyle = background; ctx.fillRect(10,y1,87,15)
         ctx.strokeRect(10,y1,87,15); ctx.fillStyle = foreground
-        switch (credits.toString().length) {
-            case 1: ctx.fillText('cr 000000'+credits,12,y2); break 
-            case 2: ctx.fillText('cr 00000'+credits,12,y2); break
-            case 3: ctx.fillText('cr 0000'+credits,12,y2); break
-            case 4: ctx.fillText('cr 000'+credits,12,y2); break
-            case 5: ctx.fillText('cr 00'+credits,12,y2); break
-            case 6: ctx.fillText('cr 0'+credits,12,y2); break
-            case 7: ctx.fillText('cr '+credits,12,y2); break
+        switch (Math.floor(credits).toString().length) {
+            case 1: ctx.fillText('cr 000000'+Math.floor(credits),12,y2); break 
+            case 2: ctx.fillText('cr 00000'+Math.floor(credits),12,y2); break
+            case 3: ctx.fillText('cr 0000'+Math.floor(credits),12,y2); break
+            case 4: ctx.fillText('cr 000'+Math.floor(credits),12,y2); break
+            case 5: ctx.fillText('cr 00'+Math.floor(credits),12,y2); break
+            case 6: ctx.fillText('cr 0'+Math.floor(credits),12,y2); break
+            case 7: ctx.fillText('cr '+Math.floor(credits),12,y2); break
         }
     }
     
@@ -1307,22 +1318,48 @@ function mainLoop() {
         //background & frame
         ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW/2-210,totH/2-135,420,270);
         ctx.lineWidth = 4; ctx.strokeStyle = foreground; ctx.strokeRect(totW/2-210,totH/2-135,420,270);
-        //asteroids
+        //asteroid fields
         ctx.strokeStyle = 'gray'; ctx.lineWidth = 2
-        asteroids.forEach(ass => {
-            ctx.fillRect(mapX+ass[ass.length-1].xPos/scaleFactor,mapY+ass[ass.length-1].yPos/scaleFactor,2,2)
-        })
         asteroidFields.forEach(field => {
-            ctx.strokeRect(mapX+field.x/scaleFactor,mapY+field.y/scaleFactor,field.width/scaleFactor,field.height/scaleFactor)
+            var fieldMapX = mapX+field.x/scaleFactor
+            var fieldMapY = mapY+field.y/scaleFactor
+            var fieldMapWidth = field.width/scaleFactor
+            var fieldMapHeight = field.height/scaleFactor
+            ctx.strokeRect(fieldMapX,fieldMapY,fieldMapWidth,fieldMapHeight)
+        })
+        asteroidFields.some(field => {
+            var fieldMapX = mapX+field.x/scaleFactor
+            var fieldMapY = mapY+field.y/scaleFactor
+            var fieldMapWidth = field.width/scaleFactor
+            var fieldMapHeight = field.height/scaleFactor
+            if (mousePosX > fieldMapX && mousePosX < fieldMapX + fieldMapWidth &&
+            mousePosY > fieldMapY && mousePosY < fieldMapY + fieldMapHeight) {
+                ctx.textAlign = 'center'; hovering = true;
+                ctx.font = '10px consolas'; ctx.fillStyle = foreground;
+                ctx.fillText('X:'+Math.round(field.x),fieldMapX,fieldMapY+fieldMapHeight+10)
+                ctx.fillText('Y:'+Math.round(field.y),fieldMapX,fieldMapY+fieldMapHeight+20)
+                ctx.fillText('Width:'+Math.round(field.width),fieldMapX,fieldMapY+fieldMapHeight+30)
+                ctx.fillText('Height:'+Math.round(field.height),fieldMapX,fieldMapY+fieldMapHeight+40)
+                ctx.fillText('Max roids:'+field.numberOfAsteroids,fieldMapX,fieldMapY+fieldMapHeight+50)
+                //ctx.fillText('Roids:'+field.currentAsteroids,fieldMapX,fieldMapY+fieldMapHeight+60)
+                //ctx.fillText('New roid:'+Math.round(field.respawnTime),fieldMapX,fieldMapY+fieldMapHeight+70)
+                ctx.textAlign = 'left'; return true
+            }
+            hovering = false; return false
         })
         //player arrow
         ctx.save(); ctx.translate(mapX+playerX/scaleFactor,mapY+playerY/scaleFactor);
         ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
         ctx.moveTo(-4,4); ctx.lineTo(4,4); ctx.lineTo(0,-8); ctx.fill();
         ctx.translate(-(mapX+playerX/scaleFactor),-(mapY+playerY/scaleFactor)); ctx.restore();
-        //write coordinates
-        /* ctx.fillStyle = foreground; ctx.font = '10px consolas';
-        ctx.fillText('X:'+Math.round(playerX)+' Y:'+Math.round(playerY),552.5,97.5) */
+        //write mouse coordinates
+        ctx.fillStyle = foreground; ctx.font = '20px consolas'; 
+        var mouseMapX = Math.floor((mousePosX-mapX)*scaleFactor)
+        var mouseMapY = Math.floor((mousePosY-mapY)*scaleFactor)
+        if (mouseMapX > 0 && mouseMapX < 70000 && mouseMapY > 0 && mouseMapY < 45000) {
+            ctx.fillText('X:'+mouseMapX+' Y:'+mouseMapY,mapX+5,mapY+mapHeight-5)
+        }
+        else {ctx.fillText('X:'+NaN+' Y:'+NaN,mapX+5,mapY+mapHeight-5)}
     }
 
     //cursor
