@@ -347,7 +347,8 @@ function generateWorld() {
         var x = Math.random() * (-camera.x + worldWidth - width - 400) + 200;
         var y = Math.random() * (-camera.y + worldHeight - height - 400) + 200;
         var numberOfAsteroids = Math.floor((width - 700) / 2100 * (100 - 25) + 25);
-        asteroidFields.push({width:width,height:height,x:x,y:y})
+        asteroidFields.push({width:width,height:height,x:x,y:y,
+        limitOfAsteroids:numberOfAsteroids,currentAsteroids:numberOfAsteroids,respawnTime:30})
         console.log('asteroids in field '+aField+' :'+numberOfAsteroids)
         for (var ass = 0; ass < numberOfAsteroids; ass++) {
             var sides = Math.floor(Math.random() * 10 + 5);
@@ -855,8 +856,36 @@ function mainLoop() {
         else {playerY = worldHeight - 100; movementVector[1] = -5}
     }
 
-    //draw asteroids
+    //respawn and draw asteroids
     asteroidFields.forEach((field,index) => {
+        if (field.currentAsteroids < field.limitOfAsteroids) {
+            field.respawnTime -= 0.02;
+            if (field.respawnTime <= 0) {
+                field.respawnTime = 30;
+                field.currentAsteroids++
+                var sides = Math.floor(Math.random() * 10 + 5);
+                var asteroid = [];
+                var radius = Math.random() * (100-25) + 25;
+                var astX = Math.random() * ((field.x + field.width) - field.x) + field.x 
+                var astY = Math.random() * ((field.y + field.height)- field.y) + field.y
+                var xSpeed = Math.random() * 2 - 1;
+                var ySpeed = Math.random() * 2 - 1;
+                var rotation = Math.random() * 4 -2;
+                var health = Math.floor((radius - 25) / 100 * (100 - 25) + 25)
+                var experience = Math.floor((health - 25) / 100 * (20 - 5) + 5)
+
+                for (var s = 0; s < sides; s++) {
+                    var angle = (Math.PI * 2 / sides) * s;
+                    var pointX = astX + Math.cos(angle) * (radius + Math.random() * 25 - 12);
+                    var pointY = astY + Math.sin(angle) * (radius + Math.random() * 25 - 12);
+                    asteroid.push({ x: pointX, y: pointY });
+                }
+        
+                asteroid.push({xPos:astX, yPos:astY, dx:xSpeed, dy:ySpeed, rot:rotation, angle:0, radius:radius, hp:health, origHp:health, field:index, xp:experience})
+
+                asteroids.push(asteroid)
+            }
+        }
         if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {
             ctx.strokeStyle = 'rgb(255, 130, 0)'; lineWidth = 5; ctx.strokeRect(-camera.x + field.x,-camera.y + field.y,field.width,field.height)
             asteroids.forEach(steroid => {
@@ -1002,6 +1031,7 @@ function mainLoop() {
                                     projectiles.splice(index,1); last.hp -= pro.damage;
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
+                                        field.currentAsteroids--
                                         for (var n = 0; n < 10; n++) {
                                             var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
                                             var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
@@ -1053,7 +1083,7 @@ function mainLoop() {
     //asteroid player collisions
     asteroidFields.forEach((field,fIndex) => {
         if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {
-            asteroids.forEach(aroid => {
+            asteroids.forEach((aroid,roidIndex) => {
                 var last = aroid[aroid.length - 1];
                 if (last.field == fIndex) {
                     var assPointX, assPointY
@@ -1074,6 +1104,29 @@ function mainLoop() {
                                     playerX += movementVector[0] * 42;
                                     playerY += movementVector[1] * 42;
                                     health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship
+                                    if (last.hp <= 0) {
+                                        asteroids.splice(roidIndex,1)
+                                        field.currentAsteroids--
+                                        for (var n = 0; n < 10; n++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
+                                        }
+                                        //health test
+                                        for (var h = 0; h < 8; h++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            pickups.push(new pickup(x,y,3,3,'red','health',last.xp/8))
+                                        }
+                                        //credits test
+                                        for (var c = 0; c < 8; c++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
+                                        }
+                                        
+                                        //maybe also give ores?
+                                    }
                                 }
                             })
                         }
@@ -1334,16 +1387,24 @@ function mainLoop() {
             var fieldMapHeight = field.height/scaleFactor
             if (mousePosX > fieldMapX && mousePosX < fieldMapX + fieldMapWidth &&
             mousePosY > fieldMapY && mousePosY < fieldMapY + fieldMapHeight) {
-                ctx.textAlign = 'center'; hovering = true;
-                ctx.font = '10px consolas'; ctx.fillStyle = foreground;
-                ctx.fillText('X:'+Math.round(field.x),fieldMapX,fieldMapY+fieldMapHeight+10)
-                ctx.fillText('Y:'+Math.round(field.y),fieldMapX,fieldMapY+fieldMapHeight+20)
-                ctx.fillText('Width:'+Math.round(field.width),fieldMapX,fieldMapY+fieldMapHeight+30)
-                ctx.fillText('Height:'+Math.round(field.height),fieldMapX,fieldMapY+fieldMapHeight+40)
-                ctx.fillText('Max roids:'+field.numberOfAsteroids,fieldMapX,fieldMapY+fieldMapHeight+50)
-                //ctx.fillText('Roids:'+field.currentAsteroids,fieldMapX,fieldMapY+fieldMapHeight+60)
-                //ctx.fillText('New roid:'+Math.round(field.respawnTime),fieldMapX,fieldMapY+fieldMapHeight+70)
-                ctx.textAlign = 'left'; return true
+                hovering = true; ctx.font = '10px consolas'; ctx.fillStyle = foreground; ctx.lineWidth = 1;
+                ctx.strokeStyle = foreground; var xPos1,xPos2,yPos
+                
+                if (fieldMapX > 450) {xPos1 = fieldMapX-88; xPos2 = fieldMapX-86}
+                else {xPos1 = fieldMapX+fieldMapWidth+3; xPos2 = fieldMapX+fieldMapWidth+5}
+                
+                if (fieldMapY > 260) {yPos = fieldMapY-78}
+                else {yPos = fieldMapY+fieldMapHeight+3}
+
+                ctx.strokeRect(xPos1,yPos,85,75)
+                ctx.fillText('X:'+Math.round(field.x),xPos2,yPos+10)
+                ctx.fillText('Y:'+Math.round(field.y),xPos2,yPos+20)
+                ctx.fillText('Width:'+Math.round(field.width),xPos2,yPos+30)
+                ctx.fillText('Height:'+Math.round(field.height),xPos2,yPos+40)
+                ctx.fillText('Max roids:'+field.limitOfAsteroids,xPos2,yPos+50)
+                ctx.fillText('Roids:'+field.currentAsteroids,xPos2,yPos+60)
+                ctx.fillText('New roid in:'+Math.round(field.respawnTime),xPos2,yPos+70)
+                return true
             }
             hovering = false; return false
         })
