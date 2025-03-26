@@ -9,7 +9,7 @@
     $username = $_POST["username"];
     $password = $_POST["password"];
     
-    $compQuery = "SELECT Username FROM logins WHERE Username='$username'";
+    $compQuery = "SELECT * FROM logins WHERE Username='$username' && Password='$password'";
     $result = $connection->query($compQuery);
     
     if ($result === false) {
@@ -17,19 +17,11 @@
     }
     else {
         if ($result->num_rows > 0) {
-            die("username" . $username . "already exists");
+            echo "account exists, signing in";
         } 
         else {
-            echo "no match found<br>";
+            die("account" . $username . "does not exist");
         }
-    }
-    
-    $regQuery = "INSERT INTO logins (Username, Password) VALUES ('$username', '$password')";
-    if ($connection->query($regQuery) === TRUE) {
-        echo "New account created successfully";
-    } 
-    else {
-        echo "Registering error: " . $regQuery . "<br>" . $connection->error;
     }
     
     $connection->close();

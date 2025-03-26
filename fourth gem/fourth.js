@@ -34,6 +34,7 @@ var slotsX = [150,205,260,315]
 var slotsY = [140,195,250,305]
 //map
 var canOpenMap = true
+var deathLocation = {x:0,y:0,ship:0,angle:0}
 //arrays
 var enemies = []
 var asteroidFields = []
@@ -685,6 +686,7 @@ function mainLoop() {
     if (keysPressed && keysPressed['KeyM'] && canOpenMap == true && gameState != states.escaping) {
         canOpenMap = false; setTimeout(() => {canOpenMap = true},1000)
         if (gameState != states.map) {
+            skillPointsAdding = false;
             gameState = states.map; console.log('map open')
         }
         else {
@@ -916,6 +918,34 @@ function mainLoop() {
             })
         }
     })
+
+    //draw wrecked version of ship
+    if (-camera.x + deathLocation.x > 0 && -camera.x + deathLocation.x < totW && -camera.y + deathLocation.y > 0 && -camera.y + deathLocation.y < totH) {
+        if (deathLocation.x != 0 && deathLocation.y != 0) {
+            ctx.save();
+            ctx.translate(-camera.x + deathLocation.x, -camera.y + deathLocation.y); 
+            ctx.rotate(deathLocation.angle * Math.PI / 180);
+            deathLocation.angle += 0.05
+            ctx.translate(-(-camera.x + deathLocation.x), -(-camera.y + deathLocation.y)); 
+            ctx.strokeStyle = 'rgb(82,82,82)'; 
+            ctx.fillStyle = 'rgb(26,26,26)';
+            ctx.lineWidth = 2
+            
+            if (deathLocation.ship == 1) {updateFighterSprite(-camera.x+deathLocation.x,-camera.y+deathLocation.y); playerSprite = fighter}
+            else if (deathLocation.ship == 2) {updateCorvetteSprite(-camera.x+deathLocation.x,-camera.y+deathLocation.y); playerSprite = corvette}
+
+            playerSprite.forEach((path,index) => {
+            if (index == playerSprite.length-1) {
+                ctx.fillStyle = 'rgb(46,54,150)';
+                ctx.fill(path)
+            }
+            else {
+                ctx.fill(path); ctx.stroke(path)
+            }
+            })
+            ctx.restore();
+        }
+    }
 
     //draw player
     ctx.save();
@@ -1260,7 +1290,18 @@ function mainLoop() {
 
 
     //draw asteroids
-    ctx.fillStyle = 'gray';
+    ctx.fillStyle = 'gray'; ctx.strokeStyle = 'grey';
+    asteroidFields.forEach(field => {
+        const relativeX = field.x - (playerX - 7000 / 2);
+        const relativeY = field.y - (playerY - 4500 / 2);
+
+        if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+            const scaledX = (relativeX / 7000) * 140;
+            const scaledY = (relativeY / 4500) * 90;
+
+            ctx.strokeRect(550 + scaledX, 10 + scaledY, field.width / 7000 * 140, field.height / 4500 * 90)
+        }
+    })
     asteroids.forEach(ass => {
         const asteroid = ass[ass.length - 1];
     
@@ -1293,6 +1334,11 @@ function mainLoop() {
             ctx.fillRect(550 + scaledX, 10 + scaledY, 1, 1);
         }
     })
+
+    //death location
+    var deathX = ((deathLocation.x - (playerX - 7000 / 2)) / 7000) * 140
+    var deathY = ((deathLocation.y - (playerY - 4500 / 2)) / 4500) * 90;
+    ctx.fillStyle = 'black'; ctx.fillRect(550+deathX,10+deathY,2,2)
 
     //frame and trans to player loc
     ctx.lineWidth = 2; ctx.strokeStyle = foreground;
@@ -1408,6 +1454,9 @@ function mainLoop() {
             }
             hovering = false; return false
         })
+        //death location
+        ctx.fillStyle = 'black'; 
+        ctx.fillRect(mapX + deathLocation.x / scaleFactor, mapY + deathLocation.y / scaleFactor, 3, 3)
         //player arrow
         ctx.save(); ctx.translate(mapX+playerX/scaleFactor,mapY+playerY/scaleFactor);
         ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
@@ -1470,9 +1519,10 @@ function mainLoop() {
         ctx.fillText('!!!Catastrofic hull failure imminent!!!',totW/2,totH/2-80);
         ctx.fillText('!!Deploying escape pod!!',totW/2,totH/2-40); ctx.textAlign = 'left';
         setTimeout(function() {
-            maxHealth = 5; health = maxHealth; maxShield = 0; gameState = states.escaping;
-            //also spawn wrecked version of ship and give the escape pod some speed so it shoots out of the ship
-            //also create map marker to collect inventory contents
+            maxHealth = 5; health = maxHealth; maxShield = 0; healedHealth = 0;
+            gameState = states.escaping; deathLocation.x = playerX;
+            deathLocation.y = playerY; deathLocation.ship = spriteSelection; 
+            movementVector[1] = -5;
         },3000)
     } 
     
@@ -1488,10 +1538,10 @@ function mainLoop() {
             ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; 
             ctx.fillText('You died...',totW/2-200,totH/2);
             setTimeout(function() {
-                gameState = states.menu;skillPointsAdding = false;
+                /* gameState = states.menu;skillPointsAdding = false;
                 canPause = true; can.style.cursor = 'default';
-            },2800)
-            setTimeout(mainMenu,3000);
+                mainMenu() */ window.location.reload()
+            },3000)
         }
     }
     
