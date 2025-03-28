@@ -32,14 +32,19 @@ var accLvl = 0,crtLvl = 0 //???
 var hltLvl = 0 //???
 var slotsX = [150,205,260,315]
 var slotsY = [140,195,250,305]
-//map
+var beingDragged = {item:null,origin:null}
+//misc
 var canOpenMap = true
 var deathLocation = {x:0,y:0,ship:0,angle:0}
+var timeoutThing = true
 //arrays
 var enemies = []
 var asteroidFields = []
 var asteroids = []
 var weapons = []
+var inventoryContent = {slot1:null,slot2:null,slot3:null,slot4:null,slot5:null,slot6:null,slot7:null,slot8:null,
+    slot9:null,slot10:null,slot11:null,slot12:null,slot13:null,slot14:null,slot15:null,slot16:null
+}
 var projectiles = []
 var pickups = []
 var xpReqs = [25,50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500]
@@ -55,10 +60,7 @@ var playerAngle = 0
 var playerSpeed = 0
 var playerMaxSpeed = 5
 var playerTurnSpeed = 3
-var fireInterval //maybe replace this
-var fireIntervals = [] //maybe this to acommodate different firerates
-var canFire = true //same
-var fireCooldowns = [] //maybe this for non-automatics
+var fireInterval
 var shieldJustHit = false
 var shieldTimeout = 0
 var displayLevelUpMessage = 0
@@ -239,12 +241,7 @@ can.addEventListener('mousedown', function(event) {
 })
 
 window.addEventListener('mouseup', function() {
-    //maybe not useful later
     clearInterval(fireInterval)
-    /*maybe this instead
-    fireIntervals.forEach(int => {
-        clearInterval(int)
-    })*/
 })
 
 can.addEventListener('mousemove', function(event) {
@@ -266,12 +263,12 @@ document.addEventListener('keydown', function(event) {
         setTimeout(() => {canPause = true},500)
         interval = setInterval(mainLoop,20)
     }
-    if ((event.key == 'f' || event.key == 'Shift') && gameState == states.main && !event.repeat) {clearInterval(fireInterval); fire()}
+    if ((event.key == 'f' || event.key == 'Shift') && gameState == states.main) {fire()}
 })
 document.addEventListener('keyup', function(event) {
     if (event.key != 'F5' && event.key != 'ControlLeft') {
         keysPressed[event.code] = false; console.log(keysPressed)
-        if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
+        //if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
     }
 })
 
@@ -423,7 +420,7 @@ function checkClick() {
         
     }
     else if (gameState == states.main) {
-        fire()
+        fireInterval = setInterval(fire,20)
     }
     else if (gameState == states.inventory) {
         if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
@@ -455,6 +452,15 @@ function hoverCheck() {
         else {can.style.cursor = 'default'}
     }
     else if (gameState == states.inventory) {
+        slotsX.forEach((x,xIndex) => {
+            slotsY.forEach((y,yIndex) => {
+                if (buttonHovered(x,y,45,45)) {
+                    hovering = true
+                    console.log('pointing at '+xIndex+';'+yIndex)
+                }
+            })
+        })
+        
         if (buttonHovered(150+skillPointsTextWidth.width+5,118,15,15)) {
             hovering = true; console.log('pointing at skillpoint button')
         }
@@ -530,14 +536,31 @@ function steeringParticles(mode,x1,y1,x2,y2,projectileSize) {
 }
 
 function fire() {
-    //firing logic test
-    console.info('firing started')
-    fireInterval = setInterval(() => {
-        var source = rotatePoint(playerX,playerY-70,playerX,playerY,playerAngle)
-        var target = rotatePoint(playerX,playerY-100,playerX,playerY,playerAngle)
-        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly','mg',2.5,6,movementVector,25,2,2,4))
-        //projectiles.push(new Projectile(3,3,target.x,target.y,-camera.x + playerX,-camera.y + playerY,'enemy','mg',3,5,10,1.5,2,4))//TEST
-    }, 200);
+    weapons.forEach(gun => {
+        gun.currCool -= 0.02;
+        if (gun.currCool <= 0) {
+            if (gun.isTurret == false) {
+                var source = rotatePoint(playerX,playerY-70,playerX,playerY,playerAngle)
+                var target = rotatePoint(playerX,playerY-100,playerX,playerY,playerAngle)
+            }
+            else {
+                //var source = rotate point around ship center and turret center
+                if (gun.isPlayer == true) {
+                    var target = {x:mouseClickX,y:mouseClickY}
+                }
+                else {
+                    var target = {x:playerX,y:playerY}
+                }
+            }
+            if (gun.isPlayer == true) {
+                projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.critDmg,gun.projDmgMin,gun.projDmgMax))
+            }
+            else {
+                projectiles.push(/* something */)
+            }
+            gun.currCool = gun.fireCooldown;
+        }
+    })
 }
 
 class pickup {
@@ -579,7 +602,7 @@ class weapon {
         this.projDmgMax = damageMax
 
         this.update = function() {
-            if (isPlayer == 'yes') {
+            if (isPlayer == true) {
                 this.angle = Math.atan2(mousePosY - this.y, mousePosX - this.x);
             }
             else {
@@ -925,7 +948,7 @@ function mainLoop() {
             ctx.save();
             ctx.translate(-camera.x + deathLocation.x, -camera.y + deathLocation.y); 
             ctx.rotate(deathLocation.angle * Math.PI / 180);
-            deathLocation.angle += 0.05
+            deathLocation.angle += 0.1
             ctx.translate(-(-camera.x + deathLocation.x), -(-camera.y + deathLocation.y)); 
             ctx.strokeStyle = 'rgb(82,82,82)'; 
             ctx.fillStyle = 'rgb(26,26,26)';
@@ -1294,8 +1317,10 @@ function mainLoop() {
     asteroidFields.forEach(field => {
         const relativeX = field.x - (playerX - 7000 / 2);
         const relativeY = field.y - (playerY - 4500 / 2);
+        const relativeRight = field.x + field.width - (playerX - 7000 / 2);
+        const relativeBottom = field.y + field.height - (playerY - 4500 / 2);
 
-        if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+        if (relativeX >= 0 && relativeRight <= 7000 && relativeY >= 0 && relativeBottom <= 4500) {
             const scaledX = (relativeX / 7000) * 140;
             const scaledY = (relativeY / 4500) * 90;
 
@@ -1336,10 +1361,12 @@ function mainLoop() {
     })
 
     //death location
-    var deathX = ((deathLocation.x - (playerX - 7000 / 2)) / 7000) * 140
-    var deathY = ((deathLocation.y - (playerY - 4500 / 2)) / 4500) * 90;
-    ctx.fillStyle = 'black'; ctx.fillRect(550+deathX,10+deathY,2,2)
-
+    if (deathLocation.x != 0 && deathLocation.y != 0) {
+        var deathX = ((deathLocation.x - (playerX - 7000 / 2)) / 7000) * 140
+        var deathY = ((deathLocation.y - (playerY - 4500 / 2)) / 4500) * 90;
+        ctx.fillStyle = 'black'; ctx.fillRect(550+deathX,10+deathY,2,2)
+    }
+    
     //frame and trans to player loc
     ctx.lineWidth = 2; ctx.strokeStyle = foreground;
     ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+70,10+45);
@@ -1455,8 +1482,10 @@ function mainLoop() {
             hovering = false; return false
         })
         //death location
-        ctx.fillStyle = 'black'; 
-        ctx.fillRect(mapX + deathLocation.x / scaleFactor, mapY + deathLocation.y / scaleFactor, 3, 3)
+        if (deathLocation.x != 0 && deathLocation.y != 0) {
+            ctx.fillStyle = 'black'; 
+            ctx.fillRect(mapX + deathLocation.x / scaleFactor, mapY + deathLocation.y / scaleFactor, 3, 3)
+        }
         //player arrow
         ctx.save(); ctx.translate(mapX+playerX/scaleFactor,mapY+playerY/scaleFactor);
         ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
@@ -1518,12 +1547,15 @@ function mainLoop() {
         ctx.font = '30px consolas'; ctx.textAlign = 'center'; 
         ctx.fillText('!!!Catastrofic hull failure imminent!!!',totW/2,totH/2-80);
         ctx.fillText('!!Deploying escape pod!!',totW/2,totH/2-40); ctx.textAlign = 'left';
-        setTimeout(function() {
-            maxHealth = 5; health = maxHealth; maxShield = 0; healedHealth = 0;
-            gameState = states.escaping; deathLocation.x = playerX;
-            deathLocation.y = playerY; deathLocation.ship = spriteSelection; 
-            movementVector[1] = -5;
-        },3000)
+        if (timeoutThing == true) {
+            timeoutThing = false; 
+            setTimeout(function() {
+                maxHealth = 5; health = maxHealth; maxShield = 0; healedHealth = 0;
+                gameState = states.escaping; deathLocation.x = playerX;
+                deathLocation.y = playerY; deathLocation.ship = spriteSelection; 
+                deathLocation.angle = playerAngle; movementVector[1] = -5; timeoutThing = true
+            },3000)
+        }
     } 
     
     if (gameState == states.escaping) {
