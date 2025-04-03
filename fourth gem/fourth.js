@@ -263,12 +263,14 @@ document.addEventListener('keydown', function(event) {
         setTimeout(() => {canPause = true},500)
         interval = setInterval(mainLoop,20)
     }
-    if ((event.key == 'f' || event.key == 'Shift') && gameState == states.main) {fire()}
+    if ((event.key == 'f' || event.key == 'Shift') && gameState == states.main && !event.repeat) {
+        clearInterval(fireInterval); fireInterval = setInterval(fire,20)
+    }
 })
 document.addEventListener('keyup', function(event) {
     if (event.key != 'F5' && event.key != 'ControlLeft') {
         keysPressed[event.code] = false; console.log(keysPressed)
-        //if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
+        if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
     }
 })
 
@@ -337,6 +339,8 @@ function generateWorld() {
     ctx.fillStyle = foreground ; ctx.font = '50px consolas'; 
     ctx.fillText('Generating world...',totW/2,200);
     ctx.textAlign = 'left'; 
+    weapons.push(new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3))
+    weapons.push(new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.6,1.5,3))
     
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
@@ -427,6 +431,33 @@ function checkClick() {
             console.log('doing the skillpoint thing')
             skillPointsAdding == true ? skillPointsAdding = false : skillPointsAdding = true
         }
+        else if (skillPointsAdding == false) {
+            var lipsum = true
+            slotsX.some((x,xIndex) => {
+                slotsY.some((y,yIndex) => {
+                    if (buttonClicked(x,y,45,45)) {
+                        var target = 'slot'
+                        switch (yIndex) {
+                            case 0: target += xIndex+1; break
+                            case 1: target += xIndex+5; break
+                            case 2: target += xIndex+9; break
+                            case 3: target += xIndex+13; break
+                        }
+                        console.log('clicked on '+target)
+                        if (inventoryContent[target] != null) {
+                            beingDragged.item = inventoryContent[target]
+                            beingDragged.origin = target
+                            console.log('dragging '+beingDragged.item+' from '+beingDragged.origin)
+                        }
+                        else {console.log('nothing to drag')}
+                        lipsum = true; return true
+                    }
+                    else {lipsum = false; return false}
+                })
+                if (lipsum == true) {return true}
+                else {return false}
+            })
+        }
     }
 }
 
@@ -452,17 +483,30 @@ function hoverCheck() {
         else {can.style.cursor = 'default'}
     }
     else if (gameState == states.inventory) {
-        slotsX.forEach((x,xIndex) => {
-            slotsY.forEach((y,yIndex) => {
-                if (buttonHovered(x,y,45,45)) {
-                    hovering = true
-                    console.log('pointing at '+xIndex+';'+yIndex)
-                }
-            })
-        })
-        
         if (buttonHovered(150+skillPointsTextWidth.width+5,118,15,15)) {
             hovering = true; console.log('pointing at skillpoint button')
+        }
+        else if (skillPointsAdding == false) {
+            var lipsum = true
+            slotsX.some((x,xIndex) => {
+                slotsY.some((y,yIndex) => {
+                    if (buttonHovered(x,y,45,45)) {
+                        hovering = true
+                        var target = 'slot'
+                        switch (yIndex) {
+                            case 0: target += xIndex+1; break
+                            case 1: target += xIndex+5; break
+                            case 2: target += xIndex+9; break
+                            case 3: target += xIndex+13; break
+                        }
+                        console.log('pointing at '+target)
+                        lipsum = true; return true
+                    }
+                    else {hovering = false; lipsum = false; return false}
+                })
+                if (lipsum == true) {return true}
+                else {return false}
+            })
         }
         else {hovering = false}
     }
@@ -540,8 +584,8 @@ function fire() {
         gun.currCool -= 0.02;
         if (gun.currCool <= 0) {
             if (gun.isTurret == false) {
-                var source = rotatePoint(playerX,playerY-70,playerX,playerY,playerAngle)
-                var target = rotatePoint(playerX,playerY-100,playerX,playerY,playerAngle)
+                var source = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
+                var target = rotatePoint(gun.x,gun.y-20,playerX,playerY,playerAngle)
             }
             else {
                 //var source = rotate point around ship center and turret center
@@ -553,7 +597,7 @@ function fire() {
                 }
             }
             if (gun.isPlayer == true) {
-                projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.critDmg,gun.projDmgMin,gun.projDmgMax))
+                projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
             }
             else {
                 projectiles.push(/* something */)
@@ -593,7 +637,7 @@ class weapon {
         this.currCool = 0
         this.angle = 0
         this.isTurret = isTurret
-
+        this.isPlayer = isPlayer
         this.projAccuracy = accuracy
         this.projSpeed = speed
         this.projCritRate = critRate
@@ -881,6 +925,7 @@ function mainLoop() {
         else {playerY = worldHeight - 100; movementVector[1] = -5}
     }
 
+    weapons.forEach(gun => {gun.x += movementVector[0]; gun.y += movementVector[1]})
     //respawn and draw asteroids
     asteroidFields.forEach((field,index) => {
         if (field.currentAsteroids < field.limitOfAsteroids) {
@@ -996,7 +1041,7 @@ function mainLoop() {
     
     //new collision detection
     if (playerX < -camera.x + 2000 || playerX > worldWidth - 2000 || playerY < -camera.y + 2000 || playerY > worldHeight - 2000) {
-        console.log('colission detection running'); ctx.fillStyle = 'red'
+        console.log('colission detection running'); ctx.fillStyle = 'blue'
         playerSprite.forEach(path => {
             for (var xy = -100; xy < 100; xy += 10) {
                 var rot1 = rotatePoint(-camera.x + worldWidth - 60,-camera.y + playerY + xy, -camera.x + playerX,-camera.y + playerY,-playerAngle)
@@ -1007,10 +1052,12 @@ function mainLoop() {
                 ctx.fillRect(-camera.x + 60,-camera.y + playerY + xy,2,2)
             
                 if (ctx.isPointInPath(path,rot1.x,rot1.y)) {
-                    playerX = worldWidth - 150; movementVector[0] = -3
+                    playerX -= 200; movementVector[0] = -3
+                    weapons.forEach(gun => {gun.x -= 200})
                 }
                 else if (ctx.isPointInPath(path,rot2.x,rot2.y)) {
-                    playerX = -camera.x + 150; movementVector[0] = 3
+                    playerX += 200; movementVector[0] = 3
+                    weapons.forEach(gun => {gun.x += 200})
                 }
 
                 var rot3 = rotatePoint(-camera.x + playerX + xy,-camera.y + worldHeight - 60,-camera.x + playerX,-camera.y + playerY,playerAngle)
@@ -1020,10 +1067,12 @@ function mainLoop() {
                 ctx.fillRect(-camera.x + playerX + xy,-camera.y + 60,2,2)
 
                 if (ctx.isPointInPath(path,rot3.x,rot3.y)) {
-                    playerY = worldHeight - 150; movementVector[1] = -3
+                    playerY -= 200; movementVector[1] = -3
+                    weapons.forEach(gun => {gun.y -= 200})
                 }
                 else if (ctx.isPointInPath(path,rot4.x,rot4.y)) {
-                    playerY = -camera.y + 150; movementVector[1] = 3
+                    playerY += 200; movementVector[1] = 3
+                    weapons.forEach(gun => {gun.y += 200})
                 }
             }
         })
@@ -1148,7 +1197,7 @@ function mainLoop() {
                             ctx.fillStyle = 'red'
                             ctx.fillRect(-camera.x+rotateAroundAsteroidCenter.x,-camera.y+rotateAroundAsteroidCenter.y,3,3)
                             var thenRotateAroundPlayerPos = rotatePoint(rotateAroundAsteroidCenter.x,rotateAroundAsteroidCenter.y,playerX,playerY,playerAngle)
-                            ctx.fillStyle = 'green'
+                            ctx.fillStyle = 'chartreuse'
                             ctx.fillRect(-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y,3,3)
                             playerSprite.forEach(path => {
                                 if (ctx.isPointInPath(path,-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y)) {
@@ -1156,6 +1205,7 @@ function mainLoop() {
                                     movementVector[1] = -movementVector[1] / 2
                                     playerX += movementVector[0] * 42;
                                     playerY += movementVector[1] * 42;
+                                    weapons.forEach(gun => {gun.x += movementVector[0] * 42; gun.y += movementVector[1] * 42})
                                     health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
