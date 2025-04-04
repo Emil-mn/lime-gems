@@ -242,6 +242,7 @@ can.addEventListener('mousedown', function(event) {
 
 window.addEventListener('mouseup', function() {
     clearInterval(fireInterval)
+    if (beingDragged.item != null) {checkDrop()}
 })
 
 can.addEventListener('mousemove', function(event) {
@@ -336,12 +337,14 @@ function generateWorld() {
     console.log('generation stuff');
     gameState = states.main; can.style.cursor = 'none'
     ctx.fillStyle = background; ctx.fillRect(0,0,totW,totH);
-    ctx.fillStyle = foreground ; ctx.font = '50px consolas'; 
+    ctx.fillStyle = foreground; ctx.font = '50px consolas'; 
     ctx.fillText('Generating world...',totW/2,200);
-    ctx.textAlign = 'left'; 
-    weapons.push(new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3))
-    weapons.push(new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.6,1.5,3))
-    
+    ctx.textAlign = 'left';
+    //weapons.push(new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3))
+    //weapons.push(new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.6,1.5,3))
+    inventoryContent.slot6 = new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)
+    inventoryContent.slot9 = new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.6,1.5,3)
+
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
         var width = Math.random() * (3000-1000) + 1000;
@@ -459,6 +462,47 @@ function checkClick() {
             })
         }
     }
+}
+
+function checkDrop() {
+    var lipsum = true
+    slotsX.some((x,xIndex) => {
+        slotsY.some((y,yIndex) => {
+            if (buttonHovered(x,y,45,45)) {
+                var target = 'slot'
+                switch (yIndex) {
+                    case 0: target += xIndex+1; break
+                    case 1: target += xIndex+5; break
+                    case 2: target += xIndex+9; break
+                    case 3: target += xIndex+13; break
+                }
+                console.log('attempting drop on '+target)
+                if (inventoryContent[target] == null) {
+                    inventoryContent[target] = beingDragged.item
+                    inventoryContent[beingDragged.origin] = null
+                    console.log('moved '+beingDragged.item+' from '+beingDragged.origin+' to '+inventoryContent[target])
+                    beingDragged.item = null
+                    beingDragged.origin = null
+                }
+                else {
+                    console.log('slot already occupied')
+                    beingDragged.item = null
+                    beingDragged.origin = null
+                }
+                lipsum = true; return true
+            }
+            else {lipsum = false; return false}
+        })
+        if (lipsum == true) {return true}
+        else {return false}
+    })
+    
+    if (lipsum == false) {
+        console.log('not a drop location')
+        beingDragged.item = null
+        beingDragged.origin = null
+    }
+    //move to an equipment slot, move from an equipment slot, throwing out of inventory
 }
 
 function hoverCheck() {
@@ -633,6 +677,7 @@ class weapon {
         this.type = type
         this.tier = tier
         this.level = level
+        this.slot = null
         this.fireCooldown = fireCooldown
         this.currCool = 0
         this.angle = 0
@@ -1472,6 +1517,22 @@ function mainLoop() {
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40); ctx.strokeRect(390,105,40,40)
             ctx.font = '20px consolas'; ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175); ctx.fillText('T1w/u',393,130,33);
         }
+        else if (spriteSelection == 2) {
+            ctx.beginPath(); 
+            ctx.moveTo(445,195); ctx.lineTo(430,125); ctx.lineTo(420,125);
+            ctx.moveTo(445,205); ctx.lineTo(430,170); ctx.lineTo(420,170);
+            ctx.moveTo(445,220); ctx.lineTo(430,250); ctx.lineTo(420,250);
+            ctx.moveTo(485,195); ctx.lineTo(500,125); ctx.lineTo(510,125);
+            ctx.moveTo(485,205); ctx.lineTo(500,170); ctx.lineTo(510,170);
+            ctx.moveTo(485,220); ctx.lineTo(500,250); ctx.lineTo(510,250);
+            ctx.stroke()
+            ctx.strokeRect(380,105,40,40); ctx.strokeRect(510,105,40,40);
+            ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40);
+            ctx.strokeRect(380,230,40,40); ctx.strokeRect(510,230,40,40);
+            ctx.font = '20px consolas'; ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175);
+        }
+        //information box
+
 
         //skillpoint window
         if (skillPointsAdding == true) {
