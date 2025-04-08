@@ -480,7 +480,7 @@ function checkDrop() {
                 if (inventoryContent[target] == null) {
                     inventoryContent[target] = beingDragged.item
                     inventoryContent[beingDragged.origin] = null
-                    console.log('moved '+beingDragged.item+' from '+beingDragged.origin+' to '+inventoryContent[target])
+                    console.log('moved '+beingDragged.item+' from '+beingDragged.origin+' to '+target)
                     beingDragged.item = null
                     beingDragged.origin = null
                 }
@@ -1486,7 +1486,34 @@ function mainLoop() {
         ctx.moveTo(totW/2+20,totH/2-135); ctx.lineTo(totW/2+20,totH/2+135); ctx.moveTo(370,300);
         ctx.lineTo(560,300); ctx.stroke(); 
         //inventory slots
-        ctx.lineWidth = 3; slotsX.forEach(x => {slotsY.forEach(y => {ctx.strokeRect(x,y,45,45)})})
+        ctx.lineWidth = 3; slotsX.forEach((x,xIndex) => {
+            slotsY.forEach((y,yIndex) => {
+                ctx.strokeRect(x,y,45,45)
+                var target = 'slot'
+                switch (yIndex) {
+                    case 0: target += xIndex+1; break
+                    case 1: target += xIndex+5; break
+                    case 2: target += xIndex+9; break
+                    case 3: target += xIndex+13; break
+                }
+                ctx.font = '10px consolas'; 
+                ctx.fillStyle = foreground;
+                ctx.fillText(target.substring(4),x+3,y+10)
+                var inventoryTarget = inventoryContent[target];
+                if (inventoryTarget == null) {
+                    ctx.fillText('empty',x+10,y+25)
+                }
+                else {
+                    ctx.font = '13px consolas'; 
+                    ctx.textAlign = 'center';
+                    ctx.fillText(inventoryTarget.type,x+22.5,y+13)
+                    ctx.fillText('tier'+inventoryTarget.tier,x+22.5,y+26)
+                    ctx.fillText('lvl'+inventoryTarget.level,x+22.5,y+39)
+                    ctx.textAlign = 'left';
+                }
+            })
+        })
+
         //level related text
         ctx.font = '15px consolas'; ctx.fillStyle = foreground; skillPointsTextWidth = ctx.measureText('Skillpoints: '+skillPoints)
         ctx.fillText('Level '+level+' => '+(level+1)+'  '+Math.floor(xp)+'/'+xpRequired,150,110); ctx.fillText('Skillpoints: '+skillPoints,150,130)
@@ -1529,7 +1556,20 @@ function mainLoop() {
             ctx.strokeRect(380,105,40,40); ctx.strokeRect(510,105,40,40);
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40);
             ctx.strokeRect(380,230,40,40); ctx.strokeRect(510,230,40,40);
-            ctx.font = '20px consolas'; ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175);
+            ctx.font = '20px consolas'; 
+            ctx.fillText('T1w',383,130); ctx.fillText('T1w',513,130);
+            ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175);
+            ctx.fillText('T1w',383,255); ctx.fillText('T1w',513,255);
+        }
+        //ghost thing
+        if (beingDragged.item != null) {
+            ctx.font = '13px consolas'; 
+            ctx.fillStyle = 'rgba(13, 84, 238, 0.69)'//nice
+            ctx.textAlign = 'center';
+            ctx.fillText(beingDragged.item.type,mousePosX,mousePosY-13)
+            ctx.fillText('tier'+beingDragged.item.tier,mousePosX,mousePosY)
+            ctx.fillText('lvl'+beingDragged.item.level,mousePosX,mousePosY+13)
+            ctx.textAlign = 'left';
         }
         //information box
 
