@@ -255,7 +255,7 @@ can.addEventListener('mousemove', function(event) {
 
 document.addEventListener('keydown', function(event) {
     keysPressed = (keysPressed || []);
-    keysPressed[event.code] = true; console.log(event.code)
+    keysPressed[event.code] = true; //console.log(event.code)
     if (event.code == 'Tab') {event.preventDefault()}
     if (event.code == 'Escape' && gameState == states.paused) {
         console.log('resumed'); gameState = states.main
@@ -270,7 +270,7 @@ document.addEventListener('keydown', function(event) {
 })
 document.addEventListener('keyup', function(event) {
     if (event.key != 'F5' && event.key != 'ControlLeft') {
-        keysPressed[event.code] = false; console.log(keysPressed)
+        keysPressed[event.code] = false; //console.log(keysPressed)
         if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
     }
 })
@@ -496,13 +496,23 @@ function checkDrop() {
         if (lipsum == true) {return true}
         else {return false}
     })
+    //move to an equipment slot, move from an equipment slot
     
     if (lipsum == false) {
-        console.log('not a drop location')
-        beingDragged.item = null
-        beingDragged.origin = null
+        if (mousePosX > 140 && mousePosX < 560 && mousePosY > 90 && mousePosY < 360) {
+            console.log('not a drop location')
+            beingDragged.item = null
+            beingDragged.origin = null
+        }
+        else {
+            var pos = rotatePoint(playerX,playerY+250,playerX,playerY,playerAngle)
+            pickups.push(new pickup(pos.x,pos.y,4,4,'purple','item',beingDragged.item))
+            inventoryContent[beingDragged.origin] = null
+            console.log('threw '+beingDragged.item+' out of inventory')
+            beingDragged.item = null
+            beingDragged.origin = null
+        }
     }
-    //move to an equipment slot, move from an equipment slot, throwing out of inventory
 }
 
 function hoverCheck() {
@@ -1124,6 +1134,7 @@ function mainLoop() {
     }
     ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
 
+    //pickups
     pickups.forEach((pickup,index) => {
         pickup.update()
         if (playerX > pickup.centerX - 150 && playerX < pickup.centerX + 150 && playerY > pickup.centerY - 150 && playerY < pickup.centerY + 150) {
@@ -1144,6 +1155,16 @@ function mainLoop() {
                 }
                 else if (pickup.type == 'credits') {
                     credits += pickup.amount; console.log('gained '+pickup.amount+' credits');
+                }
+                else if (pickup.type == 'item') {
+                    Object.entries(inventoryContent).some(entry => {
+                        if (entry[1] == null) {
+                            inventoryContent[entry[0]] = pickup.amount;
+                            console.log('picked up'+pickup.amount+'into '+entry[0])
+                            return true
+                        }
+                        else {console.log(entry[0]+' full'); return false}
+                    })
                 }
             }
         })
@@ -1196,7 +1217,8 @@ function mainLoop() {
                                             var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
                                             pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
                                         }
-                                        
+                                        //gun test
+                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
                                         //maybe also give ores?
                                     }
                                 }
@@ -1272,7 +1294,8 @@ function mainLoop() {
                                             var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
                                             pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
                                         }
-                                        
+                                        //gun test
+                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
                                         //maybe also give ores?
                                     }
                                 }
@@ -1457,9 +1480,13 @@ function mainLoop() {
 
     //death location
     if (deathLocation.x != 0 && deathLocation.y != 0) {
-        var deathX = ((deathLocation.x - (playerX - 7000 / 2)) / 7000) * 140
-        var deathY = ((deathLocation.y - (playerY - 4500 / 2)) / 4500) * 90;
-        ctx.fillStyle = 'black'; ctx.fillRect(550+deathX,10+deathY,2,2)
+        var relativeX = deathLocation.x - (playerX - 7000 / 2)
+        var relativeY = deathLocation.y - (playerY - 4500 / 2)
+        if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+            const scaledX = (relativeX / 7000) * 140;
+            const scaledY = (relativeY / 4500) * 90;
+            ctx.fillStyle = 'black'; ctx.fillRect(550+scaledX,10+scaledY,2,2)
+        }
     }
     
     //frame and trans to player loc
