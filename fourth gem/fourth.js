@@ -32,11 +32,20 @@ var accLvl = 0,crtLvl = 0 //???
 var hltLvl = 0 //???
 var slotsX = [150,205,260,315]
 var slotsY = [140,195,250,305]
-var beingDragged = {item:null,origin:null}
+var fighterSlotsPos = [{x:380,y:150},{x:510,y:150},{x:390,y:105}]
+var fighterWeaponPoses = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
+var corvSlotsPos = [{x:380,y:105},{x:380,y:150},{x:380,y:230},{x:510,y:105},{x:510,y:150},{x:510,y:230}]
+var beingDragged = {item:null,origin:null,type:null}
 //misc
 var canOpenMap = true
 var deathLocation = {x:0,y:0,ship:0,angle:0}
 var timeoutThing = true
+var hoverTarget = null
+var fighterSlots = {slot1:null,slot2:null,slot3:null}
+var corvetteSlots = {slot1:null,slot2:null,slot3:null,slot4:null,slot5:null,slot6:null}
+var weaponspos = fighterWeaponPoses
+var equipmentSlotsPos = fighterSlotsPos
+var equipmentSlots = fighterSlots
 //arrays
 var enemies = []
 var asteroidFields = []
@@ -340,10 +349,8 @@ function generateWorld() {
     ctx.fillStyle = foreground; ctx.font = '50px consolas'; 
     ctx.fillText('Generating world...',totW/2,200);
     ctx.textAlign = 'left';
-    //weapons.push(new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3))
-    //weapons.push(new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.6,1.5,3))
     inventoryContent.slot6 = new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)
-    inventoryContent.slot9 = new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.6,1.5,3)
+    inventoryContent.slot9 = new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)
 
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
@@ -450,7 +457,8 @@ function checkClick() {
                         if (inventoryContent[target] != null) {
                             beingDragged.item = inventoryContent[target]
                             beingDragged.origin = target
-                            console.log('dragging '+beingDragged.item+' from '+beingDragged.origin)
+                            beingDragged.type = 'inventory'
+                            console.log('dragging '+beingDragged.item+' from the '+beingDragged.type+' slot '+beingDragged.origin)
                         }
                         else {console.log('nothing to drag')}
                         lipsum = true; return true
@@ -460,12 +468,29 @@ function checkClick() {
                 if (lipsum == true) {return true}
                 else {return false}
             })
+            if (lipsum == false) {
+                equipmentSlotsPos.some((pos,posIndex) => {
+                    if (buttonClicked(pos.x,pos.y,40,40)) {
+                        var target = 'slot'+(posIndex+1)
+                        console.log('clicked on '+target)
+                        if (equipmentSlots[target] != null) {
+                            beingDragged.item = equipmentSlots[target]
+                            beingDragged.origin = target
+                            beingDragged.type = 'equipment'
+                            console.log('dragging '+beingDragged.item+' from the '+beingDragged.type+' slot '+beingDragged.origin)
+                        }
+                        else {console.log('nothing to drag')}
+                        return true
+                    }
+                    else {return false}
+                })
+            }
         }
     }
 }
 
 function checkDrop() {
-    var lipsum = true
+    var lipsum = true,lapsum = true;
     slotsX.some((x,xIndex) => {
         slotsY.some((y,yIndex) => {
             if (buttonHovered(x,y,45,45)) {
@@ -479,15 +504,24 @@ function checkDrop() {
                 console.log('attempting drop on '+target)
                 if (inventoryContent[target] == null) {
                     inventoryContent[target] = beingDragged.item
-                    inventoryContent[beingDragged.origin] = null
-                    console.log('moved '+beingDragged.item+' from '+beingDragged.origin+' to '+target)
+                    if (beingDragged.type == 'inventory') {
+                        inventoryContent[beingDragged.origin] = null
+                    }
+                    else if (beingDragged.type == 'equipment') {
+                        equipmentSlots[beingDragged.origin] = null
+                        weapons.splice(weapons.findIndex(gun => gun.slot = beingDragged.origin),1)
+                        beingDragged.item.slot = null
+                    }
+                    console.log('moved '+beingDragged.item+' from the '+beingDragged.type+' slot '+beingDragged.origin+' to the inventory slot '+target)
                     beingDragged.item = null
                     beingDragged.origin = null
+                    beingDragged.type = null
                 }
                 else {
                     console.log('slot already occupied')
                     beingDragged.item = null
                     beingDragged.origin = null
+                    beingDragged.type = null
                 }
                 lipsum = true; return true
             }
@@ -496,21 +530,67 @@ function checkDrop() {
         if (lipsum == true) {return true}
         else {return false}
     })
-    //move to an equipment slot, move from an equipment slot
-    
+
     if (lipsum == false) {
+        equipmentSlotsPos.some((pos,posIndex) => {
+            if (buttonHovered(pos.x,pos.y,40,40)) {
+                var target = 'slot'+(posIndex+1)
+                console.log('attempting drop on '+target)
+                if (equipmentSlots[target] == null) {
+                    equipmentSlots[target] = beingDragged.item
+                    beingDragged.item.slot = target
+                    if (spriteSelection == 1) {
+                        weaponspos = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
+                    }
+                    beingDragged.item.x = weaponspos[target.substring(4)-1].x
+                    beingDragged.item.y = weaponspos[target.substring(4)-1].y
+                    if (beingDragged.type == 'inventory') {
+                        inventoryContent[beingDragged.origin] = null
+                        weapons.push(beingDragged.item)
+                    }
+                    else if (beingDragged.type == 'equipment') {
+                        equipmentSlots[beingDragged.origin] = null
+                    }
+                    console.log('moved '+beingDragged.item+' from the '+beingDragged.type+' slot '+beingDragged.origin+' to the equipment slot '+target)
+                    beingDragged.item = null
+                    beingDragged.origin = null
+                    beingDragged.type = null
+                }
+                else {
+                    console.log('slot already occupied')
+                    beingDragged.item = null
+                    beingDragged.origin = null
+                    beingDragged.type = null
+                }
+                lapsum = true; return true
+            }
+            else {lapsum = false; return false}
+        })
+    }
+    
+
+    if (lipsum == false && lapsum == false) {
         if (mousePosX > 140 && mousePosX < 560 && mousePosY > 90 && mousePosY < 360) {
             console.log('not a drop location')
             beingDragged.item = null
             beingDragged.origin = null
+            beingDragged.type = null
         }
         else {
             var pos = rotatePoint(playerX,playerY+250,playerX,playerY,playerAngle)
+            if (beingDragged.type == 'inventory') {
+                inventoryContent[beingDragged.origin] = null
+            }
+            else if (beingDragged.type == 'equipment') {
+                equipmentSlots[beingDragged.origin] = null
+                weapons.splice(weapons.findIndex(gun => gun.slot = beingDragged.origin),1)
+                beingDragged.item.slot = null
+            }
             pickups.push(new pickup(pos.x,pos.y,4,4,'purple','item',beingDragged.item))
-            inventoryContent[beingDragged.origin] = null
             console.log('threw '+beingDragged.item+' out of inventory')
             beingDragged.item = null
             beingDragged.origin = null
+            beingDragged.type = null
         }
     }
 }
@@ -553,14 +633,27 @@ function hoverCheck() {
                             case 2: target += xIndex+9; break
                             case 3: target += xIndex+13; break
                         }
+                        hoverTarget = inventoryContent[target];
                         console.log('pointing at '+target)
                         lipsum = true; return true
                     }
-                    else {hovering = false; lipsum = false; return false}
+                    else {hovering = false; hoverTarget = null; lipsum = false; return false}
                 })
                 if (lipsum == true) {return true}
                 else {return false}
             })
+            if (lipsum == false) {
+                equipmentSlotsPos.some((pos,posIndex) => {
+                    if (buttonHovered(pos.x,pos.y,40,40)) {
+                        hovering = true
+                        var target = 'slot'+(posIndex+1)
+                        console.log('pointing at '+target)
+                        hoverTarget = equipmentSlots[target];
+                        return true
+                    }
+                    else {hovering = false; hoverTarget = null; return false}
+                })
+            }
         }
         else {hovering = false}
     }
@@ -791,8 +884,16 @@ function mainLoop() {
     ctx.stroke(); ctx.strokeStyle = 'red';
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
-    if (keysPressed && keysPressed['KeyF'] && gameState != states.escaping) {spriteSelection = 1}
-    else if (keysPressed && keysPressed['KeyC'] && gameState != states.escaping) {spriteSelection = 2}
+    if (keysPressed && keysPressed['KeyF'] && gameState != states.escaping) {
+        spriteSelection = 1
+        equipmentSlotsPos = fighterSlotsPos
+        equipmentSlots = fighterSlots
+    }
+    else if (keysPressed && keysPressed['KeyC'] && gameState != states.escaping) {
+        spriteSelection = 2
+        equipmentSlotsPos = corvSlotsPos
+        equipmentSlots = corvetteSlots
+    }
     
     if (keysPressed && keysPressed['Tab'] && canOpenInv == true && gameState != states.escaping) {
         canOpenInv = false; setTimeout(() => {canOpenInv = true},1000)
@@ -1569,7 +1670,9 @@ function mainLoop() {
             ctx.moveTo(490,215); ctx.lineTo(500,170); ctx.lineTo(510,170);
             ctx.moveTo(465,200); ctx.lineTo(440,125); ctx.lineTo(430,125); ctx.stroke()
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40); ctx.strokeRect(390,105,40,40)
-            ctx.font = '20px consolas'; ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175); ctx.fillText('T1w/u',393,130,33);
+            ctx.font = '20px consolas'; ctx.textAlign = 'center';
+            ctx.fillText('T1',400,175); ctx.fillText('T1',530,175); ctx.fillText('T1',410,130);
+            ctx.textAlign = 'left';
         }
         else if (spriteSelection == 2) {
             ctx.beginPath(); 
@@ -1583,11 +1686,64 @@ function mainLoop() {
             ctx.strokeRect(380,105,40,40); ctx.strokeRect(510,105,40,40);
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40);
             ctx.strokeRect(380,230,40,40); ctx.strokeRect(510,230,40,40);
-            ctx.font = '20px consolas'; 
-            ctx.fillText('T1w',383,130); ctx.fillText('T1w',513,130);
-            ctx.fillText('T1w',383,175); ctx.fillText('T1w',513,175);
-            ctx.fillText('T1w',383,255); ctx.fillText('T1w',513,255);
+            ctx.font = '20px consolas'; ctx.textAlign = 'center'
+            ctx.fillText('T2',400,130); ctx.fillText('T2',530,130);
+            ctx.fillText('T1',400,175); ctx.fillText('T1',530,175);
+            ctx.fillText('T1',400,255); ctx.fillText('T1',530,255);
+            ctx.textAlign = 'left';
         }
+        equipmentSlotsPos.forEach((pos,posIndex) => {
+            var target = 'slot'+(posIndex+1) 
+            var equipmentTarget = equipmentSlots[target];
+            if (equipmentTarget != null) {
+                ctx.fillStyle = foreground;
+                ctx.font = '13px consolas'; 
+                ctx.textAlign = 'center';
+                ctx.fillText(equipmentTarget.type,pos.x+22.5,pos.y+13)
+                ctx.fillText('tier'+equipmentTarget.tier,pos.x+22.5,pos.y+26)
+                ctx.fillText('lvl'+equipmentTarget.level,pos.x+22.5,pos.y+39)
+                ctx.textAlign = 'left';
+            }
+        })
+        
+        //information box
+        if (hoverTarget == null) {
+            switch (spriteSelection) {
+                case 1:
+                    var sprite = 'fighter'
+                    break;
+                case 2:
+                    var sprite = 'corvette'
+                    break;
+            }
+            ctx.font = '10px consolas'; ctx.fillText(sprite,375,315)
+            ctx.fillText('turning speed: '+playerTurnSpeed,375,325)
+            ctx.fillText('forwards accel: '+playerMaxSpeed,375,335)
+            ctx.fillText('health: '+Math.round(health)+'/'+maxHealth,375,345)
+            if (maxShield == 0) {
+                ctx.fillText('shield: not installed',375,355)
+            }
+            else { ctx.fillText('shield: '+Math.round(shield)+'/'+maxShield,375,355) }
+        }
+        else {
+            switch (hoverTarget.type) {
+                case 'mg':
+                    var type = ' machinegun'
+                    break;
+                default:
+                    var type = 'corvette'
+                    break;
+            }
+            ctx.font = '10px consolas';
+            ctx.fillText('tier '+hoverTarget.tier+type+' level '+hoverTarget.level,375,315)
+            var DPSmin = hoverTarget.projDmgMin*(1/hoverTarget.fireCooldown)
+            var DPSmax = hoverTarget.projDmgMax*(1/hoverTarget.fireCooldown)
+            ctx.fillText('firerate: '+(1/hoverTarget.fireCooldown)+' shots/sec',375,325)
+            ctx.fillText('damage: '+hoverTarget.projDmgMin+'-'+hoverTarget.projDmgMax+' | DPS: '+DPSmin+'-'+DPSmax,375,335)
+            ctx.fillText('inaccuracy: '+hoverTarget.projAccuracy+'° | proj speed: '+hoverTarget.projSpeed,375,345)
+            ctx.fillText('critrate: '+hoverTarget.projCritRate+'% | crit multi: ×'+hoverTarget.projCritDmg,375,355)
+        }
+
         //ghost thing
         if (beingDragged.item != null) {
             ctx.font = '13px consolas'; 
@@ -1598,9 +1754,6 @@ function mainLoop() {
             ctx.fillText('lvl'+beingDragged.item.level,mousePosX,mousePosY+13)
             ctx.textAlign = 'left';
         }
-        //information box
-
-
         //skillpoint window
         if (skillPointsAdding == true) {
             ctx.fillStyle = background; ctx.fillRect(totW/2-131.25,totH/2-84.375,262.5,168.75);
