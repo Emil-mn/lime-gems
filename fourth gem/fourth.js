@@ -33,8 +33,10 @@ var hltLvl = 0 //???
 var slotsX = [150,205,260,315]
 var slotsY = [140,195,250,305]
 var fighterSlotsPos = [{x:380,y:150},{x:510,y:150},{x:390,y:105}]
+var fighterTierAndTurret = [{tier:1,turreted:false},{tier:1,turreted:false},{tier:1,turreted:true}]
 var fighterWeaponPoses = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
 var corvSlotsPos = [{x:380,y:105},{x:380,y:150},{x:380,y:230},{x:510,y:105},{x:510,y:150},{x:510,y:230}]
+var corvTierAndTurret = [{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true},{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true}]
 var beingDragged = {item:null,origin:null,type:null}
 //misc
 var canOpenMap = true
@@ -45,6 +47,7 @@ var fighterSlots = {slot1:null,slot2:null,slot3:null}
 var corvetteSlots = {slot1:null,slot2:null,slot3:null,slot4:null,slot5:null,slot6:null}
 var weaponspos = fighterWeaponPoses
 var equipmentSlotsPos = fighterSlotsPos
+var equipmentSlotsTierAndTurret = fighterTierAndTurret
 var equipmentSlots = fighterSlots
 //arrays
 var enemies = []
@@ -537,24 +540,43 @@ function checkDrop() {
                 var target = 'slot'+(posIndex+1)
                 console.log('attempting drop on '+target)
                 if (equipmentSlots[target] == null) {
-                    equipmentSlots[target] = beingDragged.item
-                    beingDragged.item.slot = target
-                    if (spriteSelection == 1) {
-                        weaponspos = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
+                    if (equipmentSlotsTierAndTurret[posIndex].tier == beingDragged.item.tier) {
+                        equipmentSlots[target] = beingDragged.item
+                        beingDragged.item.slot = target
+                        if (spriteSelection == 1) {
+                            weaponspos = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
+                        }
+                        else if (spriteSelection == 2) {
+                            console.error('no weaponspos for this ship')
+                        }
+                        beingDragged.item.x = weaponspos[posIndex].x
+                        beingDragged.item.y = weaponspos[posIndex].y
+                        if (equipmentSlotsTierAndTurret[posIndex].turreted == true) {
+                            beingDragged.item.isTurret = true;
+                            console.log('weapon is now turreted')
+                        }
+                        else {
+                            beingDragged.item.isTurret = false;
+                            console.log('weapon is now fixed')
+                        }
+                        if (beingDragged.type == 'inventory') {
+                            inventoryContent[beingDragged.origin] = null
+                            weapons.push(beingDragged.item)
+                        }
+                        else if (beingDragged.type == 'equipment') {
+                            equipmentSlots[beingDragged.origin] = null
+                        }
+                        console.log('moved '+beingDragged.item+' from the '+beingDragged.type+' slot '+beingDragged.origin+' to the equipment slot '+target)
+                        beingDragged.item = null
+                        beingDragged.origin = null
+                        beingDragged.type = null
                     }
-                    beingDragged.item.x = weaponspos[target.substring(4)-1].x
-                    beingDragged.item.y = weaponspos[target.substring(4)-1].y
-                    if (beingDragged.type == 'inventory') {
-                        inventoryContent[beingDragged.origin] = null
-                        weapons.push(beingDragged.item)
+                    else {
+                        console.log('wrong tier')
+                        beingDragged.item = null
+                        beingDragged.origin = null
+                        beingDragged.type = null
                     }
-                    else if (beingDragged.type == 'equipment') {
-                        equipmentSlots[beingDragged.origin] = null
-                    }
-                    console.log('moved '+beingDragged.item+' from the '+beingDragged.type+' slot '+beingDragged.origin+' to the equipment slot '+target)
-                    beingDragged.item = null
-                    beingDragged.origin = null
-                    beingDragged.type = null
                 }
                 else {
                     console.log('slot already occupied')
@@ -735,9 +757,9 @@ function fire() {
                 var target = rotatePoint(gun.x,gun.y-20,playerX,playerY,playerAngle)
             }
             else {
-                //var source = rotate point around ship center and turret center
+                var source = rotatePoint(gun.x,gun.y-15,gun.x,gun.y,gun.angle)
                 if (gun.isPlayer == true) {
-                    var target = {x:mouseClickX,y:mouseClickY}
+                    var target = {x:mousePosX+camera.x,y:mousePosY+camera.y}
                 }
                 else {
                     var target = {x:playerX,y:playerY}
@@ -795,10 +817,11 @@ class weapon {
 
         this.update = function() {
             if (isPlayer == true) {
-                this.angle = Math.atan2(mousePosY - this.y, mousePosX - this.x);
+                this.angle = Math.atan2(mousePosY+camera.y - this.y, mousePosX+camera.x - this.x)*(180 / Math.PI)+90
+                //console.log(this.angle)
             }
             else {
-                this.angle = Math.atan2(playerY - this.y, playerX - this.x)
+                this.angle = Math.atan2(playerY - this.y, playerX - this.x)*(180 / Math.PI)
             }
         }
     }
@@ -887,16 +910,18 @@ function mainLoop() {
     if (keysPressed && keysPressed['KeyF'] && gameState != states.escaping) {
         spriteSelection = 1
         equipmentSlotsPos = fighterSlotsPos
+        equipmentSlotsTierAndTurret = fighterTierAndTurret
         equipmentSlots = fighterSlots
     }
     else if (keysPressed && keysPressed['KeyC'] && gameState != states.escaping) {
         spriteSelection = 2
         equipmentSlotsPos = corvSlotsPos
+        equipmentSlotsTierAndTurret = corvTierAndTurret
         equipmentSlots = corvetteSlots
     }
     
     if (keysPressed && keysPressed['Tab'] && canOpenInv == true && gameState != states.escaping) {
-        canOpenInv = false; setTimeout(() => {canOpenInv = true},1000)
+        canOpenInv = false; setTimeout(() => {canOpenInv = true},500)
         if (gameState != states.inventory) {
             gameState = states.inventory; console.log('inventory open')
         }
@@ -907,7 +932,7 @@ function mainLoop() {
     }
 
     if (keysPressed && keysPressed['KeyM'] && canOpenMap == true && gameState != states.escaping) {
-        canOpenMap = false; setTimeout(() => {canOpenMap = true},1000)
+        canOpenMap = false; setTimeout(() => {canOpenMap = true},500)
         if (gameState != states.map) {
             skillPointsAdding = false;
             gameState = states.map; console.log('map open')
@@ -1171,6 +1196,20 @@ function mainLoop() {
         }
     }
 
+    //draw fixed guns
+    weapons.forEach(gun => {
+        if (gun.isTurret == false) {
+            ctx.beginPath()
+            ctx.strokeStyle = shipStroke;
+            ctx.lineWidth = 3;
+            var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
+            var point2 = rotatePoint(gun.x,gun.y+30,playerX,playerY,playerAngle)
+            ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
+            ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+            ctx.stroke()
+        }
+    })
+
     //draw player
     ctx.save();
     ctx.translate(playerX-camera.x,playerY-camera.y); 
@@ -1195,6 +1234,25 @@ function mainLoop() {
     })
     ctx.restore();
     
+    //draw turrets
+    weapons.forEach(turret => {
+        if (turret.isTurret == true) {
+            ctx.beginPath()
+            ctx.strokeStyle = shipStroke;
+            ctx.fillStyle = shipFill;
+            ctx.lineWidth = 3;
+            turret.update()
+            var point1 = rotatePoint(turret.x,turret.y-15,turret.x,turret.y,turret.angle)
+            var point2 = rotatePoint(turret.x,turret.y,playerX,playerY,playerAngle)
+            ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
+            ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+            ctx.stroke()
+            ctx.beginPath()
+            ctx.arc(-camera.x+point2.x,-camera.y+point2.y,5,0,69)
+            ctx.fill(); ctx.stroke()
+        }
+    })
+
     //new collision detection
     if (playerX < -camera.x + 2000 || playerX > worldWidth - 2000 || playerY < -camera.y + 2000 || playerY > worldHeight - 2000) {
         console.log('colission detection running'); ctx.fillStyle = 'blue'
@@ -1670,9 +1728,6 @@ function mainLoop() {
             ctx.moveTo(490,215); ctx.lineTo(500,170); ctx.lineTo(510,170);
             ctx.moveTo(465,200); ctx.lineTo(440,125); ctx.lineTo(430,125); ctx.stroke()
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40); ctx.strokeRect(390,105,40,40)
-            ctx.font = '20px consolas'; ctx.textAlign = 'center';
-            ctx.fillText('T1',400,175); ctx.fillText('T1',530,175); ctx.fillText('T1',410,130);
-            ctx.textAlign = 'left';
         }
         else if (spriteSelection == 2) {
             ctx.beginPath(); 
@@ -1686,22 +1741,23 @@ function mainLoop() {
             ctx.strokeRect(380,105,40,40); ctx.strokeRect(510,105,40,40);
             ctx.strokeRect(380,150,40,40); ctx.strokeRect(510,150,40,40);
             ctx.strokeRect(380,230,40,40); ctx.strokeRect(510,230,40,40);
-            ctx.font = '20px consolas'; ctx.textAlign = 'center'
-            ctx.fillText('T2',400,130); ctx.fillText('T2',530,130);
-            ctx.fillText('T1',400,175); ctx.fillText('T1',530,175);
-            ctx.fillText('T1',400,255); ctx.fillText('T1',530,255);
-            ctx.textAlign = 'left';
         }
         equipmentSlotsPos.forEach((pos,posIndex) => {
             var target = 'slot'+(posIndex+1) 
             var equipmentTarget = equipmentSlots[target];
-            if (equipmentTarget != null) {
+            if (equipmentTarget == null) {
+                ctx.font = '20px consolas'; ctx.textAlign = 'center';
+                var tier = equipmentSlotsTierAndTurret[posIndex].tier;
+                ctx.fillText('T'+tier,pos.x+20,pos.y+25)
+                ctx.textAlign = 'left';
+            }
+            else {
                 ctx.fillStyle = foreground;
                 ctx.font = '13px consolas'; 
                 ctx.textAlign = 'center';
-                ctx.fillText(equipmentTarget.type,pos.x+22.5,pos.y+13)
-                ctx.fillText('tier'+equipmentTarget.tier,pos.x+22.5,pos.y+26)
-                ctx.fillText('lvl'+equipmentTarget.level,pos.x+22.5,pos.y+39)
+                ctx.fillText(equipmentTarget.type,pos.x+20,pos.y+10)
+                ctx.fillText('tier'+equipmentTarget.tier,pos.x+20,pos.y+23)
+                ctx.fillText('lvl'+equipmentTarget.level,pos.x+20,pos.y+36)
                 ctx.textAlign = 'left';
             }
         })
