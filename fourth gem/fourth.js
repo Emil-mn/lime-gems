@@ -34,7 +34,6 @@ var slotsX = [150,205,260,315]
 var slotsY = [140,195,250,305]
 var fighterSlotsPos = [{x:380,y:150},{x:510,y:150},{x:390,y:105}]
 var fighterTierAndTurret = [{tier:1,turreted:false},{tier:1,turreted:false},{tier:1,turreted:true}]
-var fighterWeaponPoses = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
 var corvSlotsPos = [{x:380,y:105},{x:380,y:150},{x:380,y:230},{x:510,y:105},{x:510,y:150},{x:510,y:230}]
 var corvTierAndTurret = [{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true},{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true}]
 var beingDragged = {item:null,origin:null,type:null}
@@ -45,7 +44,6 @@ var timeoutThing = true
 var hoverTarget = null
 var fighterSlots = {slot1:null,slot2:null,slot3:null}
 var corvetteSlots = {slot1:null,slot2:null,slot3:null,slot4:null,slot5:null,slot6:null}
-var weaponspos = fighterWeaponPoses
 var equipmentSlotsPos = fighterSlotsPos
 var equipmentSlotsTierAndTurret = fighterTierAndTurret
 var equipmentSlots = fighterSlots
@@ -352,8 +350,11 @@ function generateWorld() {
     ctx.fillStyle = foreground; ctx.font = '50px consolas'; 
     ctx.fillText('Generating world...',totW/2,200);
     ctx.textAlign = 'left';
-    inventoryContent.slot6 = new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)
-    inventoryContent.slot9 = new weapon(playerX+30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)
+    inventoryContent.slot4 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
+    inventoryContent.slot2 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
+    inventoryContent.slot6 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
+    inventoryContent.slot9 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,2,2.5)
+    inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,Infinity,0,1,0.25,0.3)
 
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
@@ -544,10 +545,10 @@ function checkDrop() {
                         equipmentSlots[target] = beingDragged.item
                         beingDragged.item.slot = target
                         if (spriteSelection == 1) {
-                            weaponspos = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
+                            var weaponspos = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
                         }
                         else if (spriteSelection == 2) {
-                            console.error('no weaponspos for this ship')
+                            var weaponspos = [{x:NaN,y:NaN},{x:playerX-25,y:playerY-5},{x:playerX-25,y:playerY+25},{x:NaN,y:NaN},{x:playerX+25,y:playerY-5},{x:playerX+25,y:playerY+25}]
                         }
                         beingDragged.item.x = weaponspos[posIndex].x
                         beingDragged.item.y = weaponspos[posIndex].y
@@ -757,16 +758,30 @@ function fire() {
                 var target = rotatePoint(gun.x,gun.y-20,playerX,playerY,playerAngle)
             }
             else {
-                var source = rotatePoint(gun.x,gun.y-15,gun.x,gun.y,gun.angle)
+                var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
+                var source = rotatePoint(point1.x,point1.y-15,point1.x,point1.y,gun.angle)
+                
                 if (gun.isPlayer == true) {
-                    var target = {x:mousePosX+camera.x,y:mousePosY+camera.y}
+                    //if (gun.type == 'lsr') {
+                        //var target = {x:Math.cos(gun.angle)+500,y:Math.sin(gun.angle)+500}
+                    //}
+                    //else {
+                        var target = {x:mousePosX+camera.x,y:mousePosY+camera.y}
+                    //}
                 }
                 else {
                     var target = {x:playerX,y:playerY}
                 }
             }
             if (gun.isPlayer == true) {
-                projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
+                if (gun.type == 'sg') {
+                    for (var shot = 0; shot < 7; shot++) {
+                        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
+                    }
+                }
+                else {
+                    projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
+                }
             }
             else {
                 projectiles.push(/* something */)
@@ -796,9 +811,9 @@ class pickup {
 }
 
 class weapon {
-    constructor(x,y,type,tier,level,fireCooldown,isTurret,isPlayer,accuracy, speed, critRate, critDmg, damageMin, damageMax) {
-        this.x = x
-        this.y = y
+    constructor(type,tier,level,fireCooldown,isTurret,isPlayer,accuracy, speed, critRate, critDmg, damageMin, damageMax) {
+        this.x = 0
+        this.y = 0
         this.type = type
         this.tier = tier
         this.level = level
@@ -817,7 +832,8 @@ class weapon {
 
         this.update = function() {
             if (isPlayer == true) {
-                this.angle = Math.atan2(mousePosY+camera.y - this.y, mousePosX+camera.x - this.x)*(180 / Math.PI)+90
+                var point1 = rotatePoint(this.x,this.y,playerX,playerY,playerAngle)
+                this.angle = Math.atan2(mousePosY+camera.y - point1.y, mousePosX+camera.x - point1.x)*(180 / Math.PI)+90
                 //console.log(this.angle)
             }
             else {
@@ -1242,13 +1258,13 @@ function mainLoop() {
             ctx.fillStyle = shipFill;
             ctx.lineWidth = 3;
             turret.update()
-            var point1 = rotatePoint(turret.x,turret.y-15,turret.x,turret.y,turret.angle)
-            var point2 = rotatePoint(turret.x,turret.y,playerX,playerY,playerAngle)
+            var point1 = rotatePoint(turret.x,turret.y,playerX,playerY,playerAngle)
+            var point2 = rotatePoint(point1.x,point1.y-15,point1.x,point1.y,turret.angle)
             ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
             ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
             ctx.stroke()
             ctx.beginPath()
-            ctx.arc(-camera.x+point2.x,-camera.y+point2.y,5,0,69)
+            ctx.arc(-camera.x+point1.x,-camera.y+point1.y,5,0,69)
             ctx.fill(); ctx.stroke()
         }
     })
@@ -1339,7 +1355,7 @@ function mainLoop() {
             ctx.fillStyle = 'blue'
             if (pro.lifeTime > 0.5 + pro.lifeTimeRand) {projectiles.splice(index,1)}
         }
-        else if (pro.type == 'mg') {
+        else if (pro.type == 'mg' || pro.type == 'sg') {
             if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
             else { ctx.fillStyle = 'gold'}
             if (pro.lifeTime > 10) {projectiles.splice(index,1)}
@@ -1377,7 +1393,7 @@ function mainLoop() {
                                             pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
                                         }
                                         //gun test
-                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
+                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
                                         //maybe also give ores?
                                     }
                                 }
@@ -1454,7 +1470,7 @@ function mainLoop() {
                                             pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
                                         }
                                         //gun test
-                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon(playerX-30,playerY,'mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
+                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
                                         //maybe also give ores?
                                     }
                                 }
@@ -1786,8 +1802,11 @@ function mainLoop() {
                 case 'mg':
                     var type = ' machinegun'
                     break;
+                case 'sg':
+                    var type = ' shotgun'
+                    break;
                 default:
-                    var type = 'corvette'
+                    var type = ' missing'
                     break;
             }
             ctx.font = '10px consolas';
