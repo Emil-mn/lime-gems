@@ -609,7 +609,7 @@ function checkDrop() {
                 weapons.splice(weapons.findIndex(gun => gun.slot = beingDragged.origin),1)
                 beingDragged.item.slot = null
             }
-            pickups.push(new pickup(pos.x,pos.y,4,4,'purple','item',beingDragged.item))
+            pickups.push(new pickup(pos.x,pos.y,5,5,'orange','item',beingDragged.item))
             console.log('threw '+beingDragged.item+' out of inventory')
             beingDragged.item = null
             beingDragged.origin = null
@@ -1213,18 +1213,21 @@ function mainLoop() {
     }
 
     //draw fixed guns
-    weapons.forEach(gun => {
-        if (gun.isTurret == false) {
-            ctx.beginPath()
-            ctx.strokeStyle = shipStroke;
-            ctx.lineWidth = 3;
-            var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
-            var point2 = rotatePoint(gun.x,gun.y+30,playerX,playerY,playerAngle)
-            ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
-            ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
-            ctx.stroke()
-        }
-    })
+    if (gameState != states.escaping) {
+        weapons.forEach(gun => {
+            if (gun.isTurret == false) {
+                ctx.beginPath()
+                ctx.strokeStyle = shipStroke;
+                ctx.lineWidth = 3;
+                var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
+                var point2 = rotatePoint(gun.x,gun.y+30,playerX,playerY,playerAngle)
+                ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
+                ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+                ctx.stroke()
+            }
+        })
+    }
+    
 
     //draw player
     ctx.save();
@@ -1251,23 +1254,25 @@ function mainLoop() {
     ctx.restore();
     
     //draw turrets
-    weapons.forEach(turret => {
-        if (turret.isTurret == true) {
-            ctx.beginPath()
-            ctx.strokeStyle = shipStroke;
-            ctx.fillStyle = shipFill;
-            ctx.lineWidth = 3;
-            turret.update()
-            var point1 = rotatePoint(turret.x,turret.y,playerX,playerY,playerAngle)
-            var point2 = rotatePoint(point1.x,point1.y-15,point1.x,point1.y,turret.angle)
-            ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
-            ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
-            ctx.stroke()
-            ctx.beginPath()
-            ctx.arc(-camera.x+point1.x,-camera.y+point1.y,5,0,69)
-            ctx.fill(); ctx.stroke()
-        }
-    })
+    if (gameState != states.escaping) {
+        weapons.forEach(turret => {
+            if (turret.isTurret == true) {
+                ctx.beginPath()
+                ctx.strokeStyle = shipStroke;
+                ctx.fillStyle = shipFill;
+                ctx.lineWidth = 3;
+                turret.update()
+                var point1 = rotatePoint(turret.x,turret.y,playerX,playerY,playerAngle)
+                var point2 = rotatePoint(point1.x,point1.y-15,point1.x,point1.y,turret.angle)
+                ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
+                ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+                ctx.stroke()
+                ctx.beginPath()
+                ctx.arc(-camera.x+point1.x,-camera.y+point1.y,5,0,69)
+                ctx.fill(); ctx.stroke()
+            }
+        })
+    }
 
     //new collision detection
     if (playerX < -camera.x + 2000 || playerX > worldWidth - 2000 || playerY < -camera.y + 2000 || playerY > worldHeight - 2000) {
@@ -1325,6 +1330,21 @@ function mainLoop() {
                 if (pickup.type == 'xp') {
                     xp += pickup.amount; console.log('gained '+pickup.amount+' xp'); 
                 }
+                else if (pickup.type == 'mineral') {
+                    Object.entries(inventoryContent).some(entry => {
+                        if (entry[1] == null) {
+                            inventoryContent[entry[0]] = pickup.amount;
+                            console.log('picked up '+pickup.amount.type+' ×'+pickup.amount.amount+' into '+entry[0])
+                            return true
+                        }
+                        else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount < 64) {
+                            inventoryContent[entry[0]].amount += pickup.amount.amount;
+                            console.log('added '+pickup.amount.type+' ×'+pickup.amount.amount+' to '+entry[0])
+                            return true
+                        }
+                        else {console.log(entry[0]+' full'); return false}
+                    })
+                }
                 else if (pickup.type == 'health' && health < maxHealth && healedHealth < maxHealth - health) {
                     healedHealth += pickup.amount;
                 }
@@ -1380,6 +1400,16 @@ function mainLoop() {
                                             var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
                                             pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
                                         }
+                                        for (var o = 0; o < 6; o++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            switch (Math.floor(Math.random()*3)) {
+                                                case 0: var type = 'stone'; break
+                                                case 1: var type = 'iron ore'; break
+                                                case 2: var type = 'copper ore'; break
+                                            }
+                                            pickups.push(new pickup(x,y,4,4,'gray','mineral',{type:type,amount:Math.round(last.xp/6)}))
+                                        }
                                         //health test
                                         for (var h = 0; h < 8; h++) {
                                             var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
@@ -1394,7 +1424,6 @@ function mainLoop() {
                                         }
                                         //gun test
                                         pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
-                                        //maybe also give ores?
                                     }
                                 }
                             }
@@ -1448,7 +1477,7 @@ function mainLoop() {
                                     playerX += movementVector[0] * 42;
                                     playerY += movementVector[1] * 42;
                                     weapons.forEach(gun => {gun.x += movementVector[0] * 42; gun.y += movementVector[1] * 42})
-                                    health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship
+                                    health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship. butt HOW?
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
@@ -1456,6 +1485,16 @@ function mainLoop() {
                                             var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
                                             var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
                                             pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
+                                        }
+                                        for (var o = 0; o < 6; o++) {
+                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+                                            switch (Math.floor(Math.random()*3)) {
+                                                case 0: var type = 'stone'; break
+                                                case 1: var type = 'iron ore'; break
+                                                case 2: var type = 'copper ore'; break
+                                            }
+                                            pickups.push(new pickup(x,y,4,4,'gray','mineral',{type:type,amount:Math.round(last.xp/6)}))
                                         }
                                         //health test
                                         for (var h = 0; h < 8; h++) {
@@ -1471,7 +1510,6 @@ function mainLoop() {
                                         }
                                         //gun test
                                         pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
-                                        //maybe also give ores?
                                     }
                                 }
                             })
@@ -1705,12 +1743,25 @@ function mainLoop() {
                 if (inventoryTarget == null) {
                     ctx.fillText('empty',x+10,y+25)
                 }
-                else {
+                else if (inventoryTarget instanceof weapon) {
                     ctx.font = '13px consolas'; 
                     ctx.textAlign = 'center';
                     ctx.fillText(inventoryTarget.type,x+22.5,y+13)
                     ctx.fillText('tier'+inventoryTarget.tier,x+22.5,y+26)
                     ctx.fillText('lvl'+inventoryTarget.level,x+22.5,y+39)
+                    ctx.textAlign = 'left';
+                }
+                else {
+                    switch (inventoryTarget.type) {
+                        case 'iron ore': var ore = 'Fe'; break
+                        case 'copper ore': var ore = 'Cu'; break
+                        default: var ore = 'stn'; break
+                    }
+                    ctx.font = '13px consolas'; 
+                    ctx.textAlign = 'center';
+                    ctx.fillText(ore,x+22.5,y+17)
+                    ctx.fillText('×'+inventoryTarget.amount,x+22.5,y+30)
+                    //ctx.fillText('lvl'+inventoryTarget.level,x+22.5,y+39) price???
                     ctx.textAlign = 'left';
                 }
             })
@@ -1797,7 +1848,7 @@ function mainLoop() {
             }
             else { ctx.fillText('shield: '+Math.round(shield)+'/'+maxShield,375,355) }
         }
-        else {
+        else if (hoverTarget instanceof weapon) {
             switch (hoverTarget.type) {
                 case 'mg':
                     var type = ' machinegun'
@@ -1818,16 +1869,40 @@ function mainLoop() {
             ctx.fillText('inaccuracy: '+hoverTarget.projAccuracy+'° | proj speed: '+hoverTarget.projSpeed,375,345)
             ctx.fillText('critrate: '+hoverTarget.projCritRate+'% | crit multi: ×'+hoverTarget.projCritDmg,375,355)
         }
+        else {
+            switch (hoverTarget.type) {
+                case 'iron ore': var ore = 'ferrum'; break
+                case 'copper ore': var ore = 'cyprum'; break
+            }
+            ctx.font = '10px consolas';
+            ctx.fillText(type??''+'/'+hoverTarget.type+' ×'+hoverTarget.amount,375,315)
+        }
 
         //ghost thing
         if (beingDragged.item != null) {
-            ctx.font = '13px consolas'; 
-            ctx.fillStyle = 'rgba(13, 84, 238, 0.69)'//nice
-            ctx.textAlign = 'center';
-            ctx.fillText(beingDragged.item.type,mousePosX,mousePosY-13)
-            ctx.fillText('tier'+beingDragged.item.tier,mousePosX,mousePosY)
-            ctx.fillText('lvl'+beingDragged.item.level,mousePosX,mousePosY+13)
-            ctx.textAlign = 'left';
+            if (beingDragged.item instanceof weapon) {
+                ctx.font = '13px consolas'; 
+                ctx.fillStyle = 'rgba(13, 84, 238, 0.69)'//nice
+                ctx.textAlign = 'center';
+                ctx.fillText(beingDragged.item.type,mousePosX,mousePosY-13)
+                ctx.fillText('tier'+beingDragged.item.tier,mousePosX,mousePosY)
+                ctx.fillText('lvl'+beingDragged.item.level,mousePosX,mousePosY+13)
+                ctx.textAlign = 'left';
+            }
+            else {
+                switch (beingDragged.item.type) {
+                    case 'iron ore': var ore = 'Fe'; break
+                    case 'copper ore': var ore = 'Cu'; break
+                    default: var ore = 'stn'; break
+                }
+                ctx.font = '13px consolas'; 
+                ctx.fillStyle = 'rgba(13, 84, 238, 0.69)'//nice
+                ctx.textAlign = 'center';
+                ctx.fillText(ore,mousePosX,mousePosY-5)
+                ctx.fillText('×'+beingDragged.item.amount,mousePosX,mousePosY+8)
+                //ctx.fillText('lvl'+inventoryTarget.level,x+22.5,y+39) price???
+                ctx.textAlign = 'left';
+            }
         }
         //skillpoint window
         if (skillPointsAdding == true) {
