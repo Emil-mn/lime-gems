@@ -52,6 +52,7 @@ var enemies = []
 var asteroidFields = []
 var asteroids = []
 var weapons = []
+var damageNumbers = []
 var inventoryContent = {slot1:null,slot2:null,slot3:null,slot4:null,slot5:null,slot6:null,slot7:null,slot8:null,
     slot9:null,slot10:null,slot11:null,slot12:null,slot13:null,slot14:null,slot15:null,slot16:null
 }
@@ -1312,54 +1313,69 @@ function mainLoop() {
             }
         })
     }
-    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
+    //ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
 
     //pickups
     pickups.forEach((pickup,index) => {
         pickup.update()
         if (playerX > pickup.centerX - 150 && playerX < pickup.centerX + 150 && playerY > pickup.centerY - 150 && playerY < pickup.centerY + 150) {
-            if (playerX < pickup.x) {pickup.x -= 5}
-            else if (playerX > pickup.x) {pickup.x += 5}
-            
-            if (playerY < pickup.y) {pickup.y -= 5}
-            else if (playerY > pickup.y) {pickup.y += 5}
+            if (pickup.type != 'mineral' && pickup.type != 'item') {
+                if (playerX < pickup.x) {pickup.x -= 5}
+                else if (playerX > pickup.x) {pickup.x += 5}
+                
+                if (playerY < pickup.y) {pickup.y -= 5}
+                else if (playerY > pickup.y) {pickup.y += 5}
+            }
         }
         playerSprite.forEach(path => {
             if (ctx.isPointInPath(path,-camera.x + pickup.centerX,-camera.y + pickup.centerY)) {
-                pickups.splice(index,1)
                 if (pickup.type == 'xp') {
-                    xp += pickup.amount; console.log('gained '+pickup.amount+' xp'); 
+                    pickups.splice(index,1)
+                    xp += pickup.amount; console.log('gained '+pickup.amount+' xp');
+                    damageNumbers.push({type:'xp',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pickup.amount,lifetime:1})
                 }
                 else if (pickup.type == 'mineral') {
-                    Object.entries(inventoryContent).some(entry => {
-                        if (entry[1] == null) {
-                            inventoryContent[entry[0]] = pickup.amount;
-                            console.log('picked up '+pickup.amount.type+' ×'+pickup.amount.amount+' into '+entry[0])
-                            return true
-                        }
-                        else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount < 64) {
-                            inventoryContent[entry[0]].amount += pickup.amount.amount;
-                            console.log('added '+pickup.amount.type+' ×'+pickup.amount.amount+' to '+entry[0])
-                            return true
-                        }
-                        else {console.log(entry[0]+' full'); return false}
-                    })
+                    if (keysPressed && keysPressed['keyF']) {
+                        Object.entries(inventoryContent).some(entry => {
+                            if (entry[1] == null) {
+                                pickups.splice(index,1)
+                                inventoryContent[entry[0]] = pickup.amount;
+                                console.log('picked up '+pickup.amount.type+' ×'+pickup.amount.amount+' into '+entry[0])
+                                return true
+                            }
+                            else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount < 64) {
+                                pickups.splice(index,1)
+                                inventoryContent[entry[0]].amount += pickup.amount.amount;
+                                console.log('added '+pickup.amount.type+' ×'+pickup.amount.amount+' to '+entry[0])
+                                return true
+                            }
+                            else {console.log(entry[0]+' full'); return false}
+                        })
+                    }
                 }
-                else if (pickup.type == 'health' && health < maxHealth && healedHealth < maxHealth - health) {
-                    healedHealth += pickup.amount;
+                else if (pickup.type == 'health') {
+                    pickups.splice(index,1)
+                    if (health < maxHealth && healedHealth < maxHealth - health) {
+                        healedHealth += pickup.amount;
+                    }
                 }
                 else if (pickup.type == 'credits') {
+                    pickups.splice(index,1)
                     credits += pickup.amount; console.log('gained '+pickup.amount+' credits');
+                    damageNumbers.push({type:'credits',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pickup.amount,lifetime:1})
                 }
                 else if (pickup.type == 'item') {
-                    Object.entries(inventoryContent).some(entry => {
-                        if (entry[1] == null) {
-                            inventoryContent[entry[0]] = pickup.amount;
-                            console.log('picked up'+pickup.amount+'into '+entry[0])
-                            return true
-                        }
-                        else {console.log(entry[0]+' full'); return false}
-                    })
+                    if (keysPressed && keysPressed['keyF']) {
+                        Object.entries(inventoryContent).some(entry => {
+                            if (entry[1] == null) {
+                                pickups.splice(index,1)
+                                inventoryContent[entry[0]] = pickup.amount;
+                                console.log('picked up'+pickup.amount+'into '+entry[0])
+                                return true
+                            }
+                            else {console.log(entry[0]+' full'); return false}
+                        })
+                    }
                 }
             }
         })
@@ -1392,6 +1408,7 @@ function mainLoop() {
                                 {
                                     console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
                                     projectiles.splice(index,1); last.hp -= pro.damage;
+                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*40)-20,y:last.yPos+(Math.random()*40)-20,amount:pro.damage,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
@@ -1438,11 +1455,13 @@ function mainLoop() {
                         projectiles.splice(index,1)
                         if (shield > 0) {
                             shield -= pro.damage
+                            damageNumbers.push({type:'shieldDamage',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pro.damage,lifetime:1})
                             shieldJustHit = true
                             console.log('shield absorbed '+pro.damage+' damage')
                         }
                         else {
                             health -= pro.damage
+                            damageNumbers.push({type:'damage',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pro.damage,lifetime:1})
                             //console.log('ship received '+pro.damage+' damage')
                         }
                     }
@@ -1478,6 +1497,8 @@ function mainLoop() {
                                     playerY += movementVector[1] * 42;
                                     weapons.forEach(gun => {gun.x += movementVector[0] * 42; gun.y += movementVector[1] * 42})
                                     health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship. butt HOW?
+                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*40)-20,y:last.yPos+(Math.random()*40)-20,amount:1,lifetime:1})
+                                    damageNumbers.push({type:'damage',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:1,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
@@ -1521,7 +1542,11 @@ function mainLoop() {
     })
 
     //repair logic
-    if (healedHealth > 0) {health += maxHealth/2000; healedHealth -= maxHealth/2000}
+    if (healedHealth > 0) {
+        health += maxHealth/2000;
+        healedHealth -= maxHealth/2000
+        damageNumbers.push({type:'heal',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:maxHealth/2000,lifeTime:1})
+    }
 
     //shield logic
     if (shieldTimeout > 0) {shieldTimeout -= 0.02; console.log(Math.floor(shieldTimeout))}
@@ -1537,6 +1562,42 @@ function mainLoop() {
     {
         shield += maxShield/200
     }
+
+    //damage(and other stuff) numbers
+    ctx.font = '10px consolas';
+    damageNumbers.forEach(number => {
+        number.y -= 4 + (Math.random() * 4 - 2)
+        switch (number.type) {
+            case xp:
+                ctx.fillStyle = 'yellow';
+                var prefix = '+';
+                var suffix = 'xp';
+            break;
+            case credits:
+                ctx.fillStyle = 'gold';
+                var prefix = '+';
+                var suffix = 'cr';
+            break;
+            case damage:
+                ctx.fillStyle = 'red';
+                var prefix = '-';
+                var suffix = 'hp';
+            break;
+            case shieldDamage:
+                ctx.fillStyle = 'blue';
+                var prefix = '-';
+                var suffix = 'sp';
+            break;
+            case heal:
+                ctx.fillStyle = 'green';
+                var prefix = '+';
+                var suffix = 'hp';
+            break;
+        }
+        ctx.fillText(prefix+number.amount+suffix,number.x,number.y)
+        //reduce opacity and remove
+    })
+
 
     //xp bar
     var xpPercentage = xp / xpRequired
@@ -1761,7 +1822,6 @@ function mainLoop() {
                     ctx.textAlign = 'center';
                     ctx.fillText(ore,x+22.5,y+17)
                     ctx.fillText('×'+inventoryTarget.amount,x+22.5,y+30)
-                    //ctx.fillText('lvl'+inventoryTarget.level,x+22.5,y+39) price???
                     ctx.textAlign = 'left';
                 }
             })
@@ -1875,7 +1935,12 @@ function mainLoop() {
                 case 'copper ore': var ore = 'cyprum'; break
             }
             ctx.font = '10px consolas';
-            ctx.fillText(type??''+'/'+hoverTarget.type+' ×'+hoverTarget.amount,375,315)
+            if (hoverTarget.type == 'stone') {
+                ctx.fillText(hoverTarget.type+' ×'+hoverTarget.amount,375,315)
+            }
+            else {
+                ctx.fillText(ore+'/'+hoverTarget.type+' ×'+hoverTarget.amount,375,315)
+            }
         }
 
         //ghost thing
@@ -1900,7 +1965,6 @@ function mainLoop() {
                 ctx.textAlign = 'center';
                 ctx.fillText(ore,mousePosX,mousePosY-5)
                 ctx.fillText('×'+beingDragged.item.amount,mousePosX,mousePosY+8)
-                //ctx.fillText('lvl'+inventoryTarget.level,x+22.5,y+39) price???
                 ctx.textAlign = 'left';
             }
         }
