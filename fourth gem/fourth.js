@@ -38,6 +38,8 @@ var corvSlotsPos = [{x:380,y:105},{x:380,y:150},{x:380,y:230},{x:510,y:105},{x:5
 var corvTierAndTurret = [{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true},{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true}]
 var beingDragged = {item:null,origin:null,type:null}
 //misc
+var canPickup = false
+var healingAccumulator = 0
 var canOpenMap = true
 var deathLocation = {x:0,y:0,ship:0,angle:0}
 var timeoutThing = true
@@ -265,7 +267,7 @@ can.addEventListener('mousemove', function(event) {
 })
 
 document.addEventListener('keydown', function(event) {
-    keysPressed = (keysPressed || []);
+    keysPressed = (keysPressed || {});
     keysPressed[event.code] = true; //console.log(event.code)
     if (event.code == 'Tab') {event.preventDefault()}
     if (event.code == 'Escape' && gameState == states.paused) {
@@ -353,8 +355,9 @@ function generateWorld() {
     ctx.textAlign = 'left';
     inventoryContent.slot4 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
     inventoryContent.slot2 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
-    inventoryContent.slot6 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
+    inventoryContent.slot6 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,2,2.5)
     inventoryContent.slot9 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,2,2.5)
+    
     inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,Infinity,0,1,0.25,0.3)
 
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
@@ -752,7 +755,6 @@ function steeringParticles(mode,x1,y1,x2,y2,projectileSize) {
 
 function fire() {
     weapons.forEach(gun => {
-        gun.currCool -= 0.02;
         if (gun.currCool <= 0) {
             if (gun.isTurret == false) {
                 var source = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
@@ -1066,6 +1068,7 @@ function mainLoop() {
     }
     
     if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory) {
+        canPickup = true
         if (movementVector[0] > 0) {
             if (movementVector[0] < 0.05) {
                 movementVector[0] = 0
@@ -1092,6 +1095,7 @@ function mainLoop() {
             else {movementVector[1] += 0.1}
         }
     }
+    else {canPickup = false}
 
     // Camera follows player
     if (playerX < camera.x + camera.deadzoneWidth / 2) {
@@ -1123,7 +1127,14 @@ function mainLoop() {
         else {playerY = worldHeight - 100; movementVector[1] = -5}
     }
 
-    weapons.forEach(gun => {gun.x += movementVector[0]; gun.y += movementVector[1]})
+    weapons.forEach(gun => {
+        if (gun.currCool > 0) {
+            gun.currCool -= 0.02;
+        }
+        gun.x += movementVector[0];
+        gun.y += movementVector[1]
+    })
+    
     //respawn and draw asteroids
     asteroidFields.forEach((field,index) => {
         if (field.currentAsteroids < field.limitOfAsteroids) {
@@ -1332,10 +1343,10 @@ function mainLoop() {
                 if (pickup.type == 'xp') {
                     pickups.splice(index,1)
                     xp += pickup.amount; console.log('gained '+pickup.amount+' xp');
-                    damageNumbers.push({type:'xp',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pickup.amount,lifetime:1})
+                    damageNumbers.push({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickup.amount,lifetime:1})
                 }
                 else if (pickup.type == 'mineral') {
-                    if (keysPressed && keysPressed['keyF']) {
+                    if (canPickup == true) {
                         Object.entries(inventoryContent).some(entry => {
                             if (entry[1] == null) {
                                 pickups.splice(index,1)
@@ -1362,10 +1373,10 @@ function mainLoop() {
                 else if (pickup.type == 'credits') {
                     pickups.splice(index,1)
                     credits += pickup.amount; console.log('gained '+pickup.amount+' credits');
-                    damageNumbers.push({type:'credits',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pickup.amount,lifetime:1})
+                    damageNumbers.push({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickup.amount,lifetime:1})
                 }
                 else if (pickup.type == 'item') {
-                    if (keysPressed && keysPressed['keyF']) {
+                    if (canPickup == true) {
                         Object.entries(inventoryContent).some(entry => {
                             if (entry[1] == null) {
                                 pickups.splice(index,1)
@@ -1408,7 +1419,7 @@ function mainLoop() {
                                 {
                                     console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
                                     projectiles.splice(index,1); last.hp -= pro.damage;
-                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*40)-20,y:last.yPos+(Math.random()*40)-20,amount:pro.damage,lifetime:1})
+                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
@@ -1455,13 +1466,13 @@ function mainLoop() {
                         projectiles.splice(index,1)
                         if (shield > 0) {
                             shield -= pro.damage
-                            damageNumbers.push({type:'shieldDamage',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pro.damage,lifetime:1})
+                            damageNumbers.push({type:'shieldDamage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                             shieldJustHit = true
                             console.log('shield absorbed '+pro.damage+' damage')
                         }
                         else {
                             health -= pro.damage
-                            damageNumbers.push({type:'damage',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:pro.damage,lifetime:1})
+                            damageNumbers.push({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                             //console.log('ship received '+pro.damage+' damage')
                         }
                     }
@@ -1497,8 +1508,8 @@ function mainLoop() {
                                     playerY += movementVector[1] * 42;
                                     weapons.forEach(gun => {gun.x += movementVector[0] * 42; gun.y += movementVector[1] * 42})
                                     health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship. butt HOW?
-                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*40)-20,y:last.yPos+(Math.random()*40)-20,amount:1,lifetime:1})
-                                    damageNumbers.push({type:'damage',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:1,lifetime:1})
+                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:1,lifetime:1})
+                                    damageNumbers.push({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:1,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
@@ -1542,10 +1553,14 @@ function mainLoop() {
     })
 
     //repair logic
-    if (healedHealth > 0) {
+    if (healedHealth > 0 && health < maxHealth) {
         health += maxHealth/2000;
         healedHealth -= maxHealth/2000
-        damageNumbers.push({type:'heal',x:playerX+(Math.random()*40)-20,y:playerY+(Math.random()*40)-20,amount:maxHealth/2000,lifeTime:1})
+        healingAccumulator++
+        if (healingAccumulator > 50) {
+            damageNumbers.push({type:'heal',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:maxHealth*0.025,lifetime:1})
+            healingAccumulator = 0
+        }
     }
 
     //shield logic
@@ -1564,38 +1579,42 @@ function mainLoop() {
     }
 
     //damage(and other stuff) numbers
-    ctx.font = '10px consolas';
+    ctx.font = '15px consolas';
+    var prefix,suffix;
     damageNumbers.forEach(number => {
-        number.y -= 4 + (Math.random() * 4 - 2)
+        number.y -= 2 + (Math.random() * 2 - 1)
+        number.lifetime -= 0.01;
+        if (!(number.lifetime > 0)) {damageNumbers.shift()}
         switch (number.type) {
-            case xp:
+            case 'xp':
                 ctx.fillStyle = 'yellow';
-                var prefix = '+';
-                var suffix = 'xp';
+                prefix = '+';
+                suffix = 'xp';
             break;
-            case credits:
+            case 'credits':
                 ctx.fillStyle = 'gold';
-                var prefix = '+';
-                var suffix = 'cr';
+                prefix = '+';
+                suffix = 'cr';
             break;
-            case damage:
+            case 'damage':
                 ctx.fillStyle = 'red';
-                var prefix = '-';
-                var suffix = 'hp';
+                prefix = '-';
+                suffix = 'hp';
             break;
-            case shieldDamage:
+            case 'shieldDamage':
                 ctx.fillStyle = 'blue';
-                var prefix = '-';
-                var suffix = 'sp';
+                prefix = '-';
+                suffix = 'sp';
             break;
-            case heal:
-                ctx.fillStyle = 'green';
-                var prefix = '+';
-                var suffix = 'hp';
+            case 'heal':
+                ctx.fillStyle = 'rgb(39, 169, 52)';
+                prefix = '+';
+                suffix = 'hp';
             break;
         }
+        ctx.globalAlpha = number.lifetime;
         ctx.fillText(prefix+number.amount+suffix,number.x,number.y)
-        //reduce opacity and remove
+        ctx.globalAlpha = 1;
     })
 
 
