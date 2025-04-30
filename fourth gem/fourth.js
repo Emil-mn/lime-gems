@@ -24,6 +24,7 @@ var canPause = true
 var hovering = false
 //inventory
 var canOpenInv = true
+var canSwitchShip = true
 var skillPointsTextWidth
 var skillPoints = 0
 var skillPointsAdding = false
@@ -38,7 +39,6 @@ var corvSlotsPos = [{x:380,y:105},{x:380,y:150},{x:380,y:230},{x:510,y:105},{x:5
 var corvTierAndTurret = [{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true},{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true}]
 var beingDragged = {item:null,origin:null,type:null}
 //misc
-var canPickup = false
 var healingAccumulator = 0
 var canOpenMap = true
 var deathLocation = {x:0,y:0,ship:0,angle:0}
@@ -782,6 +782,9 @@ function fire() {
                         projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
                     }
                 }
+                else if (gun.type == 'lsr') {
+                    //create laser beam HOW???
+                }
                 else {
                     projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
                 }
@@ -926,17 +929,20 @@ function mainLoop() {
     ctx.stroke(); ctx.strokeStyle = 'red';
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
-    if (keysPressed && keysPressed['KeyF'] && gameState != states.escaping) {
-        spriteSelection = 1
-        equipmentSlotsPos = fighterSlotsPos
-        equipmentSlotsTierAndTurret = fighterTierAndTurret
-        equipmentSlots = fighterSlots
-    }
-    else if (keysPressed && keysPressed['KeyC'] && gameState != states.escaping) {
-        spriteSelection = 2
-        equipmentSlotsPos = corvSlotsPos
-        equipmentSlotsTierAndTurret = corvTierAndTurret
-        equipmentSlots = corvetteSlots
+    if (keysPressed && keysPressed['IntlBackslash'] && gameState != states.escaping && canSwitchShip == true) {
+        canSwitchShip = false; setTimeout(function() {canSwitchShip = true},500)
+        if (spriteSelection == 2) {
+            spriteSelection = 1
+            equipmentSlotsPos = fighterSlotsPos
+            equipmentSlotsTierAndTurret = fighterTierAndTurret
+            equipmentSlots = fighterSlots
+        }
+        else if (spriteSelection == 1) {
+            spriteSelection = 2
+            equipmentSlotsPos = corvSlotsPos
+            equipmentSlotsTierAndTurret = corvTierAndTurret
+            equipmentSlots = corvetteSlots
+        }
     }
     
     if (keysPressed && keysPressed['Tab'] && canOpenInv == true && gameState != states.escaping) {
@@ -1068,7 +1074,6 @@ function mainLoop() {
     }
     
     if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory) {
-        canPickup = true
         if (movementVector[0] > 0) {
             if (movementVector[0] < 0.05) {
                 movementVector[0] = 0
@@ -1095,7 +1100,6 @@ function mainLoop() {
             else {movementVector[1] += 0.1}
         }
     }
-    else {canPickup = false}
 
     // Camera follows player
     if (playerX < camera.x + camera.deadzoneWidth / 2) {
@@ -1346,7 +1350,7 @@ function mainLoop() {
                     damageNumbers.push({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickup.amount,lifetime:1})
                 }
                 else if (pickup.type == 'mineral') {
-                    if (canPickup == true) {
+                    if (keysPressed && keysPressed['KeyG']) {
                         Object.entries(inventoryContent).some(entry => {
                             if (entry[1] == null) {
                                 pickups.splice(index,1)
@@ -1376,7 +1380,7 @@ function mainLoop() {
                     damageNumbers.push({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickup.amount,lifetime:1})
                 }
                 else if (pickup.type == 'item') {
-                    if (canPickup == true) {
+                    if (keysPressed && keysPressed['KeyG']) {
                         Object.entries(inventoryContent).some(entry => {
                             if (entry[1] == null) {
                                 pickups.splice(index,1)
@@ -1582,9 +1586,9 @@ function mainLoop() {
     ctx.font = '15px consolas';
     var prefix,suffix;
     damageNumbers.forEach(number => {
-        number.y -= 2 + (Math.random() * 2 - 1)
+        number.y -= 1.5 + (Math.random() * 1.5 - 0.75)
         number.lifetime -= 0.01;
-        if (!(number.lifetime > 0)) {damageNumbers.shift()}
+        if (number.lifetime <= 0) {damageNumbers.shift()}
         switch (number.type) {
             case 'xp':
                 ctx.fillStyle = 'yellow';
