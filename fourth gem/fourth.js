@@ -273,7 +273,6 @@ document.addEventListener('keydown', function(event) {
     if (event.code == 'Escape' && gameState == states.paused) {
         console.log('resumed'); gameState = states.main
         ctx.textAlign = 'left'; can.style.cursor = 'none'
-        skillPointsAdding = false;
         setTimeout(() => {canPause = true},500)
         interval = setInterval(mainLoop,20)
     }
@@ -426,6 +425,15 @@ function checkClick() {
             setTimeout(mainMenu,2000)
         }
     }
+    else if (gameState == states.main) {
+        if (buttonClicked(550,10,140,90) && canOpenMap == true) {
+            canOpenMap = false; setTimeout(() => {canOpenMap = true},500)
+            gameState = states.map; console.log('map clicked open')
+        }
+        else {
+            fireInterval = setInterval(fire,20)
+        }
+    }
     else if (gameState == states.paused) {
         if (buttonClicked(totW/2-130,180,260,50)) {
             console.log('resumed'); gameState = states.main
@@ -441,11 +449,19 @@ function checkClick() {
         }
         
     }
-    else if (gameState == states.main) {
-        fireInterval = setInterval(fire,20)
+    else if (gameState == states.map) {
+        if (buttonClicked(155,70,125,20) && canOpenInv == true) {
+            canOpenInv = false; setTimeout(() => {canOpenInv = true},500)
+            skillPointsAdding = false;
+            gameState = states.inventory; console.log('inventory clicked open from map')
+        }
     }
     else if (gameState == states.inventory) {
-        if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
+        if (buttonClicked(290,70,60,20) && canOpenMap == true) {
+            canOpenMap = false; setTimeout(() => {canOpenMap = true},500)
+            gameState = states.map; console.log('map clicked open from inventory')
+        }
+        else if (buttonClicked(150+skillPointsTextWidth.width+5,118,15,15)) {
             console.log('doing the skillpoint thing')
             skillPointsAdding == true ? skillPointsAdding = false : skillPointsAdding = true
         }
@@ -634,6 +650,12 @@ function hoverCheck() {
         }
         else {can.style.cursor = 'default'}
     }
+    else if (gameState == states.main) {
+        if (buttonHovered(550,10,140,90)) {
+            hovering = true; console.log('pointing at minimap')
+        }
+        else {hovering = false}
+    }
     else if (gameState == states.paused) {
         if (buttonHovered(totW/2-130,180,260,50)) {
             can.style.cursor = 'pointer'
@@ -644,7 +666,10 @@ function hoverCheck() {
         else {can.style.cursor = 'default'}
     }
     else if (gameState == states.inventory) {
-        if (buttonHovered(150+skillPointsTextWidth.width+5,118,15,15)) {
+        if (buttonHovered(290,70,60,20)) {
+            hovering = true; console.log('pointing at map tab')
+        }
+        else if (buttonHovered(150+skillPointsTextWidth.width+5,118,15,15)) {
             hovering = true; console.log('pointing at skillpoint button')
         }
         else if (skillPointsAdding == false) {
@@ -951,7 +976,6 @@ function mainLoop() {
             gameState = states.inventory; console.log('inventory open')
         }
         else {
-            skillPointsAdding = false;
             gameState = states.main; console.log('inventory closed')
         }
     }
@@ -963,7 +987,6 @@ function mainLoop() {
             gameState = states.map; console.log('map open')
         }
         else {
-            skillPointsAdding = false;
             gameState = states.main; console.log('map closed')
         }
     }
@@ -1421,7 +1444,7 @@ function mainLoop() {
                                 if (pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
                                 && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)
                                 {
-                                    console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
+                                    //console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
                                     projectiles.splice(index,1); last.hp -= pro.damage;
                                     damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                                     if (last.hp <= 0) {
@@ -1674,141 +1697,158 @@ function mainLoop() {
     }
 
     //minimap
-    //background
-    ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-150,10,140,90); 
+    {
+        //background
+        ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW-150,10,140,90); 
     
-    ctx.strokeStyle = 'rgb(76,76,76)';
-    ctx.lineWidth = 0.5;
+        ctx.strokeStyle = 'rgb(76,76,76)';
+        ctx.lineWidth = 0.5;
 
-    // Define minimap dimensions and position
-    const minimapWidth = 140;
-    const minimapHeight = 90;
-    const minimapX = 550;
-    const minimapY = 10;
+        // Define minimap dimensions and position
+        const minimapWidth = 140;
+        const minimapHeight = 90;
+        const minimapX = 550;
+        const minimapY = 10;
 
-    // Define how much of the world the minimap displays
-    const visibleWorldWidth = 7000;  // Portion of the world visible on the minimap
-    const visibleWorldHeight = 4500;
+        // Define how much of the world the minimap displays
+        const visibleWorldWidth = 7000;  // Portion of the world visible on the minimap
+        const visibleWorldHeight = 4500;
 
-    // Calculate scaling factors
-    const scaleX = minimapWidth / visibleWorldWidth;
-    const scaleY = minimapHeight / visibleWorldHeight;
+        // Calculate scaling factors
+        const scaleX = minimapWidth / visibleWorldWidth;
+        const scaleY = minimapHeight / visibleWorldHeight;
 
-    // Calculate the minimap's top-left corner in world coordinates
-    const minimapWorldX = playerX - visibleWorldWidth / 2;
-    const minimapWorldY = playerY - visibleWorldHeight / 2;
+        // Calculate the minimap's top-left corner in world coordinates
+        const minimapWorldX = playerX - visibleWorldWidth / 2;
+        const minimapWorldY = playerY - visibleWorldHeight / 2;
 
-    // Draw horizontal grid lines on the minimap
-    ctx.beginPath();
-    for (let y = 0; y <= 45000; y += 60) { // World grid interval is 60
-        // Calculate the grid line's position relative to the minimap's world representation
-        const relativeY = y - minimapWorldY * scaleY;
+        // Draw horizontal grid lines on the minimap
+        ctx.beginPath();
+        for (let y = 0; y <= 45000; y += 60) { // World grid interval is 60
+            // Calculate the grid line's position relative to the minimap's world representation
+            const relativeY = y - minimapWorldY * scaleY;
 
-        // Only draw lines within the minimap's vertical bounds
-        if (relativeY >= 0 && relativeY <= minimapHeight) {
-            ctx.moveTo(minimapX, minimapY + relativeY);
-            ctx.lineTo(minimapX + minimapWidth, minimapY + relativeY);
+            // Only draw lines within the minimap's vertical bounds
+            if (relativeY >= 0 && relativeY <= minimapHeight) {
+                ctx.moveTo(minimapX, minimapY + relativeY);
+                ctx.lineTo(minimapX + minimapWidth, minimapY + relativeY);
+            }
+        }
+        ctx.stroke();
+
+        // Draw vertical grid lines on the minimap
+        ctx.beginPath();
+        for (let x = 0; x <= 70000; x += 60) { // World grid interval is 60
+            // Calculate the grid line's position relative to the minimap's world representation
+            const relativeX = x - minimapWorldX * scaleX;
+
+            // Only draw lines within the minimap's horizontal bounds
+            if (relativeX >= 0 && relativeX <= minimapWidth) {
+                ctx.moveTo(minimapX + relativeX, minimapY);
+                ctx.lineTo(minimapX + relativeX, minimapY + minimapHeight);
+            }
+        }
+        ctx.stroke();
+
+
+        //draw asteroids
+        ctx.fillStyle = 'gray'; ctx.strokeStyle = 'grey';
+        asteroidFields.forEach(field => {
+            const relativeX = field.x - (playerX - 7000 / 2);
+            const relativeY = field.y - (playerY - 4500 / 2);
+            const relativeRight = field.x + field.width - (playerX - 7000 / 2);
+            const relativeBottom = field.y + field.height - (playerY - 4500 / 2);
+
+            if (relativeX >= 0 && relativeRight <= 7000 && relativeY >= 0 && relativeBottom <= 4500) {
+                const scaledX = (relativeX / 7000) * 140;
+                const scaledY = (relativeY / 4500) * 90;
+
+                ctx.strokeRect(550 + scaledX, 10 + scaledY, field.width / 7000 * 140, field.height / 4500 * 90)
+            }
+        })
+        asteroids.forEach(ass => {
+            const asteroid = ass[ass.length - 1];
+        
+            // Calculate the asteroid's position relative to the visible section
+            const relativeX = asteroid.xPos - (playerX - 7000 / 2);
+            const relativeY = asteroid.yPos - (playerY - 4500 / 2);
+        
+            // Check if the asteroid is within the visible section
+            if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+                // Scale the asteroid's position to the minimap
+                const scaledX = (relativeX / 7000) * 140;
+                const scaledY = (relativeY / 4500) * 90;
+            
+                // Apply the minimap offset and draw the asteroid
+                ctx.fillRect(550 + scaledX, 10 + scaledY, 2, 2);
+            }
+        });
+
+        projectiles.forEach(proj => {
+            const relativeX = (-camera.x+proj.x) + camera.x - (playerX - 7000 / 2);
+            const relativeY = (-camera.y+proj.y) + camera.y - (playerY - 4500 / 2);
+
+            if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+                const scaledX = (relativeX / 7000) * 140;
+                const scaledY = (relativeY / 4500) * 90;
+
+                if (proj.type == 'particleS' || proj.type == 'particleL') {ctx.fillStyle = 'white'}
+                else if (proj.fof == 'friendly') {ctx.fillStyle = 'green'}
+                else {ctx.fillStyle = 'red'}
+                ctx.fillRect(550 + scaledX, 10 + scaledY, 1, 1);
+            }
+        })
+
+        //death location
+        if (deathLocation.x != 0 && deathLocation.y != 0) {
+            var relativeX = deathLocation.x - (playerX - 7000 / 2)
+            var relativeY = deathLocation.y - (playerY - 4500 / 2)
+            if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+                const scaledX = (relativeX / 7000) * 140;
+                const scaledY = (relativeY / 4500) * 90;
+                ctx.fillStyle = 'black'; ctx.fillRect(550+scaledX,10+scaledY,2,2)
+            }
+        }
+    
+        //frame and trans to player loc
+        ctx.lineWidth = 2; ctx.strokeStyle = foreground;
+        ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+70,10+45);
+        //rotate and draw player
+        ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
+        ctx.moveTo(-2,2); ctx.lineTo(2,2); ctx.lineTo(0,-4); ctx.fill();
+        //restore canvas
+        ctx.translate(-(totW-150+playerX/500),-(10+playerY/500)); ctx.restore();
+    
+        //write coordinates
+        ctx.fillStyle = foreground; ctx.font = '10px consolas';
+        ctx.fillText('X:'+Math.round(playerX)+' Y:'+Math.round(playerY),552.5,97.5)
+
+        //pointing overlay
+        if (hovering == true && gameState == states.main) {
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.font = '15px consolas'
+            ctx.fillRect(minimapX+1,minimapY+1,minimapWidth-2,minimapHeight-2)
+            ctx.fillStyle = foreground; ctx.textAlign = 'center';
+            ctx.fillText('Open map[M]',minimapX+minimapWidth/2,minimapHeight/2+15)
+            ctx.textAlign = 'left';
         }
     }
-    ctx.stroke();
-
-    // Draw vertical grid lines on the minimap
-    ctx.beginPath();
-    for (let x = 0; x <= 70000; x += 60) { // World grid interval is 60
-        // Calculate the grid line's position relative to the minimap's world representation
-        const relativeX = x - minimapWorldX * scaleX;
-
-        // Only draw lines within the minimap's horizontal bounds
-        if (relativeX >= 0 && relativeX <= minimapWidth) {
-            ctx.moveTo(minimapX + relativeX, minimapY);
-            ctx.lineTo(minimapX + relativeX, minimapY + minimapHeight);
-        }
-    }
-    ctx.stroke();
-
-
-    //draw asteroids
-    ctx.fillStyle = 'gray'; ctx.strokeStyle = 'grey';
-    asteroidFields.forEach(field => {
-        const relativeX = field.x - (playerX - 7000 / 2);
-        const relativeY = field.y - (playerY - 4500 / 2);
-        const relativeRight = field.x + field.width - (playerX - 7000 / 2);
-        const relativeBottom = field.y + field.height - (playerY - 4500 / 2);
-
-        if (relativeX >= 0 && relativeRight <= 7000 && relativeY >= 0 && relativeBottom <= 4500) {
-            const scaledX = (relativeX / 7000) * 140;
-            const scaledY = (relativeY / 4500) * 90;
-
-            ctx.strokeRect(550 + scaledX, 10 + scaledY, field.width / 7000 * 140, field.height / 4500 * 90)
-        }
-    })
-    asteroids.forEach(ass => {
-        const asteroid = ass[ass.length - 1];
-    
-        // Calculate the asteroid's position relative to the visible section
-        const relativeX = asteroid.xPos - (playerX - 7000 / 2);
-        const relativeY = asteroid.yPos - (playerY - 4500 / 2);
-    
-        // Check if the asteroid is within the visible section
-        if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
-            // Scale the asteroid's position to the minimap
-            const scaledX = (relativeX / 7000) * 140;
-            const scaledY = (relativeY / 4500) * 90;
-    
-            // Apply the minimap offset and draw the asteroid
-            ctx.fillRect(550 + scaledX, 10 + scaledY, 2, 2);
-        }
-    });
-
-    projectiles.forEach(proj => {
-        const relativeX = (-camera.x+proj.x) + camera.x - (playerX - 7000 / 2);
-        const relativeY = (-camera.y+proj.y) + camera.y - (playerY - 4500 / 2);
-
-        if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
-            const scaledX = (relativeX / 7000) * 140;
-            const scaledY = (relativeY / 4500) * 90;
-
-            if (proj.type == 'particleS' || proj.type == 'particleL') {ctx.fillStyle = 'white'}
-            else if (proj.fof == 'friendly') {ctx.fillStyle = 'green'}
-            else {ctx.fillStyle = 'red'}
-            ctx.fillRect(550 + scaledX, 10 + scaledY, 1, 1);
-        }
-    })
-
-    //death location
-    if (deathLocation.x != 0 && deathLocation.y != 0) {
-        var relativeX = deathLocation.x - (playerX - 7000 / 2)
-        var relativeY = deathLocation.y - (playerY - 4500 / 2)
-        if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
-            const scaledX = (relativeX / 7000) * 140;
-            const scaledY = (relativeY / 4500) * 90;
-            ctx.fillStyle = 'black'; ctx.fillRect(550+scaledX,10+scaledY,2,2)
-        }
-    }
-    
-    //frame and trans to player loc
-    ctx.lineWidth = 2; ctx.strokeStyle = foreground;
-    ctx.strokeRect(totW-150,10,140,90); ctx.save(); ctx.translate(totW-150+70,10+45);
-    //rotate and draw player
-    ctx.rotate(playerAngle * Math.PI / 180); ctx.beginPath(); ctx.fillStyle = 'green';
-    ctx.moveTo(-2,2); ctx.lineTo(2,2); ctx.lineTo(0,-4); ctx.fill();
-    //restore canvas
-    ctx.translate(-(totW-150+playerX/500),-(10+playerY/500)); ctx.restore();
-    
-    //write coordinates
-    ctx.fillStyle = foreground; ctx.font = '10px consolas';
-    ctx.fillText('X:'+Math.round(playerX)+' Y:'+Math.round(playerY),552.5,97.5)
-
     //end minimap
 
     //inventory and stuff menu
     if (gameState == states.inventory) {
         //background
-        ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW/2-210,totH/2-135,420,270);
-        //dividers
+        ctx.fillStyle = background; ctx.fillRect(totW/2-210,totH/2-135,420,270);
+        //frame and dividers
         ctx.lineWidth = 4; ctx.strokeRect(totW/2-210,totH/2-135,420,270); ctx.beginPath();
         ctx.moveTo(totW/2+20,totH/2-135); ctx.lineTo(totW/2+20,totH/2+135); ctx.moveTo(370,300);
         ctx.lineTo(560,300); ctx.stroke(); 
+        //tab things
+        ctx.beginPath(); ctx.moveTo(155,90); ctx.lineTo(155,70); ctx.lineTo(280,70); 
+        ctx.lineTo(280,90); ctx.moveTo(290,90); ctx.lineTo(290,70); ctx.lineTo(349,70);
+        ctx.lineTo(349,90); ctx.stroke(); ctx.fillRect(157,72,121,20); ctx.fillRect(292,72,55,16)
+        ctx.fillStyle = foreground; ctx.font = '15px consolas'; ctx.fillText('Inventory[Tab]',160,85);
+        ctx.fillText('Map[M]',295,85);
+        
         //inventory slots
         ctx.lineWidth = 3; slotsX.forEach((x,xIndex) => {
             slotsY.forEach((y,yIndex) => {
@@ -1825,7 +1865,7 @@ function mainLoop() {
                 ctx.fillText(target.substring(4),x+3,y+10)
                 var inventoryTarget = inventoryContent[target];
                 if (inventoryTarget == null) {
-                    ctx.fillText('empty',x+10,y+25)
+                    ctx.fillText('empty',x+9,y+25)
                 }
                 else if (inventoryTarget instanceof weapon) {
                     ctx.font = '13px consolas'; 
@@ -2010,8 +2050,14 @@ function mainLoop() {
         var mapWidth = 420
         var mapHeight = 270
         //background & frame
-        ctx.fillStyle = 'rgba(59, 168, 240, 0.9)'; ctx.fillRect(totW/2-210,totH/2-135,420,270);
+        ctx.fillStyle = background; ctx.fillRect(totW/2-210,totH/2-135,420,270);
         ctx.lineWidth = 4; ctx.strokeStyle = foreground; ctx.strokeRect(totW/2-210,totH/2-135,420,270);
+        //tab things
+        ctx.beginPath(); ctx.moveTo(155,90); ctx.lineTo(155,70); ctx.lineTo(280,70); 
+        ctx.lineTo(280,90); ctx.moveTo(290,90); ctx.lineTo(290,70); ctx.lineTo(349,70);
+        ctx.lineTo(349,90); ctx.stroke(); ctx.fillRect(157,72,121,16); ctx.fillRect(292,72,55,20)
+        ctx.fillStyle = foreground; ctx.font = '15px consolas'; ctx.fillText('Inventory[Tab]',160,85);
+        ctx.fillText('Map[M]',295,85);
         //asteroid fields
         ctx.strokeStyle = 'gray'; ctx.lineWidth = 2
         asteroidFields.forEach(field => {
@@ -2021,34 +2067,39 @@ function mainLoop() {
             var fieldMapHeight = field.height/scaleFactor
             ctx.strokeRect(fieldMapX,fieldMapY,fieldMapWidth,fieldMapHeight)
         })
-        asteroidFields.some(field => {
-            var fieldMapX = mapX+field.x/scaleFactor
-            var fieldMapY = mapY+field.y/scaleFactor
-            var fieldMapWidth = field.width/scaleFactor
-            var fieldMapHeight = field.height/scaleFactor
-            if (mousePosX > fieldMapX && mousePosX < fieldMapX + fieldMapWidth &&
-            mousePosY > fieldMapY && mousePosY < fieldMapY + fieldMapHeight) {
-                hovering = true; ctx.font = '10px consolas'; ctx.fillStyle = foreground; ctx.lineWidth = 1;
-                ctx.strokeStyle = foreground; var xPos1,xPos2,yPos
-                
-                if (fieldMapX > 450) {xPos1 = fieldMapX-88; xPos2 = fieldMapX-86}
-                else {xPos1 = fieldMapX+fieldMapWidth+3; xPos2 = fieldMapX+fieldMapWidth+5}
-                
-                if (fieldMapY > 260) {yPos = fieldMapY-78}
-                else {yPos = fieldMapY+fieldMapHeight+3}
+        if (buttonHovered(155,70,125,20)) {
+            hovering = true; console.log('pointing at inventory tab')
+        }
+        else {
+            asteroidFields.some(field => {
+                var fieldMapX = mapX+field.x/scaleFactor
+                var fieldMapY = mapY+field.y/scaleFactor
+                var fieldMapWidth = field.width/scaleFactor
+                var fieldMapHeight = field.height/scaleFactor
+                if (mousePosX > fieldMapX && mousePosX < fieldMapX + fieldMapWidth &&
+                mousePosY > fieldMapY && mousePosY < fieldMapY + fieldMapHeight) {
+                    hovering = true; ctx.font = '10px consolas'; ctx.fillStyle = foreground; ctx.lineWidth = 1;
+                    ctx.strokeStyle = foreground; var xPos1,xPos2,yPos
 
-                ctx.strokeRect(xPos1,yPos,85,75)
-                ctx.fillText('X:'+Math.round(field.x),xPos2,yPos+10)
-                ctx.fillText('Y:'+Math.round(field.y),xPos2,yPos+20)
-                ctx.fillText('Width:'+Math.round(field.width),xPos2,yPos+30)
-                ctx.fillText('Height:'+Math.round(field.height),xPos2,yPos+40)
-                ctx.fillText('Max roids:'+field.limitOfAsteroids,xPos2,yPos+50)
-                ctx.fillText('Roids:'+field.currentAsteroids,xPos2,yPos+60)
-                ctx.fillText('New roid in:'+Math.round(field.respawnTime),xPos2,yPos+70)
-                return true
-            }
-            hovering = false; return false
-        })
+                    if (fieldMapX > 450) {xPos1 = fieldMapX-88; xPos2 = fieldMapX-86}
+                    else {xPos1 = fieldMapX+fieldMapWidth+3; xPos2 = fieldMapX+fieldMapWidth+5}
+
+                    if (fieldMapY > 260) {yPos = fieldMapY-78}
+                    else {yPos = fieldMapY+fieldMapHeight+3}
+
+                    ctx.strokeRect(xPos1,yPos,85,75)
+                    ctx.fillText('X:'+Math.round(field.x),xPos2,yPos+10)
+                    ctx.fillText('Y:'+Math.round(field.y),xPos2,yPos+20)
+                    ctx.fillText('Width:'+Math.round(field.width),xPos2,yPos+30)
+                    ctx.fillText('Height:'+Math.round(field.height),xPos2,yPos+40)
+                    ctx.fillText('Max roids:'+field.limitOfAsteroids,xPos2,yPos+50)
+                    ctx.fillText('Roids:'+field.currentAsteroids,xPos2,yPos+60)
+                    ctx.fillText('New roid in:'+Math.round(field.respawnTime),xPos2,yPos+70)
+                    return true
+                }
+                hovering = false; return false
+            })
+        }
         //death location
         if (deathLocation.x != 0 && deathLocation.y != 0) {
             ctx.fillStyle = 'black'; 
@@ -2138,7 +2189,7 @@ function mainLoop() {
             ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; 
             ctx.fillText('You died...',totW/2-200,totH/2);
             setTimeout(function() {
-                /* gameState = states.menu;skillPointsAdding = false;
+                /* gameState = states.menu
                 canPause = true; can.style.cursor = 'default';
                 mainMenu() */ window.location.reload()
             },3000)
