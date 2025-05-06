@@ -431,6 +431,7 @@ function checkClick() {
             gameState = states.map; console.log('map clicked open')
         }
         else {
+            clearInterval(fireInterval)
             fireInterval = setInterval(fire,20)
         }
     }
@@ -1365,58 +1366,67 @@ function mainLoop() {
                 else if (playerY > pickup.y) {pickup.y += 5}
             }
         }
-        playerSprite.forEach(path => {
-            if (ctx.isPointInPath(path,-camera.x + pickup.centerX,-camera.y + pickup.centerY)) {
-                if (pickup.type == 'xp') {
-                    pickups.splice(index,1)
-                    xp += pickup.amount; console.log('gained '+pickup.amount+' xp');
-                    damageNumbers.push({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickup.amount,lifetime:1})
-                }
-                else if (pickup.type == 'mineral') {
-                    if (keysPressed && keysPressed['KeyG']) {
-                        Object.entries(inventoryContent).some(entry => {
-                            if (entry[1] == null) {
-                                pickups.splice(index,1)
-                                inventoryContent[entry[0]] = pickup.amount;
-                                console.log('picked up '+pickup.amount.type+' ×'+pickup.amount.amount+' into '+entry[0])
-                                return true
-                            }
-                            else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount < 64) {
-                                pickups.splice(index,1)
-                                inventoryContent[entry[0]].amount += pickup.amount.amount;
-                                console.log('added '+pickup.amount.type+' ×'+pickup.amount.amount+' to '+entry[0])
-                                return true
-                            }
-                            else {console.log(entry[0]+' full'); return false}
-                        })
+        if (playerX > pickup.centerX - 100 && playerX < pickup.centerX + 100 && playerY > pickup.centerY - 100 && playerY < pickup.centerY + 100) {
+            if (pickup.type == 'mineral' || pickup.type == 'item') {
+                if (playerX < pickup.x) {pickup.x -= 5}
+                else if (playerX > pickup.x) {pickup.x += 5}
+                
+                if (playerY < pickup.y) {pickup.y -= 5}
+                else if (playerY > pickup.y) {pickup.y += 5}
+            }
+        }
+        if (playerX > pickup.centerX - 25 && playerX < pickup.centerX + 25 && playerY > pickup.centerY - 25 && playerY < pickup.centerY + 25) {
+            if (pickup.type == 'xp') {
+                pickups.splice(index,1)
+                xp += pickup.amount; console.log('gained '+pickup.amount+' xp');
+                damageNumbers.push({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickup.amount,lifetime:1})
+            }
+            else if (pickup.type == 'mineral') {
+                Object.entries(inventoryContent).some(entry => {
+                    if (entry[1] == null) {
+                        pickups.splice(index,1)
+                        inventoryContent[entry[0]] = pickup.amount;
+                        console.log('picked up '+pickup.amount.type+' ×'+pickup.amount.amount+' into '+entry[0])
+                        return true
                     }
-                }
-                else if (pickup.type == 'health') {
-                    pickups.splice(index,1)
-                    if (health < maxHealth && healedHealth < maxHealth - health) {
-                        healedHealth += pickup.amount;
+                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount < 64) {
+                        pickups.splice(index,1)
+                        inventoryContent[entry[0]].amount += pickup.amount.amount;
+                        console.log('added '+pickup.amount.type+' ×'+pickup.amount.amount+' to '+entry[0])
+                        return true
                     }
-                }
-                else if (pickup.type == 'credits') {
-                    pickups.splice(index,1)
-                    credits += pickup.amount; console.log('gained '+pickup.amount+' credits');
-                    damageNumbers.push({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickup.amount,lifetime:1})
-                }
-                else if (pickup.type == 'item') {
-                    if (keysPressed && keysPressed['KeyG']) {
-                        Object.entries(inventoryContent).some(entry => {
-                            if (entry[1] == null) {
-                                pickups.splice(index,1)
-                                inventoryContent[entry[0]] = pickup.amount;
-                                console.log('picked up'+pickup.amount+'into '+entry[0])
-                                return true
-                            }
-                            else {console.log(entry[0]+' full'); return false}
-                        })
+                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount >= 64) {
+                        pickups.splice(index,1)
+                        inventoryContent[entry[0]].amount = 64
+                        console.log('filled '+entry[0]+' with '+pickup.amount.type)
+                        return true
                     }
+                    else {pickups.splice(index,1); console.log(entry[0]+' full'); return false}
+                })
+            }
+            else if (pickup.type == 'health') {
+                pickups.splice(index,1)
+                if (health < maxHealth && healedHealth < maxHealth - health) {
+                    healedHealth += pickup.amount;
                 }
             }
-        })
+            else if (pickup.type == 'credits') {
+                pickups.splice(index,1)
+                credits += pickup.amount; console.log('gained '+pickup.amount+' credits');
+                damageNumbers.push({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickup.amount,lifetime:1})
+            }
+            else if (pickup.type == 'item') {
+                Object.entries(inventoryContent).some(entry => {
+                    if (entry[1] == null) {
+                        pickups.splice(index,1)
+                        inventoryContent[entry[0]] = pickup.amount;
+                        console.log('picked up'+pickup.amount+'into '+entry[0])
+                        return true
+                    }
+                    else {pickups.splice(index,1); console.log(entry[0]+' full'); return false}
+                })
+            }
+        }
     })
 
 
