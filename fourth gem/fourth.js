@@ -38,17 +38,20 @@ var fighterTierAndTurret = [{tier:1,turreted:false},{tier:1,turreted:false},{tie
 var corvSlotsPos = [{x:380,y:105},{x:380,y:150},{x:380,y:230},{x:510,y:105},{x:510,y:150},{x:510,y:230}]
 var corvTierAndTurret = [{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true},{tier:2,turreted:false},{tier:1,turreted:true},{tier:1,turreted:true}]
 var beingDragged = {item:null,origin:null,type:null}
-//misc
-var healingAccumulator = 0
-var canOpenMap = true
-var deathLocation = {x:0,y:0,ship:0,angle:0}
-var timeoutThing = true
-var hoverTarget = null
 var fighterSlots = {slot1:null,slot2:null,slot3:null}
 var corvetteSlots = {slot1:null,slot2:null,slot3:null,slot4:null,slot5:null,slot6:null}
 var equipmentSlotsPos = fighterSlotsPos
 var equipmentSlotsTierAndTurret = fighterTierAndTurret
 var equipmentSlots = fighterSlots
+//map
+var canOpenMap = true
+var deathLocation = {x:0,y:0,ship:0,angle:0}
+var hoverTarget = null
+var waypoint = {x:0,y:0}
+var waypointTimer = 2
+//misc
+var healingAccumulator = 0
+var timeoutThing = true
 //arrays
 var enemies = []
 var asteroidFields = []
@@ -451,14 +454,28 @@ function checkClick() {
         
     }
     else if (gameState == states.map) {
-        if (buttonClicked(155,70,125,20) && canOpenInv == true) {
+        var scaleFactor = 166.6666666666667
+        var mapX = totW/2-210; var mapY = totH/2-135
+        var mapWidth = 420; var mapHeight = 270
+        if (buttonClicked(155,70,20,20)) {
+            gameState = states.main; console.log('map closed')
+            hovering = false
+        }
+        else if (buttonClicked(185,70,125,20) && canOpenInv == true) {
             canOpenInv = false; setTimeout(() => {canOpenInv = true},500)
             skillPointsAdding = false;
             gameState = states.inventory; console.log('inventory clicked open from map')
         }
+        else if (mouseClickX > mapX && mouseClickX < mapX + mapWidth && mouseClickY > mapY && mouseClickY < mapY + mapHeight) {
+            waypoint.x = Math.floor((mouseClickX - mapX) * scaleFactor); waypoint.y = Math.floor((mouseClickY - mapY) * scaleFactor);
+        }
     }
     else if (gameState == states.inventory) {
-        if (buttonClicked(290,70,60,20) && canOpenMap == true) {
+        if (buttonClicked(155,70,20,20)) {
+            gameState = states.main; console.log('inventory closed')
+            hovering = false
+        }
+        else if (buttonClicked(320,70,60,20) && canOpenMap == true) {
             canOpenMap = false; setTimeout(() => {canOpenMap = true},500)
             gameState = states.map; console.log('map clicked open from inventory')
         }
@@ -667,7 +684,10 @@ function hoverCheck() {
         else {can.style.cursor = 'default'}
     }
     else if (gameState == states.inventory) {
-        if (buttonHovered(290,70,60,20)) {
+        if (buttonHovered(155,70,20,20)) {
+            hovering = true; console.log('pointing at close button')
+        }
+        else if (buttonHovered(320,70,60,20)) {
             hovering = true; console.log('pointing at map tab')
         }
         else if (buttonHovered(150+skillPointsTextWidth.width+5,118,15,15)) {
@@ -955,6 +975,12 @@ function mainLoop() {
     ctx.stroke(); ctx.strokeStyle = 'red';
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
+    //waypoints
+    ctx.lineWidth = 5; ctx.strokeStyle = 'green'; ctx.beginPath();
+    ctx.arc(-camera.x + waypoint.x,-camera.y + waypoint.y,120,0,7);
+    ctx.stroke()
+
+
     if (keysPressed && keysPressed['IntlBackslash'] && gameState != states.escaping && canSwitchShip == true) {
         canSwitchShip = false; setTimeout(function() {canSwitchShip = true},500)
         if (spriteSelection == 2) {
@@ -1163,6 +1189,12 @@ function mainLoop() {
         gun.y += movementVector[1]
     })
     
+    if (playerX > waypoint.x -120 && playerX < waypoint.x + 120 && playerY > waypoint.y - 120 && playerY < waypoint.y + 120) {
+        waypointTimer -= 0.02;
+        if (waypointTimer < 0) {waypoint.x = 0; waypoint.y = 0}
+    }
+    else if (waypointTimer < 2) {waypointTimer = 2}
+
     //respawn and draw asteroids
     asteroidFields.forEach((field,index) => {
         if (field.currentAsteroids < field.limitOfAsteroids) {
@@ -1355,79 +1387,74 @@ function mainLoop() {
     //ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
 
     //pickups
-    pickups.forEach((pickup,index) => {
-        pickup.update()
-        if (playerX > pickup.centerX - 150 && playerX < pickup.centerX + 150 && playerY > pickup.centerY - 150 && playerY < pickup.centerY + 150) {
-            if (pickup.type != 'mineral' && pickup.type != 'item') {
-                if (playerX < pickup.x) {pickup.x -= 5}
-                else if (playerX > pickup.x) {pickup.x += 5}
+    for (var i = 0; i < pickups.length; i++) {
+        pickups[i].update()
+        if (playerX > pickups[i].centerX - 150 && playerX < pickups[i].centerX + 150 && playerY > pickups[i].centerY - 150 && playerY < pickups[i].centerY + 150) {
+            if (pickups[i].type != 'mineral' && pickups[i].type != 'item') {
+                if (playerX < pickups[i].x) {pickups[i].x -= 4}
+                else if (playerX > pickups[i].x) {pickups[i].x += 4}
                 
-                if (playerY < pickup.y) {pickup.y -= 5}
-                else if (playerY > pickup.y) {pickup.y += 5}
+                if (playerY < pickups[i].y) {pickups[i].y -= 4}
+                else if (playerY > pickups[i].y) {pickups[i].y += 4}
             }
         }
-        if (playerX > pickup.centerX - 100 && playerX < pickup.centerX + 100 && playerY > pickup.centerY - 100 && playerY < pickup.centerY + 100) {
-            if (pickup.type == 'mineral' || pickup.type == 'item') {
-                if (playerX < pickup.x) {pickup.x -= 5}
-                else if (playerX > pickup.x) {pickup.x += 5}
+        if (playerX > pickups[i].centerX - 100 && playerX < pickups[i].centerX + 100 && playerY > pickups[i].centerY - 100 && playerY < pickups[i].centerY + 100) {
+            if (pickups[i].type == 'mineral' || pickups[i].type == 'item') {
+                if (playerX < pickups[i].x) {pickups[i].x -= 2.5}
+                else if (playerX > pickups[i].x) {pickups[i].x += 2.5}
                 
-                if (playerY < pickup.y) {pickup.y -= 5}
-                else if (playerY > pickup.y) {pickup.y += 5}
+                if (playerY < pickups[i].y) {pickups[i].y -= 2.5}
+                else if (playerY > pickups[i].y) {pickups[i].y += 2.5}
             }
         }
-        if (playerX > pickup.centerX - 25 && playerX < pickup.centerX + 25 && playerY > pickup.centerY - 25 && playerY < pickup.centerY + 25) {
-            if (pickup.type == 'xp') {
-                pickups.splice(index,1)
-                xp += pickup.amount; console.log('gained '+pickup.amount+' xp');
-                damageNumbers.push({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickup.amount,lifetime:1})
+        if (playerX > pickups[i].centerX - 25 && playerX < pickups[i].centerX + 25 && playerY > pickups[i].centerY - 25 && playerY < pickups[i].centerY + 25) {
+            if (pickups[i].type == 'xp') {
+                xp += pickups[i].amount; console.log('gained '+pickups[i].amount+' xp');
+                damageNumbers.push({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
-            else if (pickup.type == 'mineral') {
+            else if (pickups[i].type == 'mineral') {
                 Object.entries(inventoryContent).some(entry => {
                     if (entry[1] == null) {
-                        pickups.splice(index,1)
-                        inventoryContent[entry[0]] = pickup.amount;
-                        console.log('picked up '+pickup.amount.type+' ×'+pickup.amount.amount+' into '+entry[0])
+                        inventoryContent[entry[0]] = pickups[i].amount;
+                        console.log('picked up '+pickups[i].amount.type+' ×'+pickups[i].amount.amount+' into '+entry[0])
                         return true
                     }
-                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount < 64) {
-                        pickups.splice(index,1)
-                        inventoryContent[entry[0]].amount += pickup.amount.amount;
-                        console.log('added '+pickup.amount.type+' ×'+pickup.amount.amount+' to '+entry[0])
+                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount < 64) {
+                        inventoryContent[entry[0]].amount += pickups[i].amount.amount;
+                        console.log('added '+pickups[i].amount.type+' ×'+pickups[i].amount.amount+' to '+entry[0])
                         return true
                     }
-                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickup.amount.type && entry[1].amount + pickup.amount.amount >= 64) {
-                        pickups.splice(index,1)
+                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount >= 64) {
                         inventoryContent[entry[0]].amount = 64
-                        console.log('filled '+entry[0]+' with '+pickup.amount.type)
+                        console.log('filled '+entry[0]+' with '+pickups[i].amount.type)
                         return true
                     }
-                    else {pickups.splice(index,1); console.log(entry[0]+' full'); return false}
+                    else {console.log(entry[0]+' full'); return false}
                 })
             }
-            else if (pickup.type == 'health') {
-                pickups.splice(index,1)
+            else if (pickups[i].type == 'health') {
                 if (health < maxHealth && healedHealth < maxHealth - health) {
-                    healedHealth += pickup.amount;
+                    healedHealth += pickups[i].amount;
                 }
             }
-            else if (pickup.type == 'credits') {
-                pickups.splice(index,1)
-                credits += pickup.amount; console.log('gained '+pickup.amount+' credits');
-                damageNumbers.push({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickup.amount,lifetime:1})
+            else if (pickups[i].type == 'credits') {
+                credits += pickups[i].amount; console.log('gained '+pickups[i].amount+' credits');
+                damageNumbers.push({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
-            else if (pickup.type == 'item') {
+            else if (pickups[i].type == 'item') {
                 Object.entries(inventoryContent).some(entry => {
                     if (entry[1] == null) {
-                        pickups.splice(index,1)
-                        inventoryContent[entry[0]] = pickup.amount;
-                        console.log('picked up'+pickup.amount+'into '+entry[0])
+                        inventoryContent[entry[0]] = pickups[i].amount;
+                        console.log('picked up'+pickups[i].amount+'into '+entry[0])
                         return true
                     }
-                    else {pickups.splice(index,1); console.log(entry[0]+' full'); return false}
+                    else {console.log(entry[0]+' full'); return false}
                 })
             }
+            pickups.splice(i,1);
+            i--
         }
-    })
+    }
 
 
     projectiles.forEach((pro,index) => {
@@ -1816,7 +1843,18 @@ function mainLoop() {
             if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
                 const scaledX = (relativeX / 7000) * 140;
                 const scaledY = (relativeY / 4500) * 90;
-                ctx.fillStyle = 'black'; ctx.fillRect(550+scaledX,10+scaledY,2,2)
+                ctx.fillStyle = 'black'; ctx.fillRect(550+scaledX,10+scaledY,3,3)
+            }
+        }
+
+        //waypoint
+        if (waypoint.x != 0 && waypoint.y != 0) {
+            var relativeX = waypoint.x - (playerX - 7000 / 2)
+            var relativeY = waypoint.y - (playerY - 4500 / 2)
+            if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+                const scaledX = (relativeX / 7000) * 140;
+                const scaledY = (relativeY / 4500) * 90;
+                ctx.fillStyle = 'green'; ctx.fillRect(550+scaledX,10+scaledY,3,3)
             }
         }
     
@@ -1848,19 +1886,39 @@ function mainLoop() {
     if (gameState == states.inventory) {
         //background
         ctx.fillStyle = background; ctx.fillRect(totW/2-210,totH/2-135,420,270);
+        
         //frame and dividers
         ctx.lineWidth = 4; ctx.strokeRect(totW/2-210,totH/2-135,420,270); ctx.beginPath();
         ctx.moveTo(totW/2+20,totH/2-135); ctx.lineTo(totW/2+20,totH/2+135); ctx.moveTo(370,300);
         ctx.lineTo(560,300); ctx.stroke(); 
+        
+        //closing button
+        ctx.beginPath(); ctx.moveTo(155,90); ctx.lineTo(155,70); ctx.lineTo(175,70);
+        ctx.lineTo(175,90); ctx.stroke(); ctx.fillRect(157,72,16,16); ctx.lineWidth = 2; 
+        ctx.strokeStyle = 'red'; ctx.beginPath(); ctx.moveTo(160,75); ctx.lineTo(170,85);
+        ctx.moveTo(160,85); ctx.lineTo(170,75); ctx.stroke()
+        
         //tab things
-        ctx.beginPath(); ctx.moveTo(155,90); ctx.lineTo(155,70); ctx.lineTo(280,70); 
-        ctx.lineTo(280,90); ctx.moveTo(290,90); ctx.lineTo(290,70); ctx.lineTo(349,70);
-        ctx.lineTo(349,90); ctx.stroke(); ctx.fillRect(157,72,121,20); ctx.fillRect(292,72,55,16)
-        ctx.fillStyle = foreground; ctx.font = '15px consolas'; ctx.fillText('Inventory[Tab]',160,85);
-        ctx.fillText('Map[M]',295,85);
+        ctx.strokeStyle = foreground; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(185,90); ctx.lineTo(185,70); ctx.lineTo(310,70); 
+        ctx.lineTo(310,90); ctx.moveTo(320,90); ctx.lineTo(320,70); ctx.lineTo(379,70);
+        ctx.lineTo(379,90); ctx.stroke(); ctx.fillRect(187,72,121,20); ctx.fillRect(322,72,55,16)
+        ctx.fillStyle = foreground; ctx.font = '15px consolas'; ctx.fillText('Inventory[Tab]',190,85);
+        ctx.fillText('Map[M]',325,85);
+        
+        //level related text
+        ctx.font = '15px consolas'; ctx.fillStyle = foreground; skillPointsTextWidth = ctx.measureText('Skillpoints: '+skillPoints)
+        ctx.fillText('Level '+level+' => '+(level+1)+'  '+Math.floor(xp)+'/'+xpRequired,150,110); ctx.fillText('Skillpoints: '+skillPoints,150,130)
+        
+        //skillpoint adding button
+        ctx.lineWidth = 2; ctx.strokeRect(150+skillPointsTextWidth.width+5,118,15,15); ctx.beginPath(); 
+        ctx.moveTo(150+skillPointsTextWidth.width+8,125.5); ctx.lineTo(150+skillPointsTextWidth.width+17,125.5); 
+        ctx.moveTo(150+skillPointsTextWidth.width+12.5,121); ctx.lineTo(150+skillPointsTextWidth.width+12.5,130); 
+        if (skillPoints > 0) {ctx.strokeStyle = 'red'}; ctx.stroke()
         
         //inventory slots
-        ctx.lineWidth = 3; slotsX.forEach((x,xIndex) => {
+        ctx.lineWidth = 3; ctx.strokeStyle = foreground;
+        slotsX.forEach((x,xIndex) => {
             slotsY.forEach((y,yIndex) => {
                 ctx.strokeRect(x,y,45,45)
                 var target = 'slot'
@@ -1900,14 +1958,7 @@ function mainLoop() {
             })
         })
 
-        //level related text
-        ctx.font = '15px consolas'; ctx.fillStyle = foreground; skillPointsTextWidth = ctx.measureText('Skillpoints: '+skillPoints)
-        ctx.fillText('Level '+level+' => '+(level+1)+'  '+Math.floor(xp)+'/'+xpRequired,150,110); ctx.fillText('Skillpoints: '+skillPoints,150,130)
-        //skillpoint adding button
-        ctx.lineWidth = 2; ctx.strokeRect(150+skillPointsTextWidth.width+5,118,15,15); ctx.beginPath(); 
-        ctx.moveTo(150+skillPointsTextWidth.width+8,125.5); ctx.lineTo(150+skillPointsTextWidth.width+17,125.5); 
-        ctx.moveTo(150+skillPointsTextWidth.width+12.5,121); ctx.lineTo(150+skillPointsTextWidth.width+12.5,130); 
-        if (skillPoints > 0) {ctx.strokeStyle = 'red'}; ctx.stroke()
+        
         //ship display
         if (spriteSelection == 1) {updateFighterSprite(465,200); playerSprite = fighter}
         else if (spriteSelection == 2) {updateCorvetteSprite(465,180); playerSprite = corvette; ctx.scale(0.80,0.80); ctx.translate(totW*0.165,totH*0.165)}
@@ -2062,12 +2113,18 @@ function mainLoop() {
         //background & frame
         ctx.fillStyle = background; ctx.fillRect(totW/2-210,totH/2-135,420,270);
         ctx.lineWidth = 4; ctx.strokeStyle = foreground; ctx.strokeRect(totW/2-210,totH/2-135,420,270);
+        //closing button
+        ctx.beginPath(); ctx.moveTo(155,90); ctx.lineTo(155,70); ctx.lineTo(175,70);
+        ctx.lineTo(175,90); ctx.stroke(); ctx.fillRect(157,72,16,16); ctx.lineWidth = 2; 
+        ctx.strokeStyle = 'red'; ctx.beginPath(); ctx.moveTo(160,75); ctx.lineTo(170,85);
+        ctx.moveTo(160,85); ctx.lineTo(170,75); ctx.stroke()
         //tab things
-        ctx.beginPath(); ctx.moveTo(155,90); ctx.lineTo(155,70); ctx.lineTo(280,70); 
-        ctx.lineTo(280,90); ctx.moveTo(290,90); ctx.lineTo(290,70); ctx.lineTo(349,70);
-        ctx.lineTo(349,90); ctx.stroke(); ctx.fillRect(157,72,121,16); ctx.fillRect(292,72,55,20)
-        ctx.fillStyle = foreground; ctx.font = '15px consolas'; ctx.fillText('Inventory[Tab]',160,85);
-        ctx.fillText('Map[M]',295,85);
+        ctx.lineWidth = 4; ctx.strokeStyle = foreground;
+        ctx.beginPath(); ctx.moveTo(185,90); ctx.lineTo(185,70); ctx.lineTo(310,70); 
+        ctx.lineTo(310,90); ctx.moveTo(320,90); ctx.lineTo(320,70); ctx.lineTo(379,70);
+        ctx.lineTo(379,90); ctx.stroke(); ctx.fillRect(187,72,121,16); ctx.fillRect(322,72,55,20)
+        ctx.fillStyle = foreground; ctx.font = '15px consolas'; ctx.fillText('Inventory[Tab]',190,85);
+        ctx.fillText('Map[M]',325,85);
         //asteroid fields
         ctx.strokeStyle = 'gray'; ctx.lineWidth = 2
         asteroidFields.forEach(field => {
@@ -2077,7 +2134,10 @@ function mainLoop() {
             var fieldMapHeight = field.height/scaleFactor
             ctx.strokeRect(fieldMapX,fieldMapY,fieldMapWidth,fieldMapHeight)
         })
-        if (buttonHovered(155,70,125,20)) {
+        if (buttonHovered(155,70,20,20)) {
+            hovering = true; console.log('pointing at close button')
+        }
+        else if (buttonHovered(185,70,125,20)) {
             hovering = true; console.log('pointing at inventory tab')
         }
         else {
@@ -2113,7 +2173,12 @@ function mainLoop() {
         //death location
         if (deathLocation.x != 0 && deathLocation.y != 0) {
             ctx.fillStyle = 'black'; 
-            ctx.fillRect(mapX + deathLocation.x / scaleFactor, mapY + deathLocation.y / scaleFactor, 3, 3)
+            ctx.fillRect(mapX + deathLocation.x / scaleFactor,mapY + deathLocation.y / scaleFactor,3,3)
+        }
+        //waypoint
+        if (waypoint.x != 0 && waypoint.y != 0) {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(mapX + waypoint.x / scaleFactor,mapY + waypoint.y / scaleFactor,3,3)
         }
         //player arrow
         ctx.save(); ctx.translate(mapX+playerX/scaleFactor,mapY+playerY/scaleFactor);
