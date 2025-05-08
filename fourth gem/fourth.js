@@ -16,6 +16,8 @@ var mouseClickX
 var mouseClickY
 var keysPressed
 var ctx = can.getContext('2d')
+var zoomLevel = 1
+var zoomOffset = 1
 //states
 var states = {menu:0,main:1,paused:2,inventory:3,map:4,escaping:5}
 var gameState = states.menu
@@ -288,6 +290,17 @@ document.addEventListener('keyup', function(event) {
         keysPressed[event.code] = false; //console.log(keysPressed)
         if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
     }
+})
+
+can.addEventListener('wheel', function(scroll) {
+    if (scroll.deltaY > 0 && zoomLevel > 0.5) {zoomLevel -= 0.1;}
+    else if (scroll.deltaY < 0 && zoomLevel < 1.0) {zoomLevel += 0.1}
+    zoomLevel = Math.round(zoomLevel * 10) / 10
+    if (zoomLevel != 1) {
+        zoomOffset = (1 + (1 - zoomLevel) * 2)
+    }
+    else {zoomOffset = 1}
+    console.log(zoomLevel+':'+zoomOffset)
 })
 
 function buttonClicked(x,y,width,height) {
@@ -950,7 +963,14 @@ class Projectile {
 }
 
 function mainLoop() {
-    ctx.fillStyle = 'rgb(66,66,66)'; ctx.fillRect(0,0,totW,totH)
+    ctx.scale(zoomLevel,zoomLevel)
+    camera.width = 700 * zoomOffset
+    camera.height = 450 * zoomOffset
+    camera.deadzoneWidth = 350 * zoomOffset
+    camera.deadzoneHeight = 225 * zoomOffset
+    
+    
+    ctx.fillStyle = 'rgb(66,66,66)'; ctx.fillRect(0,0,totW * zoomOffset,totH * zoomOffset)
     ctx.beginPath(); ctx.strokeStyle = 'rgb(76, 76, 76)';       
     ctx.lineWidth = 5;
     
@@ -1020,9 +1040,9 @@ function mainLoop() {
 
     //levelling up
     if (xp >= xpRequired && gameState != states.escaping) { 
-        xp -= xpRequired; skillPoints += spAmounts[level]; ctx.fillStyle = foreground;
-        ctx.font = '30px consolas'; displayLevelUpMessage = 3;
-        level++; xpRequired = xpReqs[level];
+        xp -= xpRequired; skillPoints += spAmounts[level];
+        displayLevelUpMessage = 3; level++
+        xpRequired = xpReqs[level];
     }
 
     //turning
@@ -1165,7 +1185,8 @@ function mainLoop() {
     else if (playerY > camera.y + camera.height - camera.deadzoneHeight / 2) {
         camera.y = Math.min(worldHeight - camera.height, playerY - camera.height + camera.deadzoneHeight / 2);
     }
-    
+    ctx.strokeStyle = 'red'; ctx.lineWidth = 5
+    ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
     //move player
     if (playerX > -camera.x + 60 && playerX < worldWidth - 60)
     {playerX += movementVector[0]}
@@ -1384,7 +1405,7 @@ function mainLoop() {
             }
         })
     }
-    //ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
+    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
 
     //pickups
     for (var i = 0; i < pickups.length; i++) {
@@ -1410,7 +1431,7 @@ function mainLoop() {
         if (playerX > pickups[i].centerX - 25 && playerX < pickups[i].centerX + 25 && playerY > pickups[i].centerY - 25 && playerY < pickups[i].centerY + 25) {
             if (pickups[i].type == 'xp') {
                 xp += pickups[i].amount; console.log('gained '+pickups[i].amount+' xp');
-                damageNumbers.push({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickups[i].amount,lifetime:1})
+                damageNumbers.unshift({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
             else if (pickups[i].type == 'mineral') {
                 Object.entries(inventoryContent).some(entry => {
@@ -1439,7 +1460,7 @@ function mainLoop() {
             }
             else if (pickups[i].type == 'credits') {
                 credits += pickups[i].amount; console.log('gained '+pickups[i].amount+' credits');
-                damageNumbers.push({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickups[i].amount,lifetime:1})
+                damageNumbers.unshift({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
             else if (pickups[i].type == 'item') {
                 Object.entries(inventoryContent).some(entry => {
@@ -1483,7 +1504,7 @@ function mainLoop() {
                                 {
                                     //console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
                                     projectiles.splice(index,1); last.hp -= pro.damage;
-                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
+                                    damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
@@ -1530,13 +1551,13 @@ function mainLoop() {
                         projectiles.splice(index,1)
                         if (shield > 0) {
                             shield -= pro.damage
-                            damageNumbers.push({type:'shieldDamage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
+                            damageNumbers.unshift({type:'shieldDamage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                             shieldJustHit = true
                             console.log('shield absorbed '+pro.damage+' damage')
                         }
                         else {
                             health -= pro.damage
-                            damageNumbers.push({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
+                            damageNumbers.unshift({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                             //console.log('ship received '+pro.damage+' damage')
                         }
                     }
@@ -1572,8 +1593,8 @@ function mainLoop() {
                                     playerY += movementVector[1] * 42;
                                     weapons.forEach(gun => {gun.x += movementVector[0] * 42; gun.y += movementVector[1] * 42})
                                     health -= 1; last.hp -= 1; //these numbers should change depending on the size of the asteroid and the size/strength of the ship. butt HOW?
-                                    damageNumbers.push({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:1,lifetime:1})
-                                    damageNumbers.push({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:1,lifetime:1})
+                                    damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:1,lifetime:1})
+                                    damageNumbers.unshift({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:1,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
@@ -1622,7 +1643,7 @@ function mainLoop() {
         healedHealth -= maxHealth/2000
         healingAccumulator++
         if (healingAccumulator > 50) {
-            damageNumbers.push({type:'heal',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:maxHealth*0.025,lifetime:1})
+            damageNumbers.unshift({type:'heal',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:maxHealth*0.025,lifetime:1})
             healingAccumulator = 0
         }
     }
@@ -1645,11 +1666,10 @@ function mainLoop() {
     //damage(and other stuff) numbers
     ctx.font = '15px consolas';
     var prefix,suffix;
-    damageNumbers.forEach(number => {
-        number.y -= 1.5 + (Math.random() * 1.5 - 0.75)
-        number.lifetime -= 0.01;
-        if (number.lifetime <= 0) {damageNumbers.shift()}
-        switch (number.type) {
+    for (var i = damageNumbers.length-1; i > -1; i--) {
+        damageNumbers[i].y -= 1.5 + (Math.random() * 1.5 - 0.75)
+        damageNumbers[i].lifetime -= 0.01;
+        switch (damageNumbers[i].type) {
             case 'xp':
                 ctx.fillStyle = 'yellow';
                 prefix = '+';
@@ -1676,11 +1696,14 @@ function mainLoop() {
                 suffix = 'hp';
             break;
         }
-        ctx.globalAlpha = number.lifetime;
-        ctx.fillText(prefix+number.amount+suffix,number.x,number.y)
+        if (damageNumbers[i].lifetime > 0) {ctx.globalAlpha = damageNumbers[i].lifetime;}
+        else {ctx.globalAlpha = 0}
+        ctx.fillText(prefix+damageNumbers[i].amount+suffix,damageNumbers[i].x,damageNumbers[i].y)
         ctx.globalAlpha = 1;
-    })
+        if (damageNumbers[i].lifetime <= 0) {damageNumbers.pop()}
+    }
 
+    ctx.resetTransform()
 
     //xp bar
     var xpPercentage = xp / xpRequired
