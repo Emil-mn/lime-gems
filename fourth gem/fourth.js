@@ -296,10 +296,9 @@ can.addEventListener('wheel', function(scroll) {
     if (scroll.deltaY > 0 && zoomLevel > 0.5) {zoomLevel -= 0.1;}
     else if (scroll.deltaY < 0 && zoomLevel < 1.0) {zoomLevel += 0.1}
     zoomLevel = Math.round(zoomLevel * 10) / 10
-    if (zoomLevel != 1) {
-        zoomOffset = (1 + (1 - zoomLevel) * 2)
-    }
-    else {zoomOffset = 1}
+    
+    zoomOffset = 1 / zoomLevel
+    
     console.log(zoomLevel+':'+zoomOffset)
 })
 
@@ -828,7 +827,7 @@ function fire() {
                         //var target = {x:Math.cos(gun.angle)+500,y:Math.sin(gun.angle)+500}
                     //}
                     //else {
-                        var target = {x:mousePosX+camera.x,y:mousePosY+camera.y}
+                        var target = {x:(mousePosX*zoomOffset)+camera.x,y:(mousePosY*zoomOffset)+camera.y}
                     //}
                 }
                 else {
@@ -898,7 +897,7 @@ class weapon {
         this.update = function() {
             if (isPlayer == true) {
                 var point1 = rotatePoint(this.x,this.y,playerX,playerY,playerAngle)
-                this.angle = Math.atan2(mousePosY+camera.y - point1.y, mousePosX+camera.x - point1.x)*(180 / Math.PI)+90
+                this.angle = Math.atan2((mousePosY*zoomOffset)+camera.y - point1.y, (mousePosX*zoomOffset)+camera.x - point1.x)*(180 / Math.PI)+90
                 //console.log(this.angle)
             }
             else {
@@ -1187,6 +1186,7 @@ function mainLoop() {
     }
     ctx.strokeStyle = 'red'; ctx.lineWidth = 5
     ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
+    ctx.strokeRect(-camera.x + camera.x,-camera.y + camera.y,camera.width,camera.height)
     //move player
     if (playerX > -camera.x + 60 && playerX < worldWidth - 60)
     {playerX += movementVector[0]}
@@ -1246,7 +1246,7 @@ function mainLoop() {
                 asteroids.push(asteroid)
             }
         }
-        if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {
+        if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < camera.width && -camera.y + field.y + field.height > 0 && -camera.y + field.y < camera.height) {
             ctx.strokeStyle = 'rgb(255, 130, 0)'; lineWidth = 5; ctx.strokeRect(-camera.x + field.x,-camera.y + field.y,field.width,field.height)
             asteroids.forEach(steroid => {
                 var last = steroid[steroid.length - 1];
@@ -1278,7 +1278,7 @@ function mainLoop() {
     })
 
     //draw wrecked version of ship
-    if (-camera.x + deathLocation.x > 0 && -camera.x + deathLocation.x < totW && -camera.y + deathLocation.y > 0 && -camera.y + deathLocation.y < totH) {
+    if (-camera.x + deathLocation.x > 0 && -camera.x + deathLocation.x < camera.width && -camera.y + deathLocation.y > 0 && -camera.y + deathLocation.y < camera.height) {
         if (deathLocation.x != 0 && deathLocation.y != 0) {
             ctx.save();
             ctx.translate(-camera.x + deathLocation.x, -camera.y + deathLocation.y); 
@@ -1372,12 +1372,13 @@ function mainLoop() {
         console.log('colission detection running'); ctx.fillStyle = 'blue'
         playerSprite.forEach(path => {
             for (var xy = -100; xy < 100; xy += 10) {
-                var rot1 = rotatePoint(-camera.x + worldWidth - 60,-camera.y + playerY + xy, -camera.x + playerX,-camera.y + playerY,-playerAngle)
+                var rot1 = rotatePoint((-camera.x + worldWidth - 60)/zoomOffset,(-camera.y + playerY + xy)/zoomOffset, (-camera.x + playerX)/zoomOffset,(-camera.y + playerY)/zoomOffset,-playerAngle)
                 ctx.fillRect(-camera.x + worldWidth - 60,-camera.y + playerY + xy,2,2)
                 ctx.fillRect(rot1.x,rot1.y,2,2)
             
-                var rot2 = rotatePoint(-camera.x + 60,-camera.y + playerY + xy,-camera.x + playerX,-camera.y + playerY,-playerAngle)
-                ctx.fillRect(-camera.x + 60,-camera.y + playerY + xy,2,2)
+                var rot2 = rotatePoint((-camera.x + 60)/zoomOffset,(-camera.y + playerY + xy)/zoomOffset,(-camera.x + playerX)/zoomOffset,(-camera.y + playerY)/zoomOffset,-playerAngle)
+                ctx.fillRect((-camera.x + 60)/zoomOffset,(-camera.y + playerY + xy)/zoomOffset,2,2)
+                ctx.fillRect(rot2.x,rot2.y,2,2)
             
                 if (ctx.isPointInPath(path,rot1.x,rot1.y)) {
                     playerX -= 200; movementVector[0] = -3
@@ -1388,11 +1389,13 @@ function mainLoop() {
                     weapons.forEach(gun => {gun.x += 200})
                 }
 
-                var rot3 = rotatePoint(-camera.x + playerX + xy,-camera.y + worldHeight - 60,-camera.x + playerX,-camera.y + playerY,playerAngle)
-                ctx.fillRect(-camera.x + playerX + xy,-camera.y + worldHeight - 60,2,2)
+                var rot3 = rotatePoint((-camera.x + playerX + xy)/zoomOffset,(-camera.y + worldHeight - 60)/zoomOffset,(-camera.x + playerX)/zoomOffset,(-camera.y + playerY)/zoomOffset,playerAngle)
+                ctx.fillRect((-camera.x + playerX + xy)/zoomOffset,(-camera.y + worldHeight - 60)/zoomOffset,2,2)
+                ctx.fillRect(rot3.x,rot3.y,2,2)
 
-                var rot4 = rotatePoint(-camera.x + playerX + xy,-camera.y + 60,-camera.x + playerX,-camera.y + playerY,playerAngle)
-                ctx.fillRect(-camera.x + playerX + xy,-camera.y + 60,2,2)
+                var rot4 = rotatePoint((-camera.x + playerX + xy)/zoomOffset,(-camera.y + 60)/zoomOffset,(-camera.x + playerX)/zoomOffset,(-camera.y + playerY)/zoomOffset,playerAngle)
+                ctx.fillRect((-camera.x + playerX + xy)/zoomOffset,(-camera.y + 60)/zoomOffset,2,2)
+                ctx.fillRect(rot4.x,rot4.y,2,2)
 
                 if (ctx.isPointInPath(path,rot3.x,rot3.y)) {
                     playerY -= 200; movementVector[1] = -3
