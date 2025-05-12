@@ -1185,8 +1185,8 @@ function mainLoop() {
         camera.y = Math.min(worldHeight - camera.height, playerY - camera.height + camera.deadzoneHeight / 2);
     }
     ctx.strokeStyle = 'red'; ctx.lineWidth = 5
-    ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
-    ctx.strokeRect(-camera.x + camera.x,-camera.y + camera.y,camera.width,camera.height)
+    /* ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
+    ctx.strokeRect(-camera.x + camera.x,-camera.y + camera.y,camera.width,camera.height) */
     //move player
     if (playerX > -camera.x + 60 && playerX < worldWidth - 60)
     {playerX += movementVector[0]}
@@ -1408,7 +1408,7 @@ function mainLoop() {
             }
         })
     }
-    ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
+    //ctx.fillStyle = 'red'; ctx.fillRect(playerX-camera.x-1,playerY-camera.y-1,2,2)//center of player
 
     //pickups
     for (var i = 0; i < pickups.length; i++) {
@@ -1423,7 +1423,7 @@ function mainLoop() {
             }
         }
         if (playerX > pickups[i].centerX - 100 && playerX < pickups[i].centerX + 100 && playerY > pickups[i].centerY - 100 && playerY < pickups[i].centerY + 100) {
-            if (pickups[i].type == 'mineral' || pickups[i].type == 'item') {
+            if (pickups[i].type == 'mineral') {
                 if (playerX < pickups[i].x) {pickups[i].x -= 2.5}
                 else if (playerX > pickups[i].x) {pickups[i].x += 2.5}
                 
@@ -1466,14 +1466,16 @@ function mainLoop() {
                 damageNumbers.unshift({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
             else if (pickups[i].type == 'item') {
-                Object.entries(inventoryContent).some(entry => {
-                    if (entry[1] == null) {
-                        inventoryContent[entry[0]] = pickups[i].amount;
-                        console.log('picked up'+pickups[i].amount+'into '+entry[0])
-                        return true
-                    }
-                    else {console.log(entry[0]+' full'); return false}
-                })
+                if (keysPressed && keysPressed['KeyG']) {
+                    Object.entries(inventoryContent).some(entry => {
+                        if (entry[1] == null) {
+                            inventoryContent[entry[0]] = pickups[i].amount;
+                            console.log('picked up'+pickups[i].amount+'into '+entry[0])
+                            return true
+                        }
+                        else {console.log(entry[0]+' full'); return false}
+                    })
+                }
             }
             pickups.splice(i,1);
             i--
@@ -1573,7 +1575,7 @@ function mainLoop() {
 
     //asteroid player collisions
     asteroidFields.forEach((field,fIndex) => {
-        if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {
+        if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < camera.width && -camera.y + field.y + field.height > 0 && -camera.y + field.y < camera.height) {
             asteroids.forEach((aroid,roidIndex) => {
                 var last = aroid[aroid.length - 1];
                 if (last.field == fIndex) {
@@ -1585,11 +1587,11 @@ function mainLoop() {
                             var rotateAroundAsteroidCenter = rotatePoint(assPointX,assPointY,last.xPos,last.yPos,last.angle)
                             ctx.fillStyle = 'red'
                             ctx.fillRect(-camera.x+rotateAroundAsteroidCenter.x,-camera.y+rotateAroundAsteroidCenter.y,3,3)
-                            var thenRotateAroundPlayerPos = rotatePoint(rotateAroundAsteroidCenter.x,rotateAroundAsteroidCenter.y,playerX,playerY,playerAngle)
+                            var thenRotateAroundPlayerPos = rotatePoint(rotateAroundAsteroidCenter.x,rotateAroundAsteroidCenter.y,playerX,playerY,-playerAngle)
                             ctx.fillStyle = 'chartreuse'
                             ctx.fillRect(-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y,3,3)
                             playerSprite.forEach(path => {
-                                if (ctx.isPointInPath(path,-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y)) {
+                                if (ctx.isPointInPath(path,(-camera.x+thenRotateAroundPlayerPos.x)/zoomOffset,(-camera.y+thenRotateAroundPlayerPos.y)/zoomOffset)) {
                                     movementVector[0] = -movementVector[0] / 2
                                     movementVector[1] = -movementVector[1] / 2
                                     playerX += movementVector[0] * 42;
@@ -1616,20 +1618,6 @@ function mainLoop() {
                                             }
                                             pickups.push(new pickup(x,y,4,4,'gray','mineral',{type:type,amount:Math.round(last.xp/6)}))
                                         }
-                                        //health test
-                                        for (var h = 0; h < 8; h++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            pickups.push(new pickup(x,y,3,3,'red','health',last.xp/8))
-                                        }
-                                        //credits test
-                                        for (var c = 0; c < 8; c++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
-                                        }
-                                        //gun test
-                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
                                     }
                                 }
                             })
@@ -1707,6 +1695,24 @@ function mainLoop() {
     }
 
     ctx.resetTransform()
+
+    //guide arrows
+    if (waypoint.x != 0 && waypoint.y != 0) {
+        var angle = Math.atan2((camera.y + camera.height / 2) - waypoint.y,(camera.x + camera.width / 2) - waypoint.x) - 1.570796
+        ctx.save(); ctx.translate(totW/2,totH/2);
+        ctx.rotate(angle); ctx.translate(-totW/2,-totH/2);
+        ctx.strokeStyle = 'green'; ctx.lineWidth = 3; ctx.beginPath()
+        ctx.moveTo(totW/2-15,totH/2-185); ctx.lineTo(totW/2,totH/2-200)
+        ctx.lineTo(totW/2+15,totH/2-185); ctx.stroke(); ctx.restore()
+    }
+    if (deathLocation.x != 0 && deathLocation.y != 0) {
+        var angle = Math.atan2((camera.y + camera.height / 2) - deathLocation.y,(camera.x + camera.width / 2) - deathLocation.x) - 1.570796
+        ctx.save(); ctx.translate(totW/2,totH/2);
+        ctx.rotate(angle); ctx.translate(-totW/2,-totH/2);
+        ctx.strokeStyle = 'black'; ctx.lineWidth = 3; ctx.beginPath()
+        ctx.moveTo(totW/2-15,totH/2-185); ctx.lineTo(totW/2,totH/2-200)
+        ctx.lineTo(totW/2+15,totH/2-185); ctx.stroke(); ctx.restore()
+    }
 
     //xp bar
     var xpPercentage = xp / xpRequired
@@ -1973,6 +1979,10 @@ function mainLoop() {
                     switch (inventoryTarget.type) {
                         case 'iron ore': var ore = 'Fe'; break
                         case 'copper ore': var ore = 'Cu'; break
+                        
+                        case 'silver': var ore = 'Ag'; break
+                        case 'gold': var ore = 'Au'; break
+
                         default: var ore = 'stn'; break
                     }
                     ctx.font = '13px consolas'; 
@@ -2083,6 +2093,9 @@ function mainLoop() {
             switch (hoverTarget.type) {
                 case 'iron ore': var ore = 'ferrum'; break
                 case 'copper ore': var ore = 'cyprum'; break
+                
+                case 'silver': var ore = 'argentum'; break
+                case 'gold': var ore = 'aurum'; break
             }
             ctx.font = '10px consolas';
             if (hoverTarget.type == 'stone') {
@@ -2108,6 +2121,10 @@ function mainLoop() {
                 switch (beingDragged.item.type) {
                     case 'iron ore': var ore = 'Fe'; break
                     case 'copper ore': var ore = 'Cu'; break
+                    
+                    case 'silver': var ore = 'Ag'; break
+                    case 'gold': var ore = 'Au'; break
+                    
                     default: var ore = 'stn'; break
                 }
                 ctx.font = '13px consolas'; 
@@ -2219,6 +2236,10 @@ function mainLoop() {
             ctx.fillText('X:'+mouseMapX+' Y:'+mouseMapY,mapX+5,mapY+mapHeight-5)
         }
         else {ctx.fillText('X:'+NaN+' Y:'+NaN,mapX+5,mapY+mapHeight-5)}
+        //help text
+        ctx.font = '10px consolas'; ctx.textAlign = 'right'; 
+        ctx.fillText('Click anywhere to set waypoint',mapX+mapWidth-5,mapY+mapHeight-5)
+        ctx.textAlign = 'left';
     }
 
     //cursor
