@@ -54,6 +54,7 @@ var waypointTimer = 2
 //misc
 var healingAccumulator = 0
 var timeoutThing = true
+var pickupTarget = null
 //arrays
 var enemies = []
 var asteroidFields = []
@@ -995,10 +996,11 @@ function mainLoop() {
     ctx.strokeRect(-camera.x+60,-camera.y+60,worldWidth-120,worldHeight-120)
 
     //waypoints
-    ctx.lineWidth = 5; ctx.strokeStyle = 'green'; ctx.beginPath();
-    ctx.arc(-camera.x + waypoint.x,-camera.y + waypoint.y,120,0,7);
-    ctx.stroke()
-
+    if (waypoint.x != 0 && waypoint.y != 0) {
+        ctx.lineWidth = 5; ctx.strokeStyle = 'green'; ctx.beginPath();
+        ctx.arc(-camera.x + waypoint.x,-camera.y + waypoint.y,120,0,7);
+        ctx.stroke()
+    }
 
     if (keysPressed && keysPressed['IntlBackslash'] && gameState != states.escaping && canSwitchShip == true) {
         canSwitchShip = false; setTimeout(function() {canSwitchShip = true},500)
@@ -1448,7 +1450,7 @@ function mainLoop() {
                         console.log('added '+pickups[i].amount.type+' ×'+pickups[i].amount.amount+' to '+entry[0])
                         return true
                     }
-                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount >= 64) {
+                    else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount >= 64 && entry[1].amount < 64) {
                         inventoryContent[entry[0]].amount = 64
                         console.log('filled '+entry[0]+' with '+pickups[i].amount.type)
                         return true
@@ -1465,20 +1467,27 @@ function mainLoop() {
                 credits += pickups[i].amount; console.log('gained '+pickups[i].amount+' credits');
                 damageNumbers.unshift({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
-            else if (pickups[i].type == 'item') {
+            
+            if (pickups[i].type != 'item') {
+                pickups.splice(i,1);
+                i--
+            }
+            else {
+                pickups[i].amount.x = pickups[i].x
+                pickups[i].amount.y = pickups[i].y
+                pickupTarget = pickups[i].amount
                 if (keysPressed && keysPressed['KeyG']) {
                     Object.entries(inventoryContent).some(entry => {
                         if (entry[1] == null) {
                             inventoryContent[entry[0]] = pickups[i].amount;
                             console.log('picked up'+pickups[i].amount+'into '+entry[0])
+                            pickups.splice(i,1); i--; pickupTarget = null
                             return true
                         }
                         else {console.log(entry[0]+' full'); return false}
                     })
                 }
             }
-            pickups.splice(i,1);
-            i--
         }
     }
 
@@ -1541,7 +1550,7 @@ function mainLoop() {
                                             pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
                                         }
                                         //gun test
-                                        pickups.push(new pickup(x+10,y+10,4,4,'purple','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,3)))
+                                        pickups.push(new pickup(x+10,y+10,5,5,'hotpink','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)))
                                     }
                                 }
                             }
@@ -1695,6 +1704,40 @@ function mainLoop() {
     }
 
     ctx.resetTransform()
+
+    //weapon pickup info
+    if (pickupTarget != null) {
+        switch (pickupTarget.type) {
+            case 'mg':
+                var type = ' machinegun'
+            break;
+            case 'sg':
+                var type = ' shotgun'
+            break;
+            default:
+                var type = ' missing'
+            break;
+        }
+        ctx.lineWidth = 4; ctx.font = '10px consolas'; ctx.fillStyle = background;
+        ctx.fillRect(500,380,190,60); ctx.fillStyle = foreground; ctx.strokeStyle = foreground;
+        ctx.strokeRect(500,380,190,60); 
+        
+        ctx.beginPath(); ctx.lineWidth = 2; ctx.moveTo(500,380); 
+        ctx.lineTo((-camera.x + pickupTarget.x + 2.5)/zoomOffset,(-camera.y + pickupTarget.y + 2.5)/zoomOffset); 
+        ctx.stroke();
+        
+        ctx.fillText('tier '+pickupTarget.tier+type+' level '+pickupTarget.level,505,395)
+        var DPSmin = pickupTarget.projDmgMin*(1/pickupTarget.fireCooldown)
+        var DPSmax = pickupTarget.projDmgMax*(1/pickupTarget.fireCooldown)
+        ctx.fillText('firerate: '+(1/pickupTarget.fireCooldown)+' shots/sec',505,405)
+        ctx.fillText('damage: '+pickupTarget.projDmgMin+'-'+pickupTarget.projDmgMax+' | DPS: '+DPSmin+'-'+DPSmax,505,415)
+        ctx.fillText('inaccuracy: '+pickupTarget.projAccuracy+'° | proj speed: '+pickupTarget.projSpeed,505,425)
+        ctx.fillText('critrate: '+pickupTarget.projCritRate+'% | crit multi: ×'+pickupTarget.projCritDmg,505,435)
+        
+        ctx.font = '18px consolas'; ctx.textAlign = 'center';
+        ctx.fillText('[G]',(-camera.x + pickupTarget.x + 2.5)/zoomOffset,(-camera.y + pickupTarget.y - 10)/zoomOffset)
+        ctx.textAlign = 'left'; pickupTarget = null
+    }
 
     //guide arrows
     if (waypoint.x != 0 && waypoint.y != 0) {
