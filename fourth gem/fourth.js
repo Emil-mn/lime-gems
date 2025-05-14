@@ -368,12 +368,17 @@ function generateWorld() {
     ctx.fillStyle = foreground; ctx.font = '50px consolas'; 
     ctx.fillText('Generating world...',totW/2,200);
     ctx.textAlign = 'left';
-    inventoryContent.slot4 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
-    inventoryContent.slot2 = new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)
-    inventoryContent.slot6 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,2,2.5)
-    inventoryContent.slot9 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,2,2.5)
+    inventoryContent.slot1 = new weapon('mg',1,1,0.2,false,true,2,6,10,2,1.5,2)
+    inventoryContent.slot2 = new weapon('mg',1,1,0.2,false,true,2,6,10,2,1.5,2)
+    inventoryContent.slot3 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,1,1.5)
+    inventoryContent.slot4 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,1,1.5)
+    inventoryContent.slot5 = new weapon('cnn',2,1,2,false,true,1,7,5,1.5,15,30)
+    inventoryContent.slot6 = new weapon('cnn',2,1,2,false,true,1,7,5,1.5,15,30)
     
-    inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,Infinity,0,1,0.25,0.3)
+    inventoryContent.slot13 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
+    inventoryContent.slot14 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
+    inventoryContent.slot15 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
+    inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
 
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
@@ -599,7 +604,7 @@ function checkDrop() {
                             var weaponspos = [{x:playerX-30,y:playerY},{x:playerX+30,y:playerY},{x:playerX,y:playerY}]
                         }
                         else if (spriteSelection == 2) {
-                            var weaponspos = [{x:NaN,y:NaN},{x:playerX-25,y:playerY-5},{x:playerX-25,y:playerY+25},{x:NaN,y:NaN},{x:playerX+25,y:playerY-5},{x:playerX+25,y:playerY+25}]
+                            var weaponspos = [{x:playerX-25,y:playerY-40},{x:playerX-25,y:playerY-5},{x:playerX-25,y:playerY+25},{x:playerX+25,y:playerY-40},{x:playerX+25,y:playerY-5},{x:playerX+25,y:playerY+25}]
                         }
                         beingDragged.item.x = weaponspos[posIndex].x
                         beingDragged.item.y = weaponspos[posIndex].y
@@ -817,19 +822,14 @@ function fire() {
         if (gun.currCool <= 0) {
             if (gun.isTurret == false) {
                 var source = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
-                var target = rotatePoint(gun.x,gun.y-20,playerX,playerY,playerAngle)
+                var target = rotatePoint(gun.x,gun.y-100,playerX,playerY,playerAngle)
             }
             else {
                 var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
                 var source = rotatePoint(point1.x,point1.y-15,point1.x,point1.y,gun.angle)
                 
                 if (gun.isPlayer == true) {
-                    //if (gun.type == 'lsr') {
-                        //var target = {x:Math.cos(gun.angle)+500,y:Math.sin(gun.angle)+500}
-                    //}
-                    //else {
-                        var target = {x:(mousePosX*zoomOffset)+camera.x,y:(mousePosY*zoomOffset)+camera.y}
-                    //}
+                    var target = {x:(mousePosX*zoomOffset)+camera.x,y:(mousePosY*zoomOffset)+camera.y}
                 }
                 else {
                     var target = {x:playerX,y:playerY}
@@ -841,11 +841,13 @@ function fire() {
                         projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
                     }
                 }
-                else if (gun.type == 'lsr') {
-                    //create laser beam HOW???
-                }
                 else {
-                    projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
+                    if (gun.type != 'cnn') {
+                        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
+                    }
+                    else {
+                        projectiles.push(new Projectile(6,6,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
+                    }
                 }
             }
             else {
@@ -924,8 +926,17 @@ class Projectile {
         this.critRate = critRate
         this.critRand = Math.random() * 100
         this.angle = Math.atan2(targetY - this.centerY, targetX - this.centerX) + (Math.random() * (2 * accuracy) - accuracy) * Math.PI / 180
-        this.dx = Math.cos(this.angle) * speed + shipSpeed[0]
-        this.dy = Math.sin(this.angle) * speed + shipSpeed[1]
+        if (this.type != 'lsr') {
+            this.dx = Math.cos(this.angle) * speed + shipSpeed[0]
+            this.dy = Math.sin(this.angle) * speed + shipSpeed[1]
+        }
+        else {
+            this.dx = Math.cos(this.angle)
+            this.dy = Math.sin(this.angle)
+            this.path = new Path2D()
+            this.path.moveTo(-camera.x+this.x,-camera.y+this.y);
+            this.path.lineTo(-camera.x+this.x+this.dx*1100,-camera.y+this.y+this.dy*1100);
+        }
         this.lifeTime = 0
         if (this.type == 'particleS' || this.type == 'particleL') {
             this.lifeTimeRand = Math.random()
@@ -938,11 +949,17 @@ class Projectile {
 
         this.update = function() {
             this.lifeTime += 0.02
-            this.x += this.dx
-            this.y += this.dy
-            this.centerX = this.x + this.width / 2
-            this.centerY = this.y + this.height / 2
-            ctx.fillRect(-camera.x+this.x, -camera.y+this.y, this.width, this.height)
+            if (this.type != 'lsr') {
+                this.x += this.dx
+                this.y += this.dy
+                this.centerX = this.x + this.width / 2
+                this.centerY = this.y + this.height / 2
+                ctx.fillRect(-camera.x+this.x, -camera.y+this.y, this.width, this.height)
+            }
+            else {
+                ctx.lineWidth = 2; ctx.strokeStyle = 'red';
+                ctx.stroke(this.path)
+            }
         }
         this.crashWith = function (otherobj) {
             var myleft = this.x
@@ -1311,14 +1328,26 @@ function mainLoop() {
     if (gameState != states.escaping) {
         weapons.forEach(gun => {
             if (gun.isTurret == false) {
-                ctx.beginPath()
-                ctx.strokeStyle = shipStroke;
-                ctx.lineWidth = 3;
-                var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
-                var point2 = rotatePoint(gun.x,gun.y+30,playerX,playerY,playerAngle)
-                ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
-                ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
-                ctx.stroke()
+                if (gun.tier == 1) {
+                    ctx.beginPath()
+                    ctx.strokeStyle = shipStroke;
+                    ctx.lineWidth = 3;
+                    var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
+                    var point2 = rotatePoint(gun.x,gun.y+30,playerX,playerY,playerAngle)
+                    ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
+                    ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+                    ctx.stroke()
+                }
+                else if (gun.tier == 2) {
+                    ctx.beginPath()
+                    ctx.strokeStyle = shipStroke;
+                    ctx.lineWidth = 6;
+                    var point1 = rotatePoint(gun.x,gun.y,playerX,playerY,playerAngle)
+                    var point2 = rotatePoint(gun.x,gun.y+50,playerX,playerY,playerAngle)
+                    ctx.moveTo(-camera.x+point1.x,-camera.y+point1.y)
+                    ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+                    ctx.stroke()
+                }
             }
         })
     }
@@ -1439,24 +1468,33 @@ function mainLoop() {
                 damageNumbers.unshift({type:'xp',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
             else if (pickups[i].type == 'mineral') {
+                var inventoryFull = false;
                 Object.entries(inventoryContent).some(entry => {
                     if (entry[1] == null) {
                         inventoryContent[entry[0]] = pickups[i].amount;
                         console.log('picked up '+pickups[i].amount.type+' ×'+pickups[i].amount.amount+' into '+entry[0])
-                        return true
+                        inventoryFull = false; return true
                     }
                     else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount < 64) {
                         inventoryContent[entry[0]].amount += pickups[i].amount.amount;
                         console.log('added '+pickups[i].amount.type+' ×'+pickups[i].amount.amount+' to '+entry[0])
-                        return true
+                        inventoryFull = false; return true
                     }
                     else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount >= 64 && entry[1].amount < 64) {
                         inventoryContent[entry[0]].amount = 64
                         console.log('filled '+entry[0]+' with '+pickups[i].amount.type)
-                        return true
+                        inventoryFull = false; return true
                     }
-                    else {console.log(entry[0]+' full'); return false}
+                    else {
+                        console.log(entry[0]+' full'); inventoryFull = true; return false
+                    }
                 })
+                if (inventoryFull == true) {
+                    damageNumbers.unshift({type:'inventory full',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:'inventory full',lifetime:1})
+                }
+                else {
+                    damageNumbers.unshift({type:'mineral',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:pickups[i].amount,lifetime:1})
+                }
             }
             else if (pickups[i].type == 'health') {
                 if (health < maxHealth && healedHealth < maxHealth - health) {
@@ -1477,15 +1515,22 @@ function mainLoop() {
                 pickups[i].amount.y = pickups[i].y
                 pickupTarget = pickups[i].amount
                 if (keysPressed && keysPressed['KeyG']) {
+                    var inventoryFull = false;
                     Object.entries(inventoryContent).some(entry => {
                         if (entry[1] == null) {
                             inventoryContent[entry[0]] = pickups[i].amount;
                             console.log('picked up'+pickups[i].amount+'into '+entry[0])
                             pickups.splice(i,1); i--; pickupTarget = null
-                            return true
+                            inventoryFull = false; return true
                         }
-                        else {console.log(entry[0]+' full'); return false}
+                        else {
+                            console.log(entry[0]+' full'); inventoryFull = true; return false
+                        }
+                        
                     })
+                    if (inventoryFull == true) {
+                        damageNumbers.unshift({type:'inventory full',x:playerX+(Math.random()*100-50) - camera.x,y:playerY+(Math.random()*100-50) - camera.y,amount:'inventory full',lifetime:1})
+                    }
                 }
             }
         }
@@ -1501,23 +1546,27 @@ function mainLoop() {
             ctx.fillStyle = 'blue'
             if (pro.lifeTime > 0.5 + pro.lifeTimeRand) {projectiles.splice(index,1)}
         }
-        else if (pro.type == 'mg' || pro.type == 'sg') {
-            if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
-            else { ctx.fillStyle = 'gold'}
-            if (pro.lifeTime > 10) {projectiles.splice(index,1)}
+        else {
+            if (pro.type != 'lsr') {
+                if (pro.critRand < pro.critRate) { ctx.fillStyle = 'red'} 
+                else { ctx.fillStyle = 'gold'}
+                if (pro.lifeTime > 10) {projectiles.splice(index,1)}
+            }
+            else if (pro.lifeTime >= 0.02) {projectiles.splice(index,1)}
+            
             if (pro.fof == 'friendly') {
                 //shooting asteroids
                 asteroidFields.forEach((field,fIndex) => {
-                    if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < totW && -camera.y + field.y + field.height > 0 && -camera.y + field.y < totH) {    
+                    if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < camera.width && -camera.y + field.y + field.height > 0 && -camera.y + field.y < camera.height) {    
                         asteroids.forEach((roid,roidIndex) => {
                             var last = roid[roid.length - 1];
                             if (last.field == fIndex) {
                                 //if (index == 0) {console.log(Math.floor(pro.x - -camera.x)); console.log(Math.floor(pro.y - -camera.y))}
-                                if (pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
-                                && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)
+                                if ((pro.type != 'lsr' && pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
+                                && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)||(pro.type == 'lsr' && ctx.isPointInPath(pro.path,last.xPos,last.yPos)))
                                 {
                                     //console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
-                                    projectiles.splice(index,1); last.hp -= pro.damage;
+                                    last.hp -= pro.damage; projectiles.splice(index,1);
                                     damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
@@ -1695,10 +1744,25 @@ function mainLoop() {
                 prefix = '+';
                 suffix = 'hp';
             break;
+            case 'mineral':
+                ctx.fillStyle = 'gray';
+                prefix = '+';
+                suffix = ' ×'+damageNumbers[i].amount.amount
+            break;
+            case 'inventory full':
+                ctx.fillStyle = 'red';
+                prefix = '!';
+                suffix = '!';
+            break;
         }
         if (damageNumbers[i].lifetime > 0) {ctx.globalAlpha = damageNumbers[i].lifetime;}
         else {ctx.globalAlpha = 0}
-        ctx.fillText(prefix+damageNumbers[i].amount+suffix,damageNumbers[i].x,damageNumbers[i].y)
+        if (damageNumbers[i].type != 'mineral') {
+            ctx.fillText(prefix+damageNumbers[i].amount+suffix,damageNumbers[i].x,damageNumbers[i].y)
+        }
+        else {
+            ctx.fillText(prefix+damageNumbers[i].amount.type+suffix,damageNumbers[i].x,damageNumbers[i].y)
+        }
         ctx.globalAlpha = 1;
         if (damageNumbers[i].lifetime <= 0) {damageNumbers.pop()}
     }
@@ -2115,21 +2179,34 @@ function mainLoop() {
             switch (hoverTarget.type) {
                 case 'mg':
                     var type = ' machinegun'
-                    break;
+                break;
                 case 'sg':
                     var type = ' shotgun'
-                    break;
+                break;
+                case 'lsr':
+                    var type = ' laser'
+                break;
+                case 'cnn':
+                    var type = ' cannon'
+                break;
                 default:
                     var type = ' missing'
-                    break;
+                break;
             }
             ctx.font = '10px consolas';
             ctx.fillText('tier '+hoverTarget.tier+type+' level '+hoverTarget.level,375,315)
             var DPSmin = hoverTarget.projDmgMin*(1/hoverTarget.fireCooldown)
             var DPSmax = hoverTarget.projDmgMax*(1/hoverTarget.fireCooldown)
-            ctx.fillText('firerate: '+(1/hoverTarget.fireCooldown)+' shots/sec',375,325)
-            ctx.fillText('damage: '+hoverTarget.projDmgMin+'-'+hoverTarget.projDmgMax+' | DPS: '+DPSmin+'-'+DPSmax,375,335)
-            ctx.fillText('inaccuracy: '+hoverTarget.projAccuracy+'° | proj speed: '+hoverTarget.projSpeed,375,345)
+            if (hoverTarget.type != 'lsr') {
+                ctx.fillText('firerate: '+(1/hoverTarget.fireCooldown)+' shots/sec',375,325)
+                ctx.fillText('damage: '+hoverTarget.projDmgMin+'-'+hoverTarget.projDmgMax+' | DPS: '+DPSmin+'-'+DPSmax,375,335)
+                ctx.fillText('inaccuracy: '+hoverTarget.projAccuracy+'° | proj speed: '+hoverTarget.projSpeed,375,345)
+            }
+            else {
+                ctx.fillText('firerate: '+50+' shots/sec',375,325)
+                ctx.fillText('damage: '+hoverTarget.projDmgMin+'-'+hoverTarget.projDmgMax+' | DPS: '+hoverTarget.projDmgMin*50+'-'+hoverTarget.projDmgMax*50,375,335)
+                ctx.fillText('inaccuracy: '+hoverTarget.projAccuracy+'° | proj speed: ∞',375,345)
+            }
             ctx.fillText('critrate: '+hoverTarget.projCritRate+'% | crit multi: ×'+hoverTarget.projCritDmg,375,355)
         }
         else {
