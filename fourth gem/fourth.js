@@ -569,7 +569,7 @@ function checkDrop() {
                     }
                     else if (beingDragged.type == 'equipment') {
                         equipmentSlots[beingDragged.origin] = null
-                        weapons.splice(weapons.findIndex(gun => gun.slot = beingDragged.origin),1)
+                        weapons.splice(weapons.findIndex(gun => gun.slot == beingDragged.origin),1)
                         beingDragged.item.slot = null
                     }
                     console.log('moved '+beingDragged.item+' from the '+beingDragged.type+' slot '+beingDragged.origin+' to the inventory slot '+target)
@@ -662,7 +662,7 @@ function checkDrop() {
             }
             else if (beingDragged.type == 'equipment') {
                 equipmentSlots[beingDragged.origin] = null
-                weapons.splice(weapons.findIndex(gun => gun.slot = beingDragged.origin),1)
+                weapons.splice(weapons.findIndex(gun => gun.slot == beingDragged.origin),1)
                 beingDragged.item.slot = null
             }
             pickups.push(new pickup(pos.x,pos.y,5,5,'orange','item',beingDragged.item))
@@ -767,6 +767,31 @@ function rotatePoint(px, py, cx, cy, angle) {
     let finalY = rotatedY + cy;
 
     return { x: finalX, y: finalY };
+}
+
+function doesLineIntersectCircle(x1, y1, x2, y2, cx, cy, r) {
+    // Translate the line and circle so the circle is at the origin
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    let fx = x1 - cx;
+    let fy = y1 - cy;
+
+    // Quadratic coefficients
+    let a = dx * dx + dy * dy;
+    let b = 2 * (fx * dx + fy * dy);
+    let c = fx * fx + fy * fy - r * r;
+
+    // Discriminant
+    let discriminant = b * b - 4 * a * c;
+
+    // Check the discriminant
+    if (discriminant < 0) {
+        // No intersection
+        return false;
+    } else {
+        // Intersection exists
+        return true;
+    }
 }
 
 function steeringParticles(mode,x1,y1,x2,y2,projectileSize) {
@@ -933,6 +958,8 @@ class Projectile {
         else {
             this.dx = Math.cos(this.angle)
             this.dy = Math.sin(this.angle)
+            this.startPoint = {x:this.x,y:this.y}
+            this.endPoint = {x:this.x+this.dx*1100,y:this.y+this.dy*1100}
             this.path = new Path2D()
             this.path.moveTo(-camera.x+this.x,-camera.y+this.y);
             this.path.lineTo(-camera.x+this.x+this.dx*1100,-camera.y+this.y+this.dy*1100);
@@ -1563,10 +1590,10 @@ function mainLoop() {
                             if (last.field == fIndex) {
                                 //if (index == 0) {console.log(Math.floor(pro.x - -camera.x)); console.log(Math.floor(pro.y - -camera.y))}
                                 if ((pro.type != 'lsr' && pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
-                                && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)||(pro.type == 'lsr' && ctx.isPointInPath(pro.path,last.xPos,last.yPos)))
+                                && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)||(pro.type == 'lsr' && doesLineIntersectCircle(pro.startPoint.x,pro.startPoint.y,pro.endPoint.x,pro.endPoint.y,last.xPos,last.yPos,last.radius)))
                                 {
                                     //console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
-                                    last.hp -= pro.damage; projectiles.splice(index,1);
+                                    last.hp -= pro.damage; if (pro.type != 'lsr') {projectiles.splice(index,1)}
                                     damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
