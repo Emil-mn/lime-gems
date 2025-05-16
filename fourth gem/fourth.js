@@ -61,6 +61,7 @@ var asteroidFields = []
 var asteroids = []
 var weapons = []
 var damageNumbers = []
+var explosions = []
 var inventoryContent = {slot1:null,slot2:null,slot3:null,slot4:null,slot5:null,slot6:null,slot7:null,slot8:null,
     slot9:null,slot10:null,slot11:null,slot12:null,slot13:null,slot14:null,slot15:null,slot16:null
 }
@@ -372,9 +373,11 @@ function generateWorld() {
     inventoryContent.slot2 = new weapon('mg',1,1,0.2,false,true,2,6,10,2,1.5,2)
     inventoryContent.slot3 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,1,1.5)
     inventoryContent.slot4 = new weapon('sg',1,1,1,false,true,8,6,5,1.5,1,1.5)
-    inventoryContent.slot5 = new weapon('cnn',2,1,2,false,true,1,7,5,1.5,15,30)
-    inventoryContent.slot6 = new weapon('cnn',2,1,2,false,true,1,7,5,1.5,15,30)
-    
+    inventoryContent.slot5 = new weapon('cnn',2,1,2,false,true,1,8,5,1.5,15,30)
+    inventoryContent.slot6 = new weapon('cnn',2,1,2,false,true,1,8,5,1.5,15,30)
+    inventoryContent.slot7 = new weapon('rlg',2,1,4,false,true,1,15,2,1.25,25,50)
+    inventoryContent.slot8 = new weapon('rlg',2,1,4,false,true,1,15,2,1.25,25,50)
+
     inventoryContent.slot13 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
     inventoryContent.slot14 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
     inventoryContent.slot15 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
@@ -794,6 +797,72 @@ function doesLineIntersectCircle(x1, y1, x2, y2, cx, cy, r) {
     }
 }
 
+function dropStuff(mode,last) {
+    if (mode == 'asteroid') {
+        for (var n = 0; n < 10; n++) {
+            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+            pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
+        }
+        for (var o = 0; o < 6; o++) {
+            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+            switch (Math.floor(Math.random()*3)) {
+                case 0: var type = 'stone'; break
+                case 1: var type = 'iron ore'; break
+                case 2: var type = 'copper ore'; break
+            }
+            pickups.push(new pickup(x,y,4,4,'gray','mineral',{type:type,amount:Math.round(last.xp/6)}))
+        }
+    }
+    else if (mode == 'enemy') {
+        for (var h = 0; h < 8; h++) {
+            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+            pickups.push(new pickup(x,y,3,3,'red','health',last.xp/8))
+        }
+        for (var c = 0; c < 8; c++) {
+            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
+            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
+            pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
+        }
+        pickups.push(new pickup(x+10,y+10,5,5,'hotpink','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)))
+    }
+}
+
+function blastDamage(hitX,hitY,damage,radius) {
+    asteroidFields.forEach((field,fIndex) => {
+        if (-camera.x + field.x + field.width > 0 && -camera.x + field.x < camera.width && -camera.y + field.y + field.height > 0 && -camera.y + field.y < camera.height) {    
+            for (var ast = 0; ast < asteroids.length; ast++) {
+                var roid = asteroids[ast]
+                var last = roid[roid.length - 1];
+                if (last.field == fIndex) {
+                    //if roid inside blast radius
+                    if (last.xPos > hitX-radius && last.xPos < hitX+radius && last.yPos > hitY-radius && last.yPos < hitY+radius)
+                    {
+                        //calculate damage based on how far the center of the roid is between the edge and center of the radius
+                        var distanceFromCenter = Math.hypot(last.xPos - hitX,last.yPos - hitY)
+                        var fraction = distanceFromCenter / radius;
+                        var blastDmg = damage * fraction
+
+                        //roid hit by blast dmg
+                        last.hp -= blastDmg;
+                        damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:blastDmg,lifetime:1})
+
+                        //roid killed by blast dmg
+                        if (last.hp <= 0) {
+                            asteroids.splice(ast,1)
+                            dropStuff('asteroid',last)
+                            field.currentAsteroids--
+                            ast--
+                        }
+                    }  
+                }
+            }
+        }
+    })  
+}
+
 function steeringParticles(mode,x1,y1,x2,y2,projectileSize) {
     if (mode == 'turnLeft') {
         var rotated1 = rotatePoint(playerX+x1,playerY-y1,playerX,playerY,playerAngle)
@@ -866,14 +935,13 @@ function fire() {
                         projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
                     }
                 }
-                else {
-                    if (gun.type != 'cnn') {
-                        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
-                    }
-                    else {
-                        projectiles.push(new Projectile(6,6,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
-                    }
+                else if (gun.type == 'mg' || gun.type == 'lsr') {
+                    projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
                 }
+                else if (gun.type == 'cnn' || gun.type == 'rlg') {
+                    projectiles.push(new Projectile(5,15,source.x,source.y,target.x,target.y,'friendly',gun.type,gun.projAccuracy,gun.projSpeed,movementVector,gun.projCritRate,gun.projCritDmg,gun.projDmgMin,gun.projDmgMax))
+                }
+                
             }
             else {
                 projectiles.push(/* something */)
@@ -981,7 +1049,16 @@ class Projectile {
                 this.y += this.dy
                 this.centerX = this.x + this.width / 2
                 this.centerY = this.y + this.height / 2
-                ctx.fillRect(-camera.x+this.x, -camera.y+this.y, this.width, this.height)
+
+                if (this.width == this.height) {
+                    ctx.fillRect(-camera.x+this.x, -camera.y+this.y, this.width, this.height)
+                }
+                else {
+                    ctx.save(); ctx.translate(-camera.x+this.centerX,-camera.y+this.centerY)
+                    ctx.rotate(this.angle - 1.570796); ctx.translate(-(-camera.x+this.centerX),-(-camera.y+this.centerY))
+                    ctx.fillRect(-camera.x+this.x, -camera.y+this.y, this.width, this.height); ctx.restore()
+                }
+                
             }
             else {
                 ctx.lineWidth = 2; ctx.strokeStyle = 'red';
@@ -1588,45 +1665,39 @@ function mainLoop() {
                         asteroids.forEach((roid,roidIndex) => {
                             var last = roid[roid.length - 1];
                             if (last.field == fIndex) {
-                                //if (index == 0) {console.log(Math.floor(pro.x - -camera.x)); console.log(Math.floor(pro.y - -camera.y))}
                                 if ((pro.type != 'lsr' && pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
                                 && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)||(pro.type == 'lsr' && doesLineIntersectCircle(pro.startPoint.x,pro.startPoint.y,pro.endPoint.x,pro.endPoint.y,last.xPos,last.yPos,last.radius)))
                                 {
-                                    //console.log('hit at:'+ (pro.x) + ',' + (pro.y) + 'damage dealt:' + pro.damage)
-                                    last.hp -= pro.damage; if (pro.type != 'lsr') {projectiles.splice(index,1)}
-                                    damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
+                                    if (pro.type != 'rlg') {
+                                        last.hp -= pro.damage
+                                        damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
+                                    }
+                                    else {
+                                        //railgun logic
+                                        if (pro.damage <= last.hp) {
+                                            last.hp -= pro.damage
+                                            damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
+                                            projectiles.splice(index,1)
+                                        }
+                                        else {
+                                            pro.damage -= last.hp
+                                            damageNumbers.unshift({type:'damage',x:last.xPos+(Math.random()*100 - 50) - camera.x,y:last.yPos+(Math.random()*100 - 50) - camera.y,amount:last.hp,lifetime:1})
+                                            last.hp = 0
+                                        }
+                                    }
+                                    
+                                    if (pro.type == 'cnn') {
+                                        blastDamage(pro.x,pro.y,pro.damage,150);
+                                        explosions.push({x:pro.x,y:pro.y,radius:150,currRadius:0})
+                                    }
+                                    
+                                    if (pro.type != 'lsr' && pro.type != 'rlg') {projectiles.splice(index,1)}
+                                    
+                                    
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
-                                        for (var n = 0; n < 10; n++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
-                                        }
-                                        for (var o = 0; o < 6; o++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            switch (Math.floor(Math.random()*3)) {
-                                                case 0: var type = 'stone'; break
-                                                case 1: var type = 'iron ore'; break
-                                                case 2: var type = 'copper ore'; break
-                                            }
-                                            pickups.push(new pickup(x,y,4,4,'gray','mineral',{type:type,amount:Math.round(last.xp/6)}))
-                                        }
-                                        //health test
-                                        for (var h = 0; h < 8; h++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            pickups.push(new pickup(x,y,3,3,'red','health',last.xp/8))
-                                        }
-                                        //credits test
-                                        for (var c = 0; c < 8; c++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            pickups.push(new pickup(x,y,3,3,'green','credits',last.xp/8))
-                                        }
-                                        //gun test
-                                        pickups.push(new pickup(x+10,y+10,5,5,'hotpink','item',new weapon('mg',1,1,0.2,false,true,2,6,10,1.5,1.5,2)))
+                                        dropStuff('asteroid',last)
                                     }
                                 }
                             }
@@ -1688,21 +1759,7 @@ function mainLoop() {
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
-                                        for (var n = 0; n < 10; n++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            pickups.push(new pickup(x,y,3,3,'yellow','xp',last.xp/10))
-                                        }
-                                        for (var o = 0; o < 6; o++) {
-                                            var x = last.xPos + (Math.random() * (last.radius*2)) - last.radius
-                                            var y = last.yPos + (Math.random() * (last.radius*2)) - last.radius
-                                            switch (Math.floor(Math.random()*3)) {
-                                                case 0: var type = 'stone'; break
-                                                case 1: var type = 'iron ore'; break
-                                                case 2: var type = 'copper ore'; break
-                                            }
-                                            pickups.push(new pickup(x,y,4,4,'gray','mineral',{type:type,amount:Math.round(last.xp/6)}))
-                                        }
+                                        dropStuff('enemy',last)
                                     }
                                 }
                             })
@@ -1737,6 +1794,19 @@ function mainLoop() {
     if (!shieldJustHit && shieldTimeout <= 0 && shield < maxShield)
     {
         shield += maxShield/200
+    }
+
+    //explosions
+    for (var x = 0; x < explosions.length; x++) {
+        var xplode = explosions[x]
+        xplode.currRadius += xplode.radius / 10
+        ctx.globalAlpha = 1 - xplode.currRadius / xplode.radius
+        ctx.strokeStyle = 'orange'; ctx.beginPath()
+        ctx.arc(-camera.x+xplode.x,-camera.y+xplode.y,xplode.currRadius,0,69)
+        ctx.stroke(); ctx.globalAlpha = 1
+        if (xplode.currRadius >= xplode.radius) {
+            explosions.splice(x,1); x--
+        }
     }
 
     //damage(and other stuff) numbers
@@ -1804,6 +1874,15 @@ function mainLoop() {
             break;
             case 'sg':
                 var type = ' shotgun'
+            break;
+            case 'lsr':
+                var type = ' laser'
+            break;
+            case 'cnn':
+                var type = ' cannon'
+            break;
+            case 'rlg':
+                var type = ' railgun'
             break;
             default:
                 var type = ' missing'
@@ -2215,6 +2294,9 @@ function mainLoop() {
                 break;
                 case 'cnn':
                     var type = ' cannon'
+                break;
+                case 'rlg':
+                    var type = ' railgun'
                 break;
                 default:
                     var type = ' missing'
