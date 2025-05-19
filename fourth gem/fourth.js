@@ -773,28 +773,40 @@ function rotatePoint(px, py, cx, cy, angle) {
 }
 
 function doesLineIntersectCircle(x1, y1, x2, y2, cx, cy, r) {
-    // Translate the line and circle so the circle is at the origin
     let dx = x2 - x1;
     let dy = y2 - y1;
     let fx = x1 - cx;
     let fy = y1 - cy;
 
-    // Quadratic coefficients
     let a = dx * dx + dy * dy;
     let b = 2 * (fx * dx + fy * dy);
     let c = fx * fx + fy * fy - r * r;
 
-    // Discriminant
     let discriminant = b * b - 4 * a * c;
 
-    // Check the discriminant
     if (discriminant < 0) {
-        // No intersection
-        return false;
-    } else {
-        // Intersection exists
-        return true;
+        return null;
     }
+
+    let sqrtD = Math.sqrt(discriminant);
+    let t1 = (-b - sqrtD) / (2 * a);
+    let t2 = (-b + sqrtD) / (2 * a);
+
+    let intersections = [];
+
+    if (t1 >= 0 && t1 <= 1) {
+        let ix1 = x1 + t1 * dx;
+        let iy1 = y1 + t1 * dy;
+        intersections.push({ x: ix1, y: iy1 });
+    }
+
+    if (t2 >= 0 && t2 <= 1) {
+        let ix2 = x1 + t2 * dx;
+        let iy2 = y1 + t2 * dy;
+        intersections.push({ x: ix2, y: iy2 });
+    }
+
+    return intersections.length > 0 ? intersections : null;
 }
 
 function dropStuff(mode,last) {
@@ -1028,6 +1040,7 @@ class Projectile {
             this.dy = Math.sin(this.angle)
             this.startPoint = {x:this.x,y:this.y}
             this.endPoint = {x:this.x+this.dx*1100,y:this.y+this.dy*1100}
+            this.hits = []
             this.path = new Path2D()
             this.path.moveTo(-camera.x+this.x,-camera.y+this.y);
             this.path.lineTo(-camera.x+this.x+this.dx*1100,-camera.y+this.y+this.dy*1100);
@@ -1042,7 +1055,7 @@ class Projectile {
         
         if (this.critRand < this.critRate) {this.damage *= critDmg; /*console.log('crit damage: ' + this.damage)*/}
 
-        this.update = function() {
+        this.update = function(path) {
             this.lifeTime += 0.02
             if (this.type != 'lsr') {
                 this.x += this.dx
@@ -1062,7 +1075,13 @@ class Projectile {
             }
             else {
                 ctx.lineWidth = 2; ctx.strokeStyle = 'red';
-                ctx.stroke(this.path)
+                if (path == false) {
+                    ctx.beginPath()
+                    ctx.moveTo(-camera.x+this.x,-camera.y+this.y);
+                    ctx.lineTo(-camera.x+this.endPoint.x,-camera.y+this.endPoint.y);
+                    ctx.stroke()
+                }
+                else {ctx.stroke(this.path)}
             }
         }
         this.crashWith = function (otherobj) {
@@ -1293,6 +1312,22 @@ function mainLoop() {
         }
     }
 
+    //move player
+    if (playerX > -camera.x + 60 && playerX < worldWidth - 60)
+    {playerX += movementVector[0]}
+    else {
+        if (playerX < worldWidth/2) {playerX = -camera.x + 100; movementVector[0] = 5}
+        else {playerX = worldWidth - 100; movementVector[0] = -5}
+    }
+
+    if (playerY > -camera.y + 60 && playerY < worldHeight - 60)
+    {playerY += movementVector[1]}
+    else {
+        if (playerY < worldHeight/2) {playerY = -camera.y + 100; movementVector[1] = 5}
+        else {playerY = worldHeight - 100; movementVector[1] = -5}
+    }
+    
+    
     // Camera follows player
     if (playerX < camera.x + camera.deadzoneWidth / 2) {
         camera.x = Math.max(0, playerX - camera.deadzoneWidth / 2);
@@ -1310,20 +1345,6 @@ function mainLoop() {
     ctx.strokeStyle = 'red'; ctx.lineWidth = 5
     /* ctx.strokeRect(camera.deadzoneWidth / 2,camera.deadzoneHeight / 2,camera.width - camera.deadzoneWidth,camera.height - camera.deadzoneHeight)
     ctx.strokeRect(-camera.x + camera.x,-camera.y + camera.y,camera.width,camera.height) */
-    //move player
-    if (playerX > -camera.x + 60 && playerX < worldWidth - 60)
-    {playerX += movementVector[0]}
-    else {
-        if (playerX < worldWidth/2) {playerX = -camera.x + 100; movementVector[0] = 5}
-        else {playerX = worldWidth - 100; movementVector[0] = -5}
-    }
-
-    if (playerY > -camera.y + 60 && playerY < worldHeight - 60)
-    {playerY += movementVector[1]}
-    else {
-        if (playerY < worldHeight/2) {playerY = -camera.y + 100; movementVector[1] = 5}
-        else {playerY = worldHeight - 100; movementVector[1] = -5}
-    }
 
     weapons.forEach(gun => {
         if (gun.currCool > 0) {
@@ -1642,6 +1663,7 @@ function mainLoop() {
 
 
     projectiles.forEach((pro,index) => {
+        var drawPath = true
         if (pro.type == 'particleS') {
             ctx.fillStyle = 'white'
             if (pro.lifeTime > 0.5 + pro.lifeTimeRand) {projectiles.splice(index,1)}
@@ -1656,7 +1678,6 @@ function mainLoop() {
                 else { ctx.fillStyle = 'gold'}
                 if (pro.lifeTime > 10) {projectiles.splice(index,1)}
             }
-            else if (pro.lifeTime >= 0.02) {projectiles.splice(index,1)}
             
             if (pro.fof == 'friendly') {
                 //shooting asteroids
@@ -1665,8 +1686,8 @@ function mainLoop() {
                         asteroids.forEach((roid,roidIndex) => {
                             var last = roid[roid.length - 1];
                             if (last.field == fIndex) {
-                                if ((pro.type != 'lsr' && pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
-                                && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)||(pro.type == 'lsr' && doesLineIntersectCircle(pro.startPoint.x,pro.startPoint.y,pro.endPoint.x,pro.endPoint.y,last.xPos,last.yPos,last.radius)))
+                                if (pro.type != 'lsr' && pro.x > last.xPos - last.radius && pro.x < last.xPos + last.radius 
+                                && pro.y > last.yPos - last.radius && pro.y < last.yPos + last.radius)
                                 {
                                     if (pro.type != 'rlg') {
                                         last.hp -= pro.damage
@@ -1691,19 +1712,48 @@ function mainLoop() {
                                         explosions.push({x:pro.x,y:pro.y,radius:150,currRadius:0})
                                     }
                                     
-                                    if (pro.type != 'lsr' && pro.type != 'rlg') {projectiles.splice(index,1)}
+                                    if (pro.type != 'rlg') {projectiles.splice(index,1)}
                                     
                                     
                                     if (last.hp <= 0) {
+                                        dropStuff('asteroid',last)
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
-                                        dropStuff('asteroid',last)
+                                    }
+                                }
+                                else if (pro.type == 'lsr') {
+                                    intersections = doesLineIntersectCircle(pro.startPoint.x,pro.startPoint.y,pro.endPoint.x,pro.endPoint.y,last.xPos,last.yPos,last.radius)
+                                    if (intersections != null) {
+                                        /* ctx.fillStyle = 'red';
+                                        ctx.fillRect(-camera.x+intersections[0].x,-camera.y+intersections[0].y,5,5) */
+                                        pro.hits.push({hit:intersections[0],roid:last,index:roidIndex,distance:NaN})
+                                        drawPath = false
+                                        /* if (intersections[1] != null) {
+                                            ctx.fillRect(-camera.x+intersections[1].x,-camera.y+intersections[1].y,5,5)
+                                        } */
                                     }
                                 }
                             }
                         })
+                        if (pro.type == 'lsr' && pro.hits.length > 0) {
+                            pro.hits.forEach(hit => {
+                                hit.distance = Math.hypot(pro.startPoint.x - hit.hit.x,pro.startPoint.y - hit.hit.y)
+                            })
+                            pro.hits.sort((a,b) => a.distance - b.distance)
+                            pro.endPoint.x = pro.hits[0].hit.x
+                            pro.endPoint.y = pro.hits[0].hit.y
+                            ctx.fillStyle = 'orange';
+                            ctx.fillRect(-camera.x+pro.hits[0].hit.x,-camera.y+pro.hits[0].hit.y,4,4)
+                            pro.hits[0].roid.hp -= pro.damage
+                            damageNumbers.unshift({type:'damage',x:pro.hits[0].roid.xPos+(Math.random()*100 - 50) - camera.x,y:pro.hits[0].roid.yPos+(Math.random()*100 - 50) - camera.y,amount:pro.damage,lifetime:1})
+                            if (pro.hits[0].roid.hp <= 0) {
+                                asteroids.splice(pro.hits[0].index,1)
+                                field.currentAsteroids--
+                                dropStuff('asteroid',pro.hits[0].roid)
+                            } 
+                        }
                     }
-                })     
+                })
             }
             else if (pro.fof = 'enemy') {
                 //getting hit by enemies
@@ -1725,7 +1775,8 @@ function mainLoop() {
                 })
             }
         }
-        pro.update()
+        pro.update(drawPath)
+        if (pro.type == 'lsr') {projectiles.splice(index,1)}
     })
     
 
