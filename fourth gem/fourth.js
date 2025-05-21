@@ -78,21 +78,30 @@ var inputVector = [0,0]
 var movementVector = [0,0]
 var playerAngle = 0
 var playerSpeed = 0
-var playerMaxSpeed = 5
-var playerTurnSpeed = 3
 var fireInterval
 var shieldJustHit = false
 var shieldTimeout = 0
 var displayLevelUpMessage = 0
 var healedHealth = 0
 //character stats
+var fighterMaxSpeed = 0.05
+var fighterTurnSpeed = 3
+var fighterMaxHealth = 100
+
+var corvetteMaxSpeed = 0.04
+var corvetteTurnSpeed = 2.75
+var corvetteMaxHealth = 150
+
+var playerMaxSpeed = fighterMaxSpeed
+var playerTurnSpeed = fighterTurnSpeed
+var maxHealth = fighterMaxHealth
+var maxShield = 0
 var health = 100
 var shield = 0
+
 var credits = 0
 var xp = 0
 var level = 0
-var maxHealth = 100
-var maxShield = 0
 var xpRequired = xpReqs[0]
 //sprites
 var escapePod
@@ -383,6 +392,11 @@ function generateWorld() {
     inventoryContent.slot15 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
     inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
 
+    enemies.push(new mine(worldWidth/2 + 500,worldHeight/2 + 500,'impact',75))
+    enemies.push(new mine(worldWidth/2 + 600,worldHeight/2 + 600,'impact',100))
+    enemies.push(new mine(worldWidth/2 + 700,worldHeight/2 + 700,'impact',125))
+    enemies.push(new mine(worldWidth/2 + 800,worldHeight/2 + 800,'impact',150))
+    
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
         var width = Math.random() * (3000-1000) + 1000;
@@ -963,6 +977,35 @@ function fire() {
     })
 }
 
+class mine {
+    constructor(x,y,type,size) {
+        this.x = x
+        this.y = y
+        this.size = size
+        this.type = type
+        this.angle = 0
+        this.rotation = ((Math.random() * 3) - 1.5) * Math.PI / 180
+        this.update = function() {
+            this.centerX = this.x + this.size / 2
+            this.centerY = this.y + this.size / 2
+            ctx.fillStyle = 'darkslategray'
+            this.angle += this.rotation; ctx.save();
+            ctx.translate(-camera.x+this.centerX,-camera.y+this.centerY)
+            ctx.rotate(this.angle); 
+            ctx.translate(-(-camera.x+this.centerX),-(-camera.y+this.centerY))
+            ctx.beginPath(); ctx.moveTo(-camera.x+this.x+this.size/3,-camera.y+this.y)
+            ctx.lineTo(-camera.x+this.x+(this.size/3)*2,-camera.y+this.y)
+            ctx.lineTo(-camera.x+this.x+this.size,-camera.y+this.y+this.size/3)
+            ctx.lineTo(-camera.x+this.x+this.size,-camera.y+this.y+(this.size/3)*2)
+            ctx.lineTo(-camera.x+this.x+(this.size/3)*2,-camera.y+this.y+this.size)
+            ctx.lineTo(-camera.x+this.x+this.size/3,-camera.y+this.y+this.size)
+            ctx.lineTo(-camera.x+this.x,-camera.y+this.y+(this.size/3)*2)
+            ctx.lineTo(-camera.x+this.x,-camera.y+this.y+this.size/3)
+            ctx.closePath(); ctx.fill(); ctx.restore()
+        }
+    }
+}
+
 class pickup {
     constructor(x, y, width, height, color, type, amount) {
         this.x = x
@@ -1146,12 +1189,18 @@ function mainLoop() {
         canSwitchShip = false; setTimeout(function() {canSwitchShip = true},500)
         if (spriteSelection == 2) {
             spriteSelection = 1
+            playerMaxSpeed = fighterMaxSpeed
+            playerTurnSpeed = fighterTurnSpeed
+            maxHealth = fighterMaxHealth
             equipmentSlotsPos = fighterSlotsPos
             equipmentSlotsTierAndTurret = fighterTierAndTurret
             equipmentSlots = fighterSlots
         }
         else if (spriteSelection == 1) {
             spriteSelection = 2
+            playerMaxSpeed = corvetteMaxSpeed
+            playerTurnSpeed = corvetteTurnSpeed
+            maxHealth = corvetteMaxHealth
             equipmentSlotsPos = corvSlotsPos
             equipmentSlotsTierAndTurret = corvTierAndTurret
             equipmentSlots = corvetteSlots
@@ -1216,7 +1265,7 @@ function mainLoop() {
 
     //strafing
     if (keysPressed && keysPressed['KeyQ'] && gameState != states.inventory) {
-        playerSpeed = 0.025
+        playerSpeed = playerMaxSpeed/2
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
@@ -1231,7 +1280,7 @@ function mainLoop() {
         }
     }
     else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory) {
-        playerSpeed = 0.025
+        playerSpeed = playerMaxSpeed/2
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
@@ -1248,7 +1297,7 @@ function mainLoop() {
 
     //go forwards / backwards
     if (keysPressed && (keysPressed['KeyW'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
-        playerSpeed = 0.05
+        playerSpeed = playerMaxSpeed
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
@@ -1266,7 +1315,7 @@ function mainLoop() {
         }
     }
     else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
-        playerSpeed = 0.025
+        playerSpeed = playerMaxSpeed/2
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
         movementVector[1] += inputVector[1]
@@ -1420,6 +1469,13 @@ function mainLoop() {
             })
         }
     })
+
+
+    enemies.forEach((enemy,index) => {
+        enemy.update()
+    })
+
+
 
     //draw wrecked version of ship
     if (-camera.x + deathLocation.x > 0 && -camera.x + deathLocation.x < camera.width && -camera.y + deathLocation.y > 0 && -camera.y + deathLocation.y < camera.height) {
@@ -2324,8 +2380,8 @@ function mainLoop() {
                     break;
             }
             ctx.font = '10px consolas'; ctx.fillText(sprite,375,315)
-            ctx.fillText('turning speed: '+playerTurnSpeed,375,325)
-            ctx.fillText('forwards accel: '+playerMaxSpeed,375,335)
+            ctx.fillText('turning speed: '+playerTurnSpeed*50+'°/s',375,325)
+            ctx.fillText('forwards accel: '+playerMaxSpeed*50+'px/s',375,335)
             ctx.fillText('health: '+Math.round(health)+'/'+maxHealth,375,345)
             if (maxShield == 0) {
                 ctx.fillText('shield: not installed',375,355)
