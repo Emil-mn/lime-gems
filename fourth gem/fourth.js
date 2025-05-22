@@ -392,10 +392,11 @@ function generateWorld() {
     inventoryContent.slot15 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
     inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
 
-    enemies.push(new mine(worldWidth/2 + 500,worldHeight/2 + 500,'impact',75))
-    enemies.push(new mine(worldWidth/2 + 600,worldHeight/2 + 600,'impact',100))
-    enemies.push(new mine(worldWidth/2 + 700,worldHeight/2 + 700,'impact',125))
-    enemies.push(new mine(worldWidth/2 + 800,worldHeight/2 + 800,'impact',150))
+    enemies.push(new mine(worldWidth/2 + 3000,worldHeight/2 + 500,'impact','tiny'))
+    //enemies.push(new mine(worldWidth/2 + 620,worldHeight/2 + 500,'impact','small'))
+    //enemies.push(new mine(worldWidth/2 + 760,worldHeight/2 + 500,'impact','medium'))
+    //enemies.push(new mine(worldWidth/2 + 920,worldHeight/2 + 500,'impact','large'))
+    //enemies.push(new mine(worldWidth/2 + 1100,worldHeight/2 + 500,'impact','huge'))
     
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
@@ -886,7 +887,18 @@ function blastDamage(hitX,hitY,damage,radius) {
                 }
             }
         }
-    })  
+    })
+    if (playerX > hitX-radius && playerX < hitX+radius && playerY > hitY-radius && playerY < hitY+radius)
+    {
+        //calculate damage based on how far the center of the ship is between the edge and center of the radius
+        var distanceFromCenter = Math.hypot(playerX - hitX,playerY - hitY)
+        var fraction = distanceFromCenter / radius;
+        var blastDmg = damage * fraction
+
+        //ship hit by blast dmg
+        health -= blastDmg;
+        damageNumbers.unshift({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:blastDmg,lifetime:1})
+    }  
 }
 
 function steeringParticles(mode,x1,y1,x2,y2,projectileSize) {
@@ -981,10 +993,48 @@ class mine {
     constructor(x,y,type,size) {
         this.x = x
         this.y = y
-        this.size = size
+        this.centerX = this.x + this.size / 2
+        this.centerY = this.y + this.size / 2
+        switch (size) {
+            case 'tiny':
+                this.size = 50
+                this.damage = 30
+                this.radius = 100
+            break
+            case 'small':
+                this.size = 75
+                this.damage = 50
+                this.radius = 125
+            break
+            case 'medium':
+                this.size = 100
+                this.damage = 70
+                this.radius = 150
+            break
+            case 'large':
+                this.size = 125
+                this.damage = 90
+                this.radius = 175
+            break
+            case 'huge':
+                this.size = 150
+                this.damage = 110
+                this.radius = 200
+            break
+        }
         this.type = type
         this.angle = 0
-        this.rotation = ((Math.random() * 3) - 1.5) * Math.PI / 180
+        this.rotation = ((Math.random() * 1) - 0.5) * Math.PI / 180
+        this.points = [
+            {x:this.x+this.size/3,y:this.y},
+            {x:this.x+(this.size/3)*2,y:this.y},
+            {x:this.x+this.size,y:this.y+this.size/3},
+            {x:this.x+this.size,y:this.y+(this.size/3)*2},
+            {x:this.x+(this.size/3)*2,y:this.y+this.size},
+            {x:this.x+this.size/3,y:this.y+this.size},
+            {x:this.x,y:this.y+(this.size/3)*2},
+            {x:this.x,y:this.y+this.size/3}
+        ]
         this.update = function() {
             this.centerX = this.x + this.size / 2
             this.centerY = this.y + this.size / 2
@@ -1472,7 +1522,37 @@ function mainLoop() {
 
 
     enemies.forEach((enemy,index) => {
-        enemy.update()
+        if (playerX > enemy.x - 2000 && playerX < enemy.x + 2000 && playerY > enemy.y - 2000 && playerY < enemy.y + 2000) {
+            enemy.update()
+            if (enemy instanceof mine) {
+                if (enemy.type == 'impact') {
+                    enemy.points.forEach((point) => {
+                        ctx.fillStyle = 'green'
+                        ctx.fillRect(-camera.x+point.x,-camera.y+point.y,3,3)
+                        var rotateAroundMineCenter = rotatePoint(point.x,point.y,enemy.centerX,enemy.centerY,enemy.angle)
+                        ctx.fillStyle = 'red'
+                        ctx.fillRect(-camera.x+rotateAroundMineCenter.x,-camera.y+rotateAroundMineCenter.y,3,3)
+                        var thenRotateAroundPlayerPos = rotatePoint(rotateAroundMineCenter.x,rotateAroundMineCenter.y,playerX,playerY,-playerAngle)
+                        ctx.fillStyle = 'chartreuse'
+                        ctx.fillRect(-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y,3,3)
+                        playerSprite.forEach(path => {
+                            if (ctx.isPointInPath(path,(-camera.x+thenRotateAroundPlayerPos.x)/zoomOffset,(-camera.y+thenRotateAroundPlayerPos.y)/zoomOffset)) {
+                                movementVector[0] = -movementVector[0] / 2
+                                movementVector[1] = -movementVector[1] / 2
+                                playerX += movementVector[0] * 42;
+                                playerY += movementVector[1] * 42;
+                                weapons.forEach(gun => {gun.x += movementVector[0] * 42; gun.y += movementVector[1] * 42})
+                                damageNumbers.unshift({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:enemy.damage,lifetime:1})
+                                enemies.splice(index,1)
+                                blastDamage(enemy.centerX,enemy.centerY,enemy.damage,enemy.radius)
+                                explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0})
+                            }
+                        })
+                    })
+                }
+            }
+        }
+        
     })
 
 
