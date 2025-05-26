@@ -392,12 +392,24 @@ function generateWorld() {
     inventoryContent.slot15 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
     inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
 
-    enemies.push(new mine(worldWidth/2 + 3000,worldHeight/2 + 500,'impact','tiny'))
-    //enemies.push(new mine(worldWidth/2 + 620,worldHeight/2 + 500,'impact','small'))
-    //enemies.push(new mine(worldWidth/2 + 760,worldHeight/2 + 500,'impact','medium'))
-    //enemies.push(new mine(worldWidth/2 + 920,worldHeight/2 + 500,'impact','large'))
-    //enemies.push(new mine(worldWidth/2 + 1100,worldHeight/2 + 500,'impact','huge'))
+    enemies.push(new mine(worldWidth/2 + 3000,worldHeight/2,'impact','tiny'))
+    enemies.push(new mine(worldWidth/2 + 3100,worldHeight/2,'impact','small'))
+    enemies.push(new mine(worldWidth/2 + 3200,worldHeight/2,'impact','medium'))
+    enemies.push(new mine(worldWidth/2 + 3300,worldHeight/2,'impact','large'))
+    enemies.push(new mine(worldWidth/2 + 3400,worldHeight/2,'impact','huge'))
+
+    enemies.push(new mine(worldWidth/2 + 3000,worldHeight/2 + 150,'proximity','tiny'))
+    enemies.push(new mine(worldWidth/2 + 3100,worldHeight/2 + 150,'proximity','small'))
+    enemies.push(new mine(worldWidth/2 + 3200,worldHeight/2 + 150,'proximity','medium'))
+    enemies.push(new mine(worldWidth/2 + 3300,worldHeight/2 + 150,'proximity','large'))
+    enemies.push(new mine(worldWidth/2 + 3400,worldHeight/2 + 150,'proximity','huge'))
     
+    enemies.push(new mine(worldWidth/2 + 3000,worldHeight/2 + 300,'homing','tiny'))
+    enemies.push(new mine(worldWidth/2 + 3100,worldHeight/2 + 300,'homing','small'))
+    enemies.push(new mine(worldWidth/2 + 3200,worldHeight/2 + 300,'homing','medium'))
+    enemies.push(new mine(worldWidth/2 + 3300,worldHeight/2 + 300,'homing','large'))
+    enemies.push(new mine(worldWidth/2 + 3400,worldHeight/2 + 300,'homing','huge'))
+
     var numberOfAsteroidfields = Math.floor(Math.random() * 3 + 3)
     for (var aField = 0; aField < numberOfAsteroidfields; aField++) {
         var width = Math.random() * (3000-1000) + 1000;
@@ -999,31 +1011,33 @@ class mine {
             case 'tiny':
                 this.size = 50
                 this.damage = 30
-                this.radius = 100
+                this.radius = 150
             break
             case 'small':
                 this.size = 75
                 this.damage = 50
-                this.radius = 125
+                this.radius = 175
             break
             case 'medium':
                 this.size = 100
                 this.damage = 70
-                this.radius = 150
+                this.radius = 200
             break
             case 'large':
                 this.size = 125
                 this.damage = 90
-                this.radius = 175
+                this.radius = 225
             break
             case 'huge':
                 this.size = 150
                 this.damage = 110
-                this.radius = 200
+                this.radius = 250
             break
         }
         this.type = type
         this.angle = 0
+        this.delay = 0.5
+        this.triggered = false
         this.rotation = ((Math.random() * 1) - 0.5) * Math.PI / 180
         this.points = [
             {x:this.x+this.size/3,y:this.y},
@@ -1525,34 +1539,43 @@ function mainLoop() {
         if (playerX > enemy.x - 2000 && playerX < enemy.x + 2000 && playerY > enemy.y - 2000 && playerY < enemy.y + 2000) {
             enemy.update()
             if (enemy instanceof mine) {
-                if (enemy.type == 'impact') {
-                    enemy.points.forEach((point) => {
-                        ctx.fillStyle = 'green'
-                        ctx.fillRect(-camera.x+point.x,-camera.y+point.y,3,3)
-                        var rotateAroundMineCenter = rotatePoint(point.x,point.y,enemy.centerX,enemy.centerY,enemy.angle)
-                        ctx.fillStyle = 'red'
-                        ctx.fillRect(-camera.x+rotateAroundMineCenter.x,-camera.y+rotateAroundMineCenter.y,3,3)
-                        var thenRotateAroundPlayerPos = rotatePoint(rotateAroundMineCenter.x,rotateAroundMineCenter.y,playerX,playerY,-playerAngle)
-                        ctx.fillStyle = 'chartreuse'
-                        ctx.fillRect(-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y,3,3)
-                        playerSprite.forEach(path => {
-                            if (ctx.isPointInPath(path,(-camera.x+thenRotateAroundPlayerPos.x)/zoomOffset,(-camera.y+thenRotateAroundPlayerPos.y)/zoomOffset)) {
-                                movementVector[0] = -movementVector[0] / 2
-                                movementVector[1] = -movementVector[1] / 2
-                                playerX += movementVector[0] * 42;
-                                playerY += movementVector[1] * 42;
-                                weapons.forEach(gun => {gun.x += movementVector[0] * 42; gun.y += movementVector[1] * 42})
-                                damageNumbers.unshift({type:'damage',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:enemy.damage,lifetime:1})
-                                enemies.splice(index,1)
+                if (playerX > enemy.centerX - enemy.radius && playerX < enemy.centerX + enemy.radius) {
+                    if (playerY > enemy.centerY - enemy.radius && playerY < enemy.centerY + enemy.radius) {
+                        if (enemy.type == 'proximity') {enemy.triggered = true}
+                    }
+                }
+                if (enemy.triggered == true) {enemy.delay -= 0.02}
+                enemy.points.forEach((point) => {
+                    ctx.fillStyle = 'green'
+                    ctx.fillRect(-camera.x+point.x,-camera.y+point.y,3,3)
+                    var rotateAroundMineCenter = rotatePoint(point.x,point.y,enemy.centerX,enemy.centerY,enemy.angle * 180 / Math.PI)
+                    ctx.fillStyle = 'red'
+                    ctx.fillRect(-camera.x+rotateAroundMineCenter.x,-camera.y+rotateAroundMineCenter.y,3,3)
+                    var thenRotateAroundPlayerPos = rotatePoint(rotateAroundMineCenter.x,rotateAroundMineCenter.y,playerX,playerY,-playerAngle)
+                    ctx.fillStyle = 'chartreuse'
+                    ctx.fillRect(-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y,3,3)
+                    playerSprite.forEach(path => {
+                        if (ctx.isPointInPath(path,(-camera.x+thenRotateAroundPlayerPos.x)/zoomOffset,(-camera.y+thenRotateAroundPlayerPos.y)/zoomOffset)) {
+                            movementVector[0] = -movementVector[0] / 2
+                            movementVector[1] = -movementVector[1] / 2
+                            playerX += movementVector[0] * 50;
+                            playerY += movementVector[1] * 50;
+                            weapons.forEach(gun => {gun.x += movementVector[0] * 20; gun.y += movementVector[1] * 20})
+                            if (enemy.type == 'impact' || enemy.type == 'homing') {
                                 blastDamage(enemy.centerX,enemy.centerY,enemy.damage,enemy.radius)
                                 explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0})
+                                enemies.splice(index,1)
                             }
-                        })
+                        }
                     })
-                }
+                })
+                if (enemy.delay <= 0 && enemy.type == 'proximity') {
+                    blastDamage(enemy.centerX,enemy.centerY,enemy.damage,enemy.radius)
+                    explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0})
+                    enemies.splice(index,1)
+                } 
             }
         }
-        
     })
 
 
@@ -2252,6 +2275,18 @@ function mainLoop() {
                 ctx.fillRect(550 + scaledX, 10 + scaledY, 2, 2);
             }
         });
+
+        enemies.forEach(anemi => {
+            const relativeX = (-camera.x+anemi.x) + camera.x - (playerX - 7000 / 2);
+            const relativeY = (-camera.y+anemi.y) + camera.y - (playerY - 4500 / 2);
+
+            if (relativeX >= 0 && relativeX <= 7000 && relativeY >= 0 && relativeY <= 4500) {
+                const scaledX = (relativeX / 7000) * 140;
+                const scaledY = (relativeY / 4500) * 90;
+                ctx.fillStyle = 'red'
+                ctx.fillRect(550 + scaledX, 10 + scaledY, 2, 2);
+            }
+        })
 
         projectiles.forEach(proj => {
             const relativeX = (-camera.x+proj.x) + camera.x - (playerX - 7000 / 2);
