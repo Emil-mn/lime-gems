@@ -392,6 +392,12 @@ function generateWorld() {
     inventoryContent.slot15 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
     inventoryContent.slot16 = new weapon('lsr',1,1,0,false,true,0,0,0,1,0.1,0.2)
 
+    enemies.push(new weapon('mg',1,1,0.2,true,false,2,6,10,2,1.5,2,worldWidth/2 + 3000,worldHeight/2 - 100))
+    enemies.push(new weapon('sg',1,1,1,true,false,8,6,5,1.5,1,1.5,worldWidth/2 + 3100,worldHeight/2 - 100))
+    enemies.push(new weapon('cnn',2,1,2,true,false,1,8,5,1.5,15,30,worldWidth/2 + 3200,worldHeight/2 - 100))
+    enemies.push(new weapon('rlg',2,1,4,true,false,1,15,2,1.25,25,50,worldWidth/2 + 3300,worldHeight/2 - 100))
+    enemies.push(new weapon('lsr',1,1,0,true,false,0,0,0,1,0.1,0.2,worldWidth/2 + 3400,worldHeight/2 - 100))
+
     enemies.push(new mine(worldWidth/2 + 3000,worldHeight/2,'impact','tiny'))
     enemies.push(new mine(worldWidth/2 + 3100,worldHeight/2,'impact','small'))
     enemies.push(new mine(worldWidth/2 + 3200,worldHeight/2,'impact','medium'))
@@ -1036,7 +1042,7 @@ class mine {
         }
         this.type = type
         this.angle = 0
-        this.delay = 0.5
+        this.delay = 1
         this.triggered = false
         this.rotation = ((Math.random() * 1) - 0.5) * Math.PI / 180
         this.points = [
@@ -1090,9 +1096,9 @@ class pickup {
 }
 
 class weapon {
-    constructor(type,tier,level,fireCooldown,isTurret,isPlayer,accuracy, speed, critRate, critDmg, damageMin, damageMax) {
-        this.x = 0
-        this.y = 0
+    constructor(type,tier,level,fireCooldown,isTurret,isPlayer,accuracy, speed, critRate, critDmg, damageMin, damageMax, x,y) {
+        this.x = x
+        this.y = y
         this.type = type
         this.tier = tier
         this.level = level
@@ -1536,9 +1542,11 @@ function mainLoop() {
 
 
     enemies.forEach((enemy,index) => {
+        //if player is anywhere close to the enemy
         if (playerX > enemy.x - 2000 && playerX < enemy.x + 2000 && playerY > enemy.y - 2000 && playerY < enemy.y + 2000) {
             enemy.update()
             if (enemy instanceof mine) {
+                //if player inside blast radius of proximity mine
                 if (playerX > enemy.centerX - enemy.radius && playerX < enemy.centerX + enemy.radius) {
                     if (playerY > enemy.centerY - enemy.radius && playerY < enemy.centerY + enemy.radius) {
                         if (enemy.type == 'proximity') {enemy.triggered = true}
@@ -1555,12 +1563,13 @@ function mainLoop() {
                     ctx.fillStyle = 'chartreuse'
                     ctx.fillRect(-camera.x+thenRotateAroundPlayerPos.x,-camera.y+thenRotateAroundPlayerPos.y,3,3)
                     playerSprite.forEach(path => {
+                        //if player collides with mine
                         if (ctx.isPointInPath(path,(-camera.x+thenRotateAroundPlayerPos.x)/zoomOffset,(-camera.y+thenRotateAroundPlayerPos.y)/zoomOffset)) {
                             movementVector[0] = -movementVector[0] / 2
                             movementVector[1] = -movementVector[1] / 2
-                            playerX += movementVector[0] * 50;
-                            playerY += movementVector[1] * 50;
-                            weapons.forEach(gun => {gun.x += movementVector[0] * 20; gun.y += movementVector[1] * 20})
+                            playerX += movementVector[0] * 30;
+                            playerY += movementVector[1] * 30;
+                            weapons.forEach(gun => {gun.x += movementVector[0] * 30; gun.y += movementVector[1] * 30})
                             if (enemy.type == 'impact' || enemy.type == 'homing') {
                                 blastDamage(enemy.centerX,enemy.centerY,enemy.damage,enemy.radius)
                                 explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0})
@@ -1574,6 +1583,39 @@ function mainLoop() {
                     explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0})
                     enemies.splice(index,1)
                 } 
+            }
+            else if (enemy instanceof weapon) {
+                ctx.beginPath()
+                ctx.strokeStyle = shipStroke;
+                ctx.fillStyle = shipFill;
+                ctx.lineWidth = 3;
+                var point2 = rotatePoint(enemy.x,enemy.y-15,enemy.x,enemy.y,enemy.angle + 90)
+                ctx.moveTo(-camera.x+enemy.x,-camera.y+enemy.y)
+                ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+                ctx.stroke()
+                ctx.beginPath()
+                ctx.arc(-camera.x+enemy.x,-camera.y+enemy.y,5,0,69)
+                ctx.fill(); ctx.stroke()
+                if (enemy.currCool > 0) {
+                    enemy.currCool -= 0.02;
+                }
+                if (enemy.currCool <= 0) {
+                    var source = rotatePoint(enemy.x,enemy.y-15,enemy.x,enemy.y,enemy.angle + 90)        
+                    var target = {x:playerX,y:playerY}
+
+                    if (enemy.type == 'sg') {
+                        for (var shot = 0; shot < 7; shot++) {
+                            projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'enemy',enemy.type,enemy.projAccuracy,enemy.projSpeed,[0,0],enemy.projCritRate,enemy.projCritDmg,enemy.projDmgMin,enemy.projDmgMax))
+                        }
+                    }
+                    else if (enemy.type == 'mg' || enemy.type == 'lsr') {
+                        projectiles.push(new Projectile(3,3,source.x,source.y,target.x,target.y,'enemy',enemy.type,enemy.projAccuracy,enemy.projSpeed,[0,0],enemy.projCritRate,enemy.projCritDmg,enemy.projDmgMin,enemy.projDmgMax))
+                    }
+                    else if (enemy.type == 'cnn' || enemy.type == 'rlg') {
+                        projectiles.push(new Projectile(5,15,source.x,source.y,target.x,target.y,'enemy',enemy.type,enemy.projAccuracy,enemy.projSpeed,[0,0],enemy.projCritRate,enemy.projCritDmg,enemy.projDmgMin,enemy.projDmgMax))
+                    }
+                    enemy.currCool = enemy.fireCooldown;
+                }
             }
         }
     })
@@ -1661,10 +1703,10 @@ function mainLoop() {
     })
     ctx.restore();
     
-    //draw turrets
+    //draw player turrets
     if (gameState != states.escaping) {
         weapons.forEach(turret => {
-            if (turret.isTurret == true) {
+            if (turret.isTurret == true && turret.isPlayer == true) {
                 ctx.beginPath()
                 ctx.strokeStyle = shipStroke;
                 ctx.fillStyle = shipFill;
@@ -1917,7 +1959,7 @@ function mainLoop() {
             else if (pro.fof = 'enemy') {
                 //getting hit by enemies
                 playerSprite.forEach(path => {
-                    if (ctx.isPointInPath(path,pro.centerX,pro.centerY)) {
+                    if (ctx.isPointInPath(path,-camera.x+pro.centerX,-camera.y+pro.centerY)) {
                         projectiles.splice(index,1)
                         if (shield > 0) {
                             shield -= pro.damage
