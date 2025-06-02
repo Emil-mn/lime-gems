@@ -1549,7 +1549,10 @@ function mainLoop() {
                 //if player inside blast radius of proximity mine
                 if (playerX > enemy.centerX - enemy.radius && playerX < enemy.centerX + enemy.radius) {
                     if (playerY > enemy.centerY - enemy.radius && playerY < enemy.centerY + enemy.radius) {
-                        if (enemy.type == 'proximity') {enemy.triggered = true}
+                        if (enemy.type == 'proximity' && enemy.triggered == false) {
+                            explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0,duration:1,lifetime:0})
+                            enemy.triggered = true
+                        }
                     }
                 }
                 if (enemy.triggered == true) {enemy.delay -= 0.02}
@@ -1572,7 +1575,7 @@ function mainLoop() {
                             weapons.forEach(gun => {gun.x += movementVector[0] * 30; gun.y += movementVector[1] * 30})
                             if (enemy.type == 'impact' || enemy.type == 'homing') {
                                 blastDamage(enemy.centerX,enemy.centerY,enemy.damage,enemy.radius)
-                                explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0})
+                                explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0,lifetime:0})
                                 enemies.splice(index,1)
                             }
                         }
@@ -1580,7 +1583,7 @@ function mainLoop() {
                 })
                 if (enemy.delay <= 0 && enemy.type == 'proximity') {
                     blastDamage(enemy.centerX,enemy.centerY,enemy.damage,enemy.radius)
-                    explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0})
+                    explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0,lifetime:0})
                     enemies.splice(index,1)
                 } 
             }
@@ -1910,7 +1913,7 @@ function mainLoop() {
                                     
                                     if (pro.type == 'cnn') {
                                         blastDamage(pro.x,pro.y,pro.damage,150);
-                                        explosions.push({x:pro.x,y:pro.y,radius:150,currRadius:0})
+                                        explosions.push({x:pro.x,y:pro.y,radius:150,currRadius:0,lifetime:0})
                                     }
                                     
                                     if (pro.type != 'rlg') {projectiles.splice(index,1)}
@@ -1959,7 +1962,7 @@ function mainLoop() {
             else if (pro.fof = 'enemy') {
                 //getting hit by enemies
                 playerSprite.forEach(path => {
-                    if (ctx.isPointInPath(path,-camera.x+pro.centerX,-camera.y+pro.centerY)) {
+                    if (ctx.isPointInPath(path,(-camera.x+pro.centerX)/zoomOffset,(-camera.y+pro.centerY)/zoomOffset)) {
                         projectiles.splice(index,1)
                         if (shield > 0) {
                             shield -= pro.damage
@@ -2035,7 +2038,7 @@ function mainLoop() {
 
     //shield logic
     if (shieldTimeout > 0) {shieldTimeout -= 0.02; console.log(Math.floor(shieldTimeout))}
-    if (shieldJustHit == true) {
+    if (shieldJustHit == true && gameState != states.escaping) {
         if (shield < 0)
         {
             shield = 0; shieldTimeout = 4
@@ -2051,12 +2054,21 @@ function mainLoop() {
     //explosions
     for (var x = 0; x < explosions.length; x++) {
         var xplode = explosions[x]
-        xplode.currRadius += xplode.radius / 10
+        xplode.lifetime += 0.02
+        if (xplode.duration != 1) {
+            xplode.currRadius += xplode.radius / 12.5
+            ctx.strokeStyle = 'orange'
+        }
+        else {
+            xplode.currRadius += xplode.radius / 50
+            ctx.strokeStyle = 'red'
+        }
         ctx.globalAlpha = 1 - xplode.currRadius / xplode.radius
-        ctx.strokeStyle = 'orange'; ctx.beginPath()
+        ctx.beginPath()
         ctx.arc(-camera.x+xplode.x,-camera.y+xplode.y,xplode.currRadius,0,69)
         ctx.stroke(); ctx.globalAlpha = 1
         if (xplode.currRadius >= xplode.radius) {
+            console.log(xplode.lifetime)
             explosions.splice(x,1); x--
         }
     }
@@ -2784,7 +2796,8 @@ function mainLoop() {
         if (timeoutThing == true) {
             timeoutThing = false; 
             setTimeout(function() {
-                maxHealth = 5; health = maxHealth; maxShield = 0; healedHealth = 0;
+                maxHealth = 5; health = maxHealth; shield = 0; healedHealth = 0;
+                playerMaxSpeed = 0.06; playerTurnSpeed = 3.25;
                 gameState = states.escaping; deathLocation.x = playerX;
                 deathLocation.y = playerY; deathLocation.ship = spriteSelection; 
                 deathLocation.angle = playerAngle; movementVector[1] = -5; timeoutThing = true
