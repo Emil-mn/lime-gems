@@ -55,6 +55,10 @@ var waypointTimer = 2
 var healingAccumulator = 0
 var timeoutThing = true
 var pickupTarget = null
+var totalRoidsMined = 0
+var totalResources = 0
+var shipsUnlocked = 1
+var enemiesDefeated = 0
 //arrays
 var enemies = []
 var asteroidFields = []
@@ -100,6 +104,7 @@ var health = 100
 var shield = 0
 
 var credits = 0
+var totalCredits = 0
 var xp = 0
 var level = 0
 var xpRequired = xpReqs[0]
@@ -899,6 +904,7 @@ function blastDamage(hitX,hitY,damage,radius) {
                             asteroids.splice(ast,1)
                             dropStuff('asteroid',last)
                             field.currentAsteroids--
+                            totalRoidsMined++
                             ast--
                         }
                     }  
@@ -1802,14 +1808,15 @@ function mainLoop() {
                     if (entry[1] == null) {
                         inventoryContent[entry[0]] = pickups[i].amount;
                         console.log('picked up '+pickups[i].amount.type+' ×'+pickups[i].amount.amount+' into '+entry[0])
-                        inventoryFull = false; return true
+                        inventoryFull = false; totalResources += pickups[i].amount.amount; return true
                     }
                     else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount < 64) {
                         inventoryContent[entry[0]].amount += pickups[i].amount.amount;
                         console.log('added '+pickups[i].amount.type+' ×'+pickups[i].amount.amount+' to '+entry[0])
-                        inventoryFull = false; return true
+                        inventoryFull = false; totalResources += pickups[i].amount.amount; return true
                     }
                     else if (!(entry[1] instanceof weapon) && entry[1].type == pickups[i].amount.type && entry[1].amount + pickups[i].amount.amount >= 64 && entry[1].amount < 64) {
+                        totalResources += 64 - inventoryContent[entry[0]].amount
                         inventoryContent[entry[0]].amount = 64
                         console.log('filled '+entry[0]+' with '+pickups[i].amount.type)
                         inventoryFull = false; return true
@@ -1831,7 +1838,7 @@ function mainLoop() {
                 }
             }
             else if (pickups[i].type == 'credits') {
-                credits += pickups[i].amount; console.log('gained '+pickups[i].amount+' credits');
+                credits += pickups[i].amount; console.log('gained '+pickups[i].amount+' credits'); totalCredits += pickups[i].amount;
                 damageNumbers.unshift({type:'credits',x:playerX+(Math.random()*100 - 50) - camera.x,y:playerY+(Math.random()*100 - 50) - camera.y,amount:pickups[i].amount,lifetime:1})
             }
             
@@ -1923,6 +1930,7 @@ function mainLoop() {
                                         dropStuff('asteroid',last)
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
+                                        totalRoidsMined++
                                     }
                                 }
                                 else if (pro.type == 'lsr') {
@@ -1953,6 +1961,7 @@ function mainLoop() {
                             if (pro.hits[0].roid.hp <= 0) {
                                 asteroids.splice(pro.hits[0].index,1)
                                 field.currentAsteroids--
+                                totalRoidsMined++
                                 dropStuff('asteroid',pro.hits[0].roid)
                             } 
                         }
@@ -2014,6 +2023,7 @@ function mainLoop() {
                                     if (last.hp <= 0) {
                                         asteroids.splice(roidIndex,1)
                                         field.currentAsteroids--
+                                        totalRoidsMined++
                                         dropStuff('enemy',last)
                                     }
                                 }
@@ -2816,11 +2826,48 @@ function mainLoop() {
             ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH)
             ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; 
             ctx.fillText('You died...',totW/2-200,totH/2);
+            
             setTimeout(function() {
-                /* gameState = states.menu
-                canPause = true; can.style.cursor = 'default';
-                mainMenu() */ window.location.reload()
-            },3000)
+                ctx.textAlign = 'center';
+                ctx.font = '30px consolas';
+                ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'crimson'
+                ctx.fillText('You mined '+totalRoidsMined+' asteroids',totW/2,totH/2 - 50)
+            },2000)
+            setTimeout(function() {
+                ctx.fillText('And got '+totalResources+' total resources',totW/2,totH/2 + 50)
+            },2500)
+
+            setTimeout(function() {
+                ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'crimson'
+                ctx.fillText('You reached level '+level,totW/2,totH/2 - 50)
+            },5500)
+            setTimeout(function() {
+                ctx.fillText('And unlocked '+shipsUnlocked+' ships',totW/2,totH/2 + 50)
+            },6000)
+
+            setTimeout(function() {
+                ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH); ctx.fillStyle = 'crimson'
+                ctx.fillText('You defeated '+enemiesDefeated+' enemies',totW/2,totH/2 - 50)
+            },9000)
+            setTimeout(function() {
+                ctx.fillText('And earned '+totalCredits+' credits',totW/2,totH/2 + 50)
+            },9500)
+
+            setTimeout(function() {
+                ctx.textAlign = 'left'
+                ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH)
+                ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; 
+                ctx.fillText('Deleting save...',totW/2-200,totH/2)
+            },12500)
+            setTimeout(function() {
+                ctx.fillText('Deleting save...done',totW/2-200,totH/2)
+            },13500)
+            
+            setTimeout(function() {
+                gameState = states.menu
+                can.style.cursor = 'default';
+                mainMenu()
+            },15500)
         }
     }
     
