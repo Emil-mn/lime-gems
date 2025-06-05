@@ -1024,26 +1024,31 @@ class mine {
                 this.size = 50
                 this.damage = 30
                 this.radius = 150
+                this.speed = 0.07
             break
             case 'small':
                 this.size = 75
                 this.damage = 50
                 this.radius = 175
+                this.speed = 0.06
             break
             case 'medium':
                 this.size = 100
                 this.damage = 70
                 this.radius = 200
+                this.speed = 0.05
             break
             case 'large':
                 this.size = 125
                 this.damage = 90
                 this.radius = 225
+                this.speed = 0.04
             break
             case 'huge':
                 this.size = 150
                 this.damage = 110
                 this.radius = 250
+                this.speed = 0.03
             break
         }
         this.type = type
@@ -1051,6 +1056,7 @@ class mine {
         this.delay = 1
         this.triggered = false
         this.rotation = ((Math.random() * 1) - 0.5) * Math.PI / 180
+        this.movementVector = {x:0,y:0}
         this.points = [
             {x:this.x+this.size/3,y:this.y},
             {x:this.x+(this.size/3)*2,y:this.y},
@@ -1562,6 +1568,25 @@ function mainLoop() {
                     }
                 }
                 if (enemy.triggered == true) {enemy.delay -= 0.02}
+                if (enemy.type == 'homing') {
+                    if (playerX > enemy.centerX - enemy.radius && playerX < enemy.centerX + enemy.radius) {
+                        if (playerY > enemy.centerY - enemy.radius && playerY < enemy.centerY + enemy.radius) {
+                            enemy.triggered = true; enemy.delay = 5
+                        }
+                    }
+                    if (enemy.triggered == true) {
+                        var angleToPlayer = Math.atan2(enemy.centerY - playerY, enemy.centerX - playerX)
+                        var newVector = {x:enemy.speed * Math.cos(angleToPlayer),y:enemy.speed * Math.sin(angleToPlayer)}
+                        enemy.movementVector.x += newVector.x
+                        enemy.movementVector.y += newVector.y
+                        enemy.x -= enemy.movementVector.x
+                        enemy.y -= enemy.movementVector.y
+                        enemy.points.forEach(point => {
+                            point.x -= enemy.movementVector.x
+                            point.y -= enemy.movementVector.y
+                        })
+                    }
+                }
                 enemy.points.forEach((point) => {
                     ctx.fillStyle = 'green'
                     ctx.fillRect(-camera.x+point.x,-camera.y+point.y,3,3)
@@ -1587,7 +1612,7 @@ function mainLoop() {
                         }
                     })
                 })
-                if (enemy.delay <= 0 && enemy.type == 'proximity') {
+                if (enemy.delay <= 0 && (enemy.type == 'proximity' || enemy.type == 'homing')) {
                     blastDamage(enemy.centerX,enemy.centerY,enemy.damage,enemy.radius)
                     explosions.push({x:enemy.centerX,y:enemy.centerY,radius:enemy.radius,currRadius:0,lifetime:0})
                     enemies.splice(index,1)
@@ -2822,7 +2847,7 @@ function mainLoop() {
         //escape pod destroyed
         if (health <= 0) 
         {
-            clearInterval(interval); console.log('dead'); 
+            clearInterval(interval); console.log('dead'); can.style.cursor = 'not-allowed'
             ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH)
             ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; 
             ctx.fillText('You died...',totW/2-200,totH/2);
@@ -2854,13 +2879,14 @@ function mainLoop() {
             },9500)
 
             setTimeout(function() {
-                ctx.textAlign = 'left'
+                ctx.textAlign = 'left'; can.style.cursor = 'wait';
                 ctx.fillStyle = 'maroon'; ctx.fillRect(0,0,totW,totH)
                 ctx.fillStyle = 'crimson'; ctx.font = '35px consolas'; 
                 ctx.fillText('Deleting save...',totW/2-200,totH/2)
             },12500)
             setTimeout(function() {
                 ctx.fillText('Deleting save...done',totW/2-200,totH/2)
+                can.style.cursor = 'progress'
             },13500)
             
             setTimeout(function() {
