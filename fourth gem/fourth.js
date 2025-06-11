@@ -19,7 +19,7 @@ var ctx = can.getContext('2d')
 var zoomLevel = 1
 var zoomOffset = 1
 //states
-var states = {menu:0,main:1,paused:2,inventory:3,map:4,escaping:5}
+var states = {menu:0,settings:1,main:2,paused:3,inventory:4,map:5,escaping:6}
 var gameState = states.menu
 var interval
 var canPause = true
@@ -474,6 +474,10 @@ function mainMenu() {
     ctx.fillText('Load game',totW/2,335,180)
 }
 
+function settings() {
+    ctx.fillStyle = background;
+}
+
 function checkClick() {
     if (gameState == states.menu) {
         if (buttonClicked(totW/2-100,200,200,50)) {
@@ -498,19 +502,20 @@ function checkClick() {
         }
     }
     else if (gameState == states.paused) {
-        if (buttonClicked(totW/2-130,180,260,50)) {
+        if (buttonClicked(totW/2-130,165,260,50)) {
             console.log('resumed'); gameState = states.main
             ctx.textAlign = 'left'; can.style.cursor = 'none'
-            skillPointsAdding = false
             setTimeout(() => {canPause = true},500)
             interval = setInterval(mainLoop,20)
         }
-        else if (buttonClicked(totW/2-130,270,260,50)) {
+        else if (buttonClicked(totW/2-130,225,260,50)) {
+            console.log('opening settings'); gameState = states.settings
+            canPause = true; can.style.cursor = 'default'; settings()
+        }
+        else if (buttonClicked(totW/2-130,285,260,50)) {
             console.log('quitting'); gameState = states.menu;
-            skillPointsAdding = false
             canPause = true; can.style.cursor = 'default'; save()
         }
-        
     }
     else if (gameState == states.map) {
         var scaleFactor = 166.6666666666667
@@ -734,11 +739,17 @@ function hoverCheck() {
         else {hovering = false}
     }
     else if (gameState == states.paused) {
-        if (buttonHovered(totW/2-130,180,260,50)) {
+        if (buttonHovered(totW/2-130,165,260,50)) {
             can.style.cursor = 'pointer'
+            console.log('pointing at resume button')
         }
-        else if (buttonHovered(totW/2-130,270,260,50)) {
+        else if (buttonHovered(totW/2-130,225,260,50)) {
             can.style.cursor = 'pointer'
+            console.log('pointing at settings button')
+        }
+        else if (buttonHovered(totW/2-130,285,260,50)) {
+            can.style.cursor = 'pointer'
+            console.log('pointing at quit button')
         }
         else {can.style.cursor = 'default'}
     }
@@ -1622,14 +1633,81 @@ function mainLoop() {
                 ctx.beginPath()
                 ctx.strokeStyle = shipStroke;
                 ctx.fillStyle = shipFill;
-                ctx.lineWidth = 3;
-                var point2 = rotatePoint(enemy.x,enemy.y-15,enemy.x,enemy.y,enemy.angle + 90)
-                ctx.moveTo(-camera.x+enemy.x,-camera.y+enemy.y)
-                ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
-                ctx.stroke()
-                ctx.beginPath()
-                ctx.arc(-camera.x+enemy.x,-camera.y+enemy.y,5,0,69)
-                ctx.fill(); ctx.stroke()
+                if (enemy.tier == 1) {
+                    ctx.lineWidth = 3;
+                    //base
+                    var size = 25
+                    var points = [
+                        {x:(enemy.x-size/2)+(size/3)*2,y:enemy.y-size/2},
+                        {x:(enemy.x-size/2)+size,y:(enemy.y-size/2)+size/3},
+                        {x:(enemy.x-size/2)+size,y:(enemy.y-size/2)+(size/3)*2},
+                        {x:(enemy.x-size/2)+(size/3)*2,y:(enemy.y-size/2)+size},
+                        {x:(enemy.x-size/2)+size/3,y:(enemy.y-size/2)+size},
+                        {x:(enemy.x-size/2),y:(enemy.y-size/2)+(size/3)*2},
+                        {x:(enemy.x-size/2),y:(enemy.y-size/2)+size/3}
+                    ]
+                    ctx.moveTo(-camera.x+(enemy.x-size/2)+size/3,-camera.y+enemy.y-size/2)
+                    points.forEach(point => {
+                        ctx.lineTo(-camera.x+point.x,-camera.y+point.y)
+                    })
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                    //actual gun
+                    ctx.beginPath()
+                    var point2 = rotatePoint(enemy.x,enemy.y-15,enemy.x,enemy.y,enemy.angle + 90)
+                    ctx.moveTo(-camera.x+enemy.x,-camera.y+enemy.y)
+                    ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+                    ctx.stroke()
+                    ctx.beginPath()
+                    ctx.arc(-camera.x+enemy.x,-camera.y+enemy.y,5,0,69)
+                    ctx.fill(); ctx.stroke()
+                }
+                else {
+                    ctx.lineWidth = 6;
+                    //base
+                    var size = 41.666
+                    var points = [
+                        {x:(enemy.x-size/2)+(size/3)*2,y:enemy.y-size/2},
+                        {x:(enemy.x-size/2)+size,y:(enemy.y-size/2)+size/3},
+                        {x:(enemy.x-size/2)+size,y:(enemy.y-size/2)+(size/3)*2},
+                        {x:(enemy.x-size/2)+(size/3)*2,y:(enemy.y-size/2)+size},
+                        {x:(enemy.x-size/2)+size/3,y:(enemy.y-size/2)+size},
+                        {x:(enemy.x-size/2),y:(enemy.y-size/2)+(size/3)*2},
+                        {x:(enemy.x-size/2),y:(enemy.y-size/2)+size/3}
+                    ]
+                    ctx.moveTo(-camera.x+(enemy.x-size/2)+size/3,-camera.y+enemy.y-size/2)
+                    points.forEach(point => {
+                        ctx.lineTo(-camera.x+point.x,-camera.y+point.y)
+                    })
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+                    //actual gun
+                    ctx.beginPath()
+                    var point2 = rotatePoint(enemy.x,enemy.y-25,enemy.x,enemy.y,enemy.angle + 90)
+                    ctx.moveTo(-camera.x+enemy.x,-camera.y+enemy.y)
+                    ctx.lineTo(-camera.x+point2.x,-camera.y+point2.y)
+                    ctx.stroke()
+                    ctx.beginPath()
+                    ctx.arc(-camera.x+enemy.x,-camera.y+enemy.y,8.333,0,69)
+                    ctx.fill(); ctx.stroke()
+                }
+                
+                points.forEach((point) => {
+                    ctx.fillStyle = 'green'
+                    ctx.fillRect(-camera.x+point.x,-camera.y+point.y,3,3)
+                    var rotateAroundPlayerPos = rotatePoint(point.x,point.y,playerX,playerY,-playerAngle)
+                    ctx.fillStyle = 'red'
+                    ctx.fillRect(-camera.x+rotateAroundPlayerPos.x,-camera.y+rotateAroundPlayerPos.y,3,3)
+                    playerSprite.forEach(path => {
+                        //if player collides with turret
+                        if (ctx.isPointInPath(path,(-camera.x+rotateAroundPlayerPos.x)/zoomOffset,(-camera.y+rotateAroundPlayerPos.y)/zoomOffset)) {
+                            movementVector[0] = -movementVector[0] / 2
+                            movementVector[1] = -movementVector[1] / 2
+                            playerX += movementVector[0] * 30;
+                            playerY += movementVector[1] * 30;
+                            weapons.forEach(gun => {gun.x += movementVector[0] * 30; gun.y += movementVector[1] * 30})
+                        }
+                    })
+                })
+
                 if (enemy.currCool > 0) {
                     enemy.currCool -= 0.02;
                 }
@@ -2813,11 +2891,16 @@ function mainLoop() {
         ctx.textAlign = 'center'; ctx.fillText('Paused',totW/2,150);
         ctx.strokeStyle = foreground; ctx.lineWidth = 4
         ctx.strokeRect(totW/2-175,totH/2-125,350,250)
-        ctx.strokeRect(totW/2-130,180,260,50)
-        ctx.strokeRect(totW/2-130,270,260,50)
+        //resume
+        ctx.strokeRect(totW/2-130,165,260,50)
+        //settings
+        ctx.strokeRect(totW/2-130,225,260,50)
+        //quit
+        ctx.strokeRect(totW/2-130,285,260,50)
         ctx.font = '40px consolas'
-        ctx.fillText('Resume', totW/2,215)
-        ctx.fillText('Save & quit',totW/2,305)
+        ctx.fillText('Resume', totW/2,200)
+        ctx.fillText('Settings',totW/2,260)
+        ctx.fillText('Save & quit',totW/2,320)
     }
     
     
