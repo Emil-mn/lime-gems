@@ -14,12 +14,34 @@ var mousePosX
 var mousePosY
 var mouseClickX
 var mouseClickY
-var keysPressed
 var ctx = can.getContext('2d')
 var zoomLevel = 1
 var zoomOffset = 1
+//inputs
+var inputs = {
+    switchShip:{key:'IntlBackslash',value:false,default:'IntlBackslash'},
+    toggleInventory:{key:'Tab',value:false,default:'Tab'},
+    toggleMap:{key:'KeyM',value:false,default:'KeyM'},
+    turnLeftPrimary:{key:'KeyA',value:false,default:'KeyA'},
+    turnLeftSecondary:{key:'ArrowLeft',value:false,default:'ArrowLeft'},
+    turnRightPrimary:{key:'KeyD',value:false,default:'KeyD'},
+    turnRightSecondary:{key:'ArrowRight',value:false,default:'ArrowRight'},
+    strafeLeft:{key:'KeyQ',value:false,default:'KeyQ'},
+    strafeRight:{key:'KeyE',value:false,default:'KeyE'},
+    goForwardsPrimary:{key:'KeyW',value:false,default:'KeyW'},
+    goForwardsSecondary:{key:'ArrowUp',value:false,default:'ArrowUp'},
+    goBackwardsPrimary:{key:'KeyS',value:false,default:'KeyS'},
+    goBackwardsSecondary:{key:'ArrowDown',value:false,default:'ArrowDown'},
+    decelerate:{key:'KeyR',value:false,default:'KeyR'},
+    pickUp:{key:'KeyG',value:false,default:'KeyG'},
+    pause:{key:'Escape',value:false,default:'Escape'},
+    firePrimary:{key:'ShiftLeft',value:false,default:'ShiftLeft'},
+    fireSecondary:{key:'ShiftRight',value:false,default:'ShiftRight'},
+    fireTertiary:{key:'KeyF',value:false,default:'KeyF'}
+}
 //states
 var states = {menu:0,settings:1,main:2,paused:3,inventory:4,map:5,escaping:6}
+var prevState
 var gameState = states.menu
 var interval
 var canPause = true
@@ -288,24 +310,23 @@ can.addEventListener('mousemove', function(event) {
 })
 
 document.addEventListener('keydown', function(event) {
-    keysPressed = (keysPressed || {});
-    keysPressed[event.code] = true; //console.log(event.code)
+    Object.entries(inputs).some(input => {if (input[1].key == event.code) {input[1].value = true}})
     if (event.code == 'Tab') {event.preventDefault()}
-    if (event.code == 'Escape' && gameState == states.paused) {
+    if (gameState == states.settings) {settings()}
+    if (inputs.pause.value && gameState == states.paused) {
         console.log('resumed'); gameState = states.main
         ctx.textAlign = 'left'; can.style.cursor = 'none'
         setTimeout(() => {canPause = true},500)
         interval = setInterval(mainLoop,20)
     }
-    if ((event.key == 'f' || event.key == 'Shift') && gameState == states.main && !event.repeat) {
+    if ((event.code == inputs.firePrimary.key || event.code == inputs.fireSecondary.key || event.code == inputs.fireTertiary.key) && gameState == states.main && !event.repeat) {
         clearInterval(fireInterval); fireInterval = setInterval(fire,20)
     }
 })
 document.addEventListener('keyup', function(event) {
-    if (event.key != 'F5' && event.key != 'ControlLeft') {
-        keysPressed[event.code] = false; //console.log(keysPressed)
-        if (event.key == 'f' || event.key == 'Shift') {clearInterval(fireInterval)}
-    }
+    Object.entries(inputs).some(input => {if (input[1].key == event.code) {input[1].value = false}})
+    if (gameState == states.settings) {settings()}
+    if (event.code == inputs.firePrimary.key || event.code == inputs.fireSecondary.key || event.code == inputs.fireTertiary.key) {clearInterval(fireInterval)}
 })
 
 can.addEventListener('wheel', function(scroll) {
@@ -467,27 +488,47 @@ function mainMenu() {
     ctx.font = '30px consolas'; ctx.fillText('bottom text',totW/2,140)
 
     ctx.strokeStyle = foreground; ctx.lineWidth = 4
-    ctx.strokeRect(totW/2-100,200,200,50)
-    ctx.strokeRect(totW/2-100,300,200,50)
+    ctx.strokeRect(totW/2-110,180,220,50)
+    ctx.strokeRect(totW/2-110,250,220,50)
+    ctx.strokeRect(totW/2-110,320,220,50)
     ctx.font = '40px consolas'
-    ctx.fillText('New game', totW/2,235)
-    ctx.fillText('Load game',totW/2,335,180)
+    ctx.fillText('New game',totW/2,215)
+    ctx.fillText('Settings',totW/2,285)
+    ctx.fillText('Load game',totW/2,355)
 }
 
 function settings() {
-    ctx.fillStyle = background;
+    ctx.fillStyle = background; ctx.fillRect(totW/2-300,totH/2-175,600,350)
+    ctx.strokeStyle = foreground; ctx.lineWidth = 4
+    ctx.strokeRect(totW/2-300,totH/2-175,600,350); ctx.textAlign = 'center';
+    ctx.fillStyle = foreground; ctx.font = '25px consolas'; 
+    ctx.fillText('Rebind controls',totW/2,75); ctx.textAlign = 'left';
+    Object.entries(inputs).forEach((input,index) => {
+        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(60,(105+40*index)-25); 
+        ctx.lineTo(640,(105+40*index)-25); ctx.stroke()
+        
+        ctx.fillText(input[0]+': '+input[1].key+' '+input[1].value,55,105+40*index)
+        var widthOfInputName = ctx.measureText(input[0]+': ').width
+        var widthOfInputKey = ctx.measureText(input[1].key).width
+        ctx.strokeRect(55+widthOfInputName-2,(105+40*index)-20,widthOfInputKey+4,27)
+    })
+    
 }
 
 function checkClick() {
     if (gameState == states.menu) {
-        if (buttonClicked(totW/2-100,200,200,50)) {
+        if (buttonClicked(totW/2-110,180,220,50)) {
             console.log('starting new game');
             generateWorld()
         }
-        else if (buttonClicked(totW/2-100,300,200,50)) {
+        else if (buttonClicked(totW/2-110,250,220,50)) {
+            console.log('opening settings'); gameState = states.settings
+            can.style.cursor = 'default'; prevState = states.menu; settings()
+        }
+        else if (buttonClicked(totW/2-110,320,220,50)) {
             console.log('loading save');
             ctx.fillStyle = 'red'; ctx.font = '25px consolas';
-            ctx.fillText('No savefile found',totW/2,380)
+            ctx.fillText('No savefile found',totW/2,400)
             setTimeout(mainMenu,2000)
         }
     }
@@ -510,7 +551,7 @@ function checkClick() {
         }
         else if (buttonClicked(totW/2-130,225,260,50)) {
             console.log('opening settings'); gameState = states.settings
-            canPause = true; can.style.cursor = 'default'; settings()
+            canPause = true; prevState = states.paused; settings()
         }
         else if (buttonClicked(totW/2-130,285,260,50)) {
             console.log('quitting'); gameState = states.menu;
@@ -722,11 +763,15 @@ function checkDrop() {
 
 function hoverCheck() {
     if (gameState == states.menu) {
-        if (buttonHovered(totW/2-100,200,200,50)) {
+        if (buttonHovered(totW/2-110,180,220,50)) {
             console.log('new game button');
             can.style.cursor = 'pointer'
         }
-        else if (buttonHovered(totW/2-100,300,200,50)) {
+        else if (buttonHovered(totW/2-110,250,220,50)) {
+            console.log('settings button');
+            can.style.cursor = 'pointer'
+        }
+        else if (buttonHovered(totW/2-110,320,220,50)) {
             console.log('load game button');
             can.style.cursor = 'pointer'
         }
@@ -1278,7 +1323,7 @@ function mainLoop() {
         ctx.stroke()
     }
 
-    if (keysPressed && keysPressed['IntlBackslash'] && gameState != states.escaping && canSwitchShip == true) {
+    if (inputs.switchShip.value && gameState != states.escaping && canSwitchShip == true) {
         canSwitchShip = false; setTimeout(function() {canSwitchShip = true},500)
         if (spriteSelection == 2) {
             spriteSelection = 1
@@ -1300,7 +1345,7 @@ function mainLoop() {
         }
     }
     
-    if (keysPressed && keysPressed['Tab'] && canOpenInv == true && gameState != states.escaping) {
+    if (inputs.toggleInventory.value && canOpenInv == true && gameState != states.escaping) {
         canOpenInv = false; setTimeout(() => {canOpenInv = true},500)
         if (gameState != states.inventory) {
             gameState = states.inventory; console.log('inventory open')
@@ -1310,7 +1355,7 @@ function mainLoop() {
         }
     }
 
-    if (keysPressed && keysPressed['KeyM'] && canOpenMap == true && gameState != states.escaping) {
+    if (inputs.toggleMap.value && canOpenMap == true && gameState != states.escaping) {
         canOpenMap = false; setTimeout(() => {canOpenMap = true},500)
         if (gameState != states.map) {
             skillPointsAdding = false;
@@ -1329,7 +1374,7 @@ function mainLoop() {
     }
 
     //turning
-    if (keysPressed && (keysPressed['KeyA'] || keysPressed['ArrowLeft']) && gameState != states.inventory) {
+    if ((inputs.turnLeftPrimary.value || inputs.turnLeftSecondary.value) && gameState != states.inventory) {
         playerAngle -= playerTurnSpeed;
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
@@ -1342,7 +1387,7 @@ function mainLoop() {
             steeringParticles('turnLeft',17,50,17,30,3)
         }
     }
-    else if (keysPressed && (keysPressed['KeyD'] || keysPressed['ArrowRight']) && gameState != states.inventory) {
+    else if ((inputs.turnRightPrimary.value || inputs.turnRightSecondary.value) && gameState != states.inventory) {
         playerAngle += playerTurnSpeed
         //console.log(playerAngle)
         if (playerSprite == escapePod) {
@@ -1357,7 +1402,7 @@ function mainLoop() {
     }
 
     //strafing
-    if (keysPressed && keysPressed['KeyQ'] && gameState != states.inventory) {
+    if (inputs.strafeLeft.value && gameState != states.inventory) {
         playerSpeed = playerMaxSpeed/2
         inputVector = [playerSpeed * Math.cos((playerAngle+180) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+180) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -1372,7 +1417,7 @@ function mainLoop() {
             steeringParticles('strafeLeft',17,50,17,30,3)
         }
     }
-    else if (keysPressed && keysPressed['KeyE'] && gameState != states.inventory) {
+    else if (inputs.strafeRight.value && gameState != states.inventory) {
         playerSpeed = playerMaxSpeed/2
         inputVector = [playerSpeed * Math.cos((playerAngle) * Math.PI / 180),playerSpeed * Math.sin((playerAngle) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -1389,7 +1434,7 @@ function mainLoop() {
     }
 
     //go forwards / backwards
-    if (keysPressed && (keysPressed['KeyW'] || keysPressed['ArrowUp']) && gameState != states.inventory) {
+    if ((inputs.goForwardsPrimary.value || inputs.goForwardsSecondary.value) && gameState != states.inventory) {
         playerSpeed = playerMaxSpeed
         inputVector = [playerSpeed * Math.cos((playerAngle-90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle-90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -1407,7 +1452,7 @@ function mainLoop() {
             steeringParticles('goFwd',27,60,27,60,4)
         }
     }
-    else if (keysPressed && (keysPressed['KeyS'] || keysPressed['ArrowDown']) && gameState != states.inventory) {
+    else if ((inputs.goBackwardsPrimary.value || inputs.goBackwardsSecondary.value) && gameState != states.inventory) {
         playerSpeed = playerMaxSpeed/2
         inputVector = [playerSpeed * Math.cos((playerAngle+90) * Math.PI / 180),playerSpeed * Math.sin((playerAngle+90) * Math.PI / 180)]
         movementVector[0] += inputVector[0]
@@ -1426,7 +1471,7 @@ function mainLoop() {
         }
     }
     
-    if (keysPressed && keysPressed['KeyR'] && gameState != states.inventory) {
+    if (inputs.decelerate.value && gameState != states.inventory) {
         if (movementVector[0] > 0) {
             if (movementVector[0] < 0.05) {
                 movementVector[0] = 0
@@ -1953,7 +1998,7 @@ function mainLoop() {
                 pickups[i].amount.x = pickups[i].x
                 pickups[i].amount.y = pickups[i].y
                 pickupTarget = pickups[i].amount
-                if (keysPressed && keysPressed['KeyG']) {
+                if (inputs.pickUp.value) {
                     var inventoryFull = false;
                     Object.entries(inventoryContent).some(entry => {
                         if (entry[1] == null) {
@@ -2882,7 +2927,7 @@ function mainLoop() {
         ctx.beginPath(); ctx.arc(mousePosX,mousePosY,3,0,7); ctx.stroke()
     }
 
-    if (keysPressed && keysPressed['Escape'] && canPause == true && gameState != states.escaping) {
+    if (inputs.pause.value && canPause == true && gameState != states.escaping) {
         clearInterval(interval); console.log('paused');
         gameState = states.paused; canPause = false
         
